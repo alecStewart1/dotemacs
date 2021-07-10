@@ -49,9 +49,9 @@
 ;;;; Environment thingies
 ;;;;
 
-(dolist (var '(exec-path process-environment))
-  (unless (get var 'initial-value)
-    (put var 'initial-value (default-value var))))
+;(dolist (var '(exec-path process-environment))
+;  (unless (get var 'initial-value)
+;    (put var 'initial-value (default-value var))))
 
 ;;; Restore defaults that I've set
 ;;;
@@ -161,8 +161,8 @@ TRIGGER-HOOK is a list of quoted hooks and/or sharp-quoted functions."
   ;; Do GC and all that jazz
   (add-hook 'emacs-startup-hook #'my-gc-and-restore)
 
-  (dolist (var '(exec-path process-environment))
-    (set-default var (get var 'initial-value)))
+  ;(dolist (var '(exec-path process-environment))
+  ;  (set-default var (get var 'initial-value)))
 
   ;; Require the other configurations
   (require 'packing)
@@ -176,7 +176,7 @@ TRIGGER-HOOK is a list of quoted hooks and/or sharp-quoted functions."
   (require 'programming)
   (require 'vc)
   (require 'app)
-n
+
   ;; Initialize some hooks
   (dolist (fn '(switch-to-buffer display-buffer))
     (advice-add fn :around #'run-switch-buffer-hooks))

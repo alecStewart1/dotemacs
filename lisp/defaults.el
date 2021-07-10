@@ -70,7 +70,7 @@
     (enable-recursive-minibuffers . t)
     (frame-inhibit-implied-resize . t)
     (fringe-indicator-alist .
-     ,(delq ,(assq 'continuation fringe-indicator-alist)
+     ,(delq (assq 'continuation fringe-indicator-alist)
            fringe-indicator-alist))
     (highlight-nonselected-windows . nil)
     (indicate-buffer-boundaries . nil)

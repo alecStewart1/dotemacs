@@ -42,24 +42,28 @@
 ;;; For leaf.el
 ;;;
 
+(unless (bound-and-true-p package--initialized) ; To avoid warnings in 27
+  (setq package-enable-at-startup nil)          ; To prevent initializing twice
+  (package-initialize))
 
-(unless (package-installed-p 'leaf)
-  (add-transient-hook! 'package-install (package-refresh-contents))
-  (package-install 'leaf))
+(eval-and-compile 
+  (unless (package-installed-p 'leaf)
+    (add-transient-hook! 'package-install (package-refresh-contents))
+    (package-install 'leaf))
 
-(setq leaf-expand-minimally t)
+  (setq leaf-expand-minimally t)
 
-(leaf leaf-keywords
-  :ensure t
-  :init
-  (leaf gnu-elpa-keyring-update :ensure t)
-  (leaf diminish :ensure t)
-  (leaf hydra :ensure t)
-  (leaf mode-hydra :ensure t)
-  (leaf pretty-hydra :ensure t)
-  (leaf general :ensure t)
-  :config
-  (leaf-keywords-init))
+  (leaf leaf-keywords
+    :ensure t
+    :init
+    (leaf gnu-elpa-keyring-update :ensure t)
+    (leaf diminish :ensure t)
+    (leaf hydra :ensure t)
+    (leaf mode-hydra :ensure t)
+    (leaf pretty-hydra :ensure t)
+    (leaf general :ensure t)
+    :config
+    (leaf-keywords-init)))
 
 ;;; For straight and use-package
 ;;;
