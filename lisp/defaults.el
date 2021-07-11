@@ -70,7 +70,7 @@
     (enable-recursive-minibuffers . t)
     (frame-inhibit-implied-resize . t)
     (fringe-indicator-alist .
-     ,@(delq ,(assq 'continuation fringe-indicator-alist)
+     ,@(delq (assq 'continuation fringe-indicator-alist)
              fringe-indicator-alist))
     (highlight-nonselected-windows . nil)
     (indicate-buffer-boundaries . nil)
@@ -175,7 +175,7 @@
   (leaf pcache
     :tag "builtin" "defaults"
     :custom
-    `((pcache-directory ,(concat my-cache-dir "pcache/")))))
+    `((pcache-directory . ,(concat my-cache-dir "pcache/")))))
 
 ;;;; Startup
 ;;;;
@@ -272,7 +272,7 @@
 (leaf *shmoving
   :doc "For the cursor, mouse, and mousewheel."
   :config
-  (leaf cursor
+  (leaf cursor-sensor
     :tag "builtin" "defaults"
     :hook (minibuffer-setup-hook . cursor-intangible-mode))
 
@@ -338,18 +338,21 @@
 (leaf files
   :tag "builtin" "defaults"
   :custom
-  `((backup-directory-alist .
-      ,@(list (cons "." ,(concat my-cache-dir "backup/"))))
+  `((backup-directory-alist . ,@(list (cons "." (concat my-cache-dir "backup/"))))
     (large-file-warning-threshold .          15000000)
     (confirm-nonexistent-file-or-buffer .    t)
     (auto-mode-case-fold .                   nil)
     (require-final-newline .                 t)
     (make-backup-files .                     nil)
+    
     (auto-save-default .                     nil)
     (find-file-visit-truename .              t) ; resolve symlinks when opening files
     (find-file-suppress-same-file-warnings . t)
     (delete-old-versions .                   t)
-    (version-control .                       t)))
+    (backup-by-copying .                     t)
+    (version-control .                       t)
+    (kept-old-versions .                     5)
+    (kept-new-versions .                     5)))
 
 ;;;; Searching and Replacing
 
@@ -392,17 +395,17 @@
     :tag "builtin" "defaults"
     :leaf-defer nil
     :custom
-    `((gnutls-verify-error . ,(not ,(getenv "INSECURE")))
+    `(;;(gnutls-verify-error . ,(not (getenv "INSECURE")))
       (gnutls-min-prime-bits . 3072)
       (gnutls-algorithm-priority .
-        ,(when (boundp 'libgnutls-version)
-           ,(concat "SECURE128:+SECURE192:-VERS-ALL"
-                   ,(if ,(and ,(not ,IS-WINDOWS)
-                              ,(not ,(version< emacs-version "26.3"))
-                              ,(>= libgnutls-version 30605))
+        ,@(when (boundp 'libgnutls-version)
+           (concat "SECURE128:+SECURE192:-VERS-ALL"
+                   (if (and (not ,windows-nt-p)
+                            (not (version< emacs-version "26.3"))
+                            (>= libgnutls-version 30605))
                        ":+VERS-TLS1.3")
                    ":+VERS-TLS1.2")))
-      (tls-checktrust . ,gnutls-verify-error)
+      (tls-checktrust . gnutls-verify-error)
       (tls-program .    '("openssl s_client -connect %h:%p -CAfile %t -nbio -no_ssl3 -no_tls1 -no_tls1_1 -ign_eof"
                        "gnutls-cli -p %p --dh-bits=3072 --ocsp --x509cafile=%t \
         --strict-tofu --priority='SECURE192:+SECURE128:-VERS-ALL:+VERS-TLS1.2:+VERS-TLS1.3' %h"
@@ -413,7 +416,7 @@
     :tag "builtin" "defaults"
     :leaf-defer nil
     :custom
-    `((auth-sources . ,@(list ,(expand-file-name "authinfo.gpg" my-etc-dir "~/.authinfo.gpg"))))))
+    `((auth-sources . ,@(list (expand-file-name "authinfo.gpg" my-etc-dir "~/.authinfo.gpg"))))))
 
 ;;;; Misc.
 ;;;;
