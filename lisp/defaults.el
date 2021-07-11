@@ -28,11 +28,11 @@
 
 (leaf emacs
   :doc "A lot of default settings for things in Emacs's C sources"
-  :tags "builtin" "defaults"
-  :preface
-  (defun minibuffer:crm-indicator (args)
-    "Add a prompt for `completing-read-multiple'."
-    (cons (concat "[CRM] " (car args) (cdr args))))
+  :tag "builtin" "defaults"
+  ;:preface
+  ;(defun minibuffer:crm-indicator (args)
+  ;  "Add a prompt for `completing-read-multiple'."
+  ;  (cons (concat "[CRM] " (car args) (cdr args))))
   :init
   (if (bound-and-true-p tooltip-mode) (tooltip-mode -1))
   (add-to-list 'default-frame-alist '(tool-bar-lines . 0))
@@ -48,8 +48,8 @@
         (setq-default bidi-display-reordering 'left-to-right
                       bidi-paragraph-direction 'left-to-right)))
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
-  :advice
-  (:filter-args completing-read-multiple minibuffer:crm-indicator)
+  ;:advice
+  ;(:filter-args completing-read-multiple minibuffer:crm-indicator)
   :custom
   ;; Scrolling
   `((hscroll-margin . 1)
@@ -70,8 +70,8 @@
     (enable-recursive-minibuffers . t)
     (frame-inhibit-implied-resize . t)
     (fringe-indicator-alist .
-     ,(delq (assq 'continuation fringe-indicator-alist)
-           fringe-indicator-alist))
+     ,@(delq ,(assq 'continuation fringe-indicator-alist)
+             fringe-indicator-alist))
     (highlight-nonselected-windows . nil)
     (indicate-buffer-boundaries . nil)
     (indicate-empty-lines . nil)
@@ -165,7 +165,7 @@
   :doc "For compling Emacs and other things."
   :config
   (leaf bytecomp
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :leaf-defer nil
     :custom
     `((byte-compile-verbose .        nil)
@@ -173,7 +173,7 @@
       (async-byte-compile-log-file . ,(concat my-etc-dir "async-bytecomp.log"))))
 
   (leaf pcache
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :custom
     `((pcache-directory ,(concat my-cache-dir "pcache/")))))
 
@@ -181,7 +181,7 @@
 ;;;;
 
 (leaf startup
-  :tags "builtin" "defaults"
+  :tag "builtin" "defaults"
   :init
   (fset #'display-startup-echo-area-message #'ignore)
   :custom
@@ -198,7 +198,7 @@
 ;;;;
 
 (leaf simple
-  :tags "builtin" "defaults"
+  :tag "builtin" "defaults"
   :custom
   (idle-update-delay .                   1.2)
   (blink-matching-paren .                nil)
@@ -216,7 +216,7 @@
 ;;;;
 
 (leaf advice
-  :tags "builtin" "defaults"
+  :tag "builtin" "defaults"
   :custom
   ;; silence redefined function warnings
   (ad-redefinition-action . 'accept))
@@ -225,7 +225,7 @@
 ;;;;
 
 (leaf subr
-  :tags "builtin" "defaults"
+  :tag "builtin" "defaults"
   :init
   (fset #'yes-or-no-p #'y-or-n-p))
 
@@ -236,7 +236,7 @@
   :doc "For the window, frame, and widgets."
   :config
   (leaf window
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :leaf-defer nil
     :init
     (add-to-list 'display-buffer-alist '("^\\*Warnings\\*$" (display-buffer-no-window)
@@ -249,7 +249,7 @@
     (split-width-threshold . 160))
 
   (leaf frame
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :leaf-defer nil
     :hook (emacs-startup-hook . window-divider-mode)
     :bind
@@ -262,7 +262,7 @@
     (window-divider-default-right-width .  1))
 
   (leaf wid-edit
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :custom
     (widget-image-enable . nil)))
 
@@ -273,17 +273,17 @@
   :doc "For the cursor, mouse, and mousewheel."
   :config
   (leaf cursor
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :hook (minibuffer-setup-hook . cursor-intangible-mode))
 
   (leaf mouse
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :custom
     ;; middle-click paste at point, not at click
     (mouse-yank-at-point . t))
 
   (leaf mwsheel
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :custom
     (mouse-wheel-scroll-amount .     '(5 ((shift) . 2)))
     ; don't accelerate scrolling
@@ -293,7 +293,7 @@
 ;;;;
 
 (leaf bindings
-  :tags "builtin" "defaults"
+  :tag "builtin" "defaults"
   :custom
   ;; disable mode-line mouseovers
   (mode-line-default-help-echo . nil))
@@ -305,27 +305,27 @@
   :doc "For editing text."
   :config
   (leaf select
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :custom
     (x-select-request-type . '(UTF8_STRING COMPOUND_TEXT TEXT STRING)))
 
   (leaf fill
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :custom
     (adaptive-fill-regexp .            "[ t]+|[ t]*([0-9]+.|*+)[ t]*")
     (adaptive-fill-first-line-regexp . "^* *$"))
 
   (leaf delsel
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :hook (first-input-hook . delete-selection-mode))
 
   (leaf paragraphs
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :custom
     (sentence-end-double-space . nil))
 
   (leaf whitespace
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :hook (first-file-hook . whitespace-mode)
     :init
     (put 'whitespace-toggle-options 'disabled t)
@@ -336,7 +336,7 @@
 ;;;;
 
 (leaf files
-  :tags "builtin" "defaults"
+  :tag "builtin" "defaults"
   :custom
   `((backup-directory-alist .
       ,@(list (cons "." ,(concat my-cache-dir "backup/"))))
@@ -357,13 +357,13 @@
   :doc "For searching and replacing text"
   :config
   (leaf grep
-    :tags "builtin" "search-replace" "defaults"
+    :tag "builtin" "search-replace" "defaults"
     :custom
     `((grep-command ,(executable-find "rg"))
       (find-program ,(executable-find "fd"))))
 
   (leaf isearch
-    :tags "builtin" "search-replace" "defaults"
+    :tag "builtin" "search-replace" "defaults"
     :bind
     (("C-s" . isearch-forward-regexp)
      ("C-M-s" . isearch-forward)
@@ -371,7 +371,7 @@
      ("C-M-r" . isearch-backward)))
 
   (leaf replace
-    :tags "builtin" "search-replace" "defaults"
+    :tag "builtin" "search-replace" "defaults"
     :bind
     (("M-%" . query-replace-regexp)
      ("C-M-%" . query-replace))))
@@ -383,13 +383,13 @@
   :doc "For keeping ourselves and Emacs secure as we reasonably can."
   :config
   (leaf nsm
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :leaf-defer nil
     :custom
     (network-security-level 'high))
 
   (leaf gnutls
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :leaf-defer nil
     :custom
     `((gnutls-verify-error . ,(not ,(getenv "INSECURE")))
@@ -410,7 +410,8 @@
                        "gnutls-cli -p %p %h"))))
 
   (leaf auth-source
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
+    :leaf-defer nil
     :custom
     `((auth-sources . ,@(list ,(expand-file-name "authinfo.gpg" my-etc-dir "~/.authinfo.gpg"))))))
 
@@ -421,43 +422,43 @@
   :doc "Bunch of miscellaneous things I needed/wanted to configure and group together."
   :config
   (leaf uniquify
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :custom
     (uniquify-buffer-name-style . nil))
 
   (leaf ansi-color
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :custom
     (ansi-color-for-comint-mode . t))
 
   (leaf bookmark
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :custom
     `((bookmark-default-file ,(concat my-etc-dir "bookmarks"))
       (bookmark-save-flag    t)))
 
   (leaf url
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :custom
     `((url-configuration-directory . ,(concat my-etc-dir "url/"))
       (url-cache-directory .         ,(concat my-cache-dir "url/"))))
 
   (leaf tramp
-    :tags "builtin" "defaults"
+    :tag "builtin" "defaults"
     :custom
     `((tramp-auto-save-directory . ,(concat my-cache-dir "tramp-auto-save/"))
       (tramp-backup-directory-alist . backup-directory-alist)
       (tramp-persistency-file-name . ,(concat my-cache-dir "tramp-persistency.el"))))
 
   (leaf kmacro
-    :tags "builtin" "misc" "defaults"
+    :tag "builtin" "misc" "defaults"
     :bind
     (("C-x C-k c" . kmacro-call-macro)
      ("C-x C-k S" . kmacro-end-macro)
      ("C-x C-k v" . kmacro-view-macro)))
 
   (leaf misc
-    :tags "builtin" "misc" "default"
+    :tag "builtin" "misc" "default"
     :bind ("M-z" . zap-up-to-char)))
 
 (provide 'defaults)

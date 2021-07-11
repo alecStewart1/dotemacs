@@ -23,7 +23,8 @@
 ;;;;;
 
 (leaf epg-config
-  :tags "builtin" "dependency" "app"
+  :tag "builtin" "dependency" "app"
+  :leaf-defer nil
   :config
   (setq epa-pinentry-mode 'loopback))
 
@@ -34,7 +35,8 @@
 ;;;;;
 
 (leaf pinentry
-  :tags "external" "dependency" "app"
+  :tag "external" "dependency" "app"
+  :leaf-defer nil
   :config
   (pinentry-start))
 
@@ -42,7 +44,8 @@
 ;;;;;
 
 (leaf emms
-  :tags "external" "app"
+  :ensure t
+  :tag "external" "app"
   :custom
   `((emms-directory  ,(concat my-etc-dir "emms"))
     (emms-cache-file ,(concat my-cache-dir "emms")))
@@ -57,7 +60,8 @@
   :doc "Reading blog posts via RSS feeds like an old fart."
   :config
   (leaf elfeed
-    :tags "external" "rss" "app"
+    :ensure t
+    :tag "external" "rss" "app"
     :commands elfeed
     :preface
     (defun elfeed:wrap ()
@@ -125,8 +129,9 @@
                      shr-external-rendering-functions '((img . elfeed:render-image-tag-without-underline))))
 
   (leaf elfeed-org
+    :ensure t
     :doc "Elfeed, but in Org-Mode."
-    :tags "external" "rss" "complimentary" "app"
+    :tag "external" "rss" "complimentary" "app"
     :after elfeed
     :preface
     (setq rmh-elfeed-org-files (list "elfeed.org"))

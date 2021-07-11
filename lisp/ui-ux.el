@@ -82,7 +82,7 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
   :doc "I need some help."
   :config
   (leaf help
-    :tags "builtin" "ui-ux"
+    :tag "builtin" "ui-ux"
     :bind
     (("C-?" . help-command)
      :map mode-specific-map
@@ -90,7 +90,8 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
 
   (leaf helpful
     ;; a better *help* buffer
-    :tags "external" "ui-ux"
+    :ensure t
+    :tag "external" "ui-ux"
     :commands helpful--read-symbol
     :init
     (global-set-key [remap describe-function] #'helpful-callable)
@@ -120,7 +121,7 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
 ;;;;
 
 (leaf so-long
-  :tags "builtin" "ui-ux"
+  :tag "builtin" "ui-ux"
   :diminish
   :hook ((first-file-hook . global-so-long-mode)
          (org-mode-hook . so-long-minor-mode)
@@ -164,7 +165,7 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
 ;;;;
 
 (leaf paren
-  :tags "builtin" "ui-ux"
+  :tag "builtin" "ui-ux"
   :hook (after-init-hook . show-paren-mode)
   :custom
   (blink-matching-paren 'show)
@@ -182,7 +183,9 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
 ;;;;
 
 (leaf pulse
-  :tags "builtin" "ui-ux"
+  :tag "builtin" "ui-ux"
+  :leaf-defer nil
+  :require t
   :preface
   (defun pulse:pulse-line (&rest _)
     "Pulse the current line."
@@ -196,7 +199,7 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
 
 (leaf hl-line
   :doc "I don't like this. It bugs me, so I disable it."
-  :tags "builtin" "ui-ux"
+  :tag "builtin" "ui-ux"
   :disabled t
   :commands hl-line-mode global-hl-line-mode)
 
@@ -204,11 +207,13 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
 ;;;; ATM it's disabled
 
 (leaf hide-mode-line
-  :tags "external" "ui-ux"
+  :ensure t
+  :tag "external" "ui-ux"
   :hook (((completion-list-mode-hook completion-in-region-mode-hook) . hide-mode-line-mode)))
 
 (leaf minions
-  :tags "external" "ui-ux"
+  :ensure t
+  :tag "external" "ui-ux"
   :config
   (minions-mode 1))
 
@@ -216,7 +221,8 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
 ;;;;
 
 (leaf ace-window
-  :tags "external" "ui-ux"
+  :ensure t
+  :tag "external" "ui-ux"
   :bind (([remap other-window]. ace-window))
   :custom
   (aw-keys . '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
@@ -227,8 +233,9 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
 ;;;;
 
 (leaf solaire-mode
-  :tags "external" "ui-ux"
+  :ensure t
   :leaf-defer nil
+  :tag "external" "ui-ux"
   :global-minor-mode solaire-global-mode
   :hook (((change-major-mode-hook after-revert-hook) . turn-on-solaire-mode)
          (minibuffer-setup-hook . solaire-mode-in-minibuffer))
@@ -245,12 +252,14 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
   :doc "To make Emacs a little prettier."
   :config
   (leaf highlight-numbers
-    :tags "external" "highlight" "ui-ux"
+    :ensure t
+    :tag "external" "highlight" "ui-ux"
     :hook ((prog-mode-hook conf-mode-hook) . highlight-numbers-mode)
     :config (setq highlight-numbers-generic-regexp "\\_<[[:digit:]]+\\(?:\\.[0-9]*\\)?\\_>"))
 
   (leaf hl-todo
-    :tags "external" "highlight" "ui-ux"
+    :ensure t
+    :tag "external" "highlight" "ui-ux"
     :bind (:map hl-todo-mode-map
            ([C-f3] . hl-todo-occur)
            ("C-x M-t p" . hl-todo-previous)
@@ -264,7 +273,8 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
       (cl-pushnew `(,keyword . ,(face-foreground 'warning)) hl-todo-keyword-faces)))
 
   (leaf diff-hl
-    :tags "external" "highlight" "ui-ux"
+    :ensure t
+    :tag "external" "highlight" "ui-ux"
     :defvar diff-hl-margin-symbols-alist desktop-minor-mode-table
     :commands diff-hl-magit-post-refresh
     :custom-face
@@ -300,11 +310,13 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
       (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh)))
 
   (leaf volatile-highlights
-    :tags "external" "highlight" "ui-ux"
+    :ensure t
+    :tag "external" "highlight" "ui-ux"
     :hook (after-init-hook . volatile-highlights-mode))
 
   (leaf rainbow-mode
-    :tags "external" "highlight" "ui-ux"
+    :ensure t
+    :tag "external" "highlight" "ui-ux"
     :hook ((web-mode-hook css-mode-hook scss-mode-hook help-mode-hook org-mode-hook) . rainbow-mode)
     :preface
     (defun rainbow:clear-overlays ()
@@ -313,8 +325,9 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
     (:after rainbow-turn-off rainbow:clear-overlays))
 
   (leaf rainbow-delimiters
-    :tags "external" "highlight" "ui-ux"
+    :ensure t
     :leaf-defer nil
+    :tag "external" "highlight" "ui-ux"
     :hook (prog-mode-hook . rainbow-delimiters-mode)
     :config
     (setq rainbow-delimiters-max-face-count 3)))
@@ -323,7 +336,8 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
 ;;;;
 
 (leaf shackle
-  :tags "external" "ui-ux"
+  :ensure t
+  :tag "external" "ui-ux"
   :hook (after-init-hook . shackle-mode)
   :init
   (defvar shackle--popup-window-list nil) ; all popup windows
@@ -371,111 +385,12 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
                    (vc-annotate-mode                   :same t)
                    ("^\\*git-gutter.+\\*$"             :regexp t :size 15 :noselect t))))
 
-;;;; Hydras
-;;;;
-
-(leaf *hydras
-  :doc "Making key combinations easier and nicer."
-  :config
-  (leaf hydra
-    :tags "external" "hydra" "ui-ux"
-    :commands (hydra-move-splitter-up
-               hydra-move-splitter-down
-               hydra-move-splitter-right
-               hydra-move-splitter-left)
-    :init
-    (setq lv-use-separator t))
-
-  (leaf major-mode-hydra
-    :tags "external" "hydra" "ui-ux"
-    :defun (major-mode-hydra-define major-mode-hydra-define+)
-    :bind ("M-SPC" . major-mode-hydra))
-
-  (leaf pretty-hydra
-    :tags "external" "hydra" "ui-ux"
-    :after hydra
-    :defun (pretty-hydra-define pretty-hydra-define+)
-    :preface
-    (cl-defun pretty-hydra-title (title &optional icon-type icon-name
-                                        &key face height v-adjust)
-      "Add an icon in the hydra title."
-      (let ((face (or face `(:foreground ,(face-background 'highlight))))
-            (height (or height 1.0))
-            (v-adjust (or v-adjust 0.0)))
-        (concat
-         (when (and (icons-displayable-p) icon-type icon-name)
-           (let ((f (intern (format "all-the-icons-%s" icon-type))))
-             (when (fboundp f)
-               (concat
-                (apply f (list icon-name :face face :height height :v-adjust v-adjust))
-                " "))))
-         (propertize title 'face face))))
-    :config
-    (with-eval-after-load 'avy
-      (pretty-hydra-define hydra-avy (:hint nil :color blue :quit-key "q" :title "Avy Things")
-          ("Characters/Symbols"
-           (("c" avy-goto-char-in-line "char (1)"))
-           ("C" avy:goto-char-2 "char (2)")
-           ("x" avy-goto-symbol-1 "symbol")
-           "Words"
-           (("w" avy-goto-word-0 "word"))
-           ("f" avy:goto-word-beg "word beg.")
-           ("s" avy-goto-subword-1 "subword")
-           "Lines"
-           (("n" avy-goto-line-below "line below"))
-           ("p" avy-goto-line-above "line above")
-           ("l" avy-copy-line "copy line")
-           ("m" avy-move-line "move line")
-           ("e" avy-goto-end-of-line "end of line")
-           "Misc"
-           (("C-c" avy:goto-lisp-cond "Lisp conditional"))))
-      (define-key 'text-mode-map (kbd "C-c a") #'hydra-avy/body))
-
-    (with-eval-after-load 'smartparens
-      (pretty-hydra-define hydra-sp (:hint nil :quit-key "q" :title "Smartparens")
-        ("Moving"
-         (("a" sp-beginning-of-sexp)
-          ("e" sp-end-of-sexp)
-          ("f" sp-forward-sexp)
-          ("b" sp-backward-sexp)
-          ("n" sp-down-sexp)
-          ("N" sp-backward-down-sexp)
-          ("p" sp-up-sexp)
-          ("P" sp-backward-up-sexp))
-         "Slurping & Barfing"
-         (("h" sp-backward-slurp-sexp)
-          ("H" sp-backward-barf-sexp)
-          ("l" sp-forward-slurp-sexp)
-          ("L" sp-forward-barf-sexp))
-         "Wrapping"
-         (("R" sp-rewrap-sexp)
-          ("u" sp-unwrap-sexp)
-          ("U" sp-backward-unwrap-sexp)
-          ("(" sp-wrap-round)
-          ("{" sp-wrap-curly)
-          ("[" sp-wrap-square))
-         "Sexp juggling"
-         (("S" sp-split-sexp)
-          ("s" sp-splice-sexp)
-          ("r" sp-raise-sexp)
-          ("j" sp-join-sexp)
-          ("t" sp-transpose-sexp)
-          ("A" sp-absorb-sexp)
-          ("E" sp-emit-sexp)
-          ("o" sp-convolute-sexp))
-         "Destructive editing"
-         (("c" sp-change-inner :exit t)
-          ("C" sp-change-enclosing :exit t)
-          ("k" sp-kill-sexp)
-          ("K" sp-backward-kill-sexp)
-          ("w" sp-copy-sexp))))
-      (define-key 'prog-mode-map (kbd "C-c (") #'hydra-sp/body))))
-
 ;;;; Themes
 ;;;;
 
 (leaf doom-themes
-  :tags "external" "themes" "ui-ux"
+  :ensure t
+  :tag "external" "themes" "ui-ux"
   :hook (org-load-hook . doom-themes-org-config))
 
 (provide 'ui-ux)

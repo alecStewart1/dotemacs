@@ -122,7 +122,7 @@ format text in a specific region."
   :doc "Things that make programming in Emacs a bit nicer."
   :config
   (leaf compile
-    :tags "builtin" "utilities" "programming"
+    :tag "builtin" "utilities" "programming"
     :hook (compilation-filter-hook . compile:colorize-compilation-buffer)
     :preface
     (defun compile:colorize-compilation-buffer ()
@@ -135,26 +135,28 @@ format text in a specific region."
     (compilation-scroll-output . 'first-error))
 
   (leaf flymake
-    :tags "builtin" "utilities" "syntax" "programming"
+    :tag "builtin" "utilities" "syntax" "programming"
     :hook (prog-mode-hook . flymake-mode)
     :config
     (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake))
 
   (leaf goto-addr
-    :tags "builtin" "utilities" "programming"
+    :tag "builtin" "utilities" "programming"
     :hook (prog-mode-hook . goto-address-mode))
 
   (leaf eldoc
-    :tags "builtin" "utilities" "programming"
+    :tag "builtin" "utilities" "programming"
     :diminish)
 
   (leaf rmsbolt
-    :tags "external" "utilities" "programming"
+    :ensure t
+    :tag "external" "utilities" "programming"
     :after (:any c-mode c++-mode objc-mode emacs-lisp-mode common-lisp-mode))
 
   (leaf tree-sitter
-    :tags "external" "utilities" "syntax" "programming"
     :if (functionp 'module-load)
+    :ensure t
+    :tag "external" "utilities" "syntax" "programming"
     :hook ((sh-mode . tree-sitter-mode)
            (c-mode . (tree-sitter-mode tree-sitter-hl-mode))
            (csharp-mode . (tree-sitter-mode tree-sitter-hl-mode))
@@ -176,7 +178,8 @@ format text in a specific region."
            (ruby-mode . (tree-sitter-mode tree-sitter-hl-mode))))
 
   (leaf tree-sitter-langs
-    :tags "external" "syntax" "complimentary" "programming"
+    :ensure t
+    :tag "external" "syntax" "complimentary" "programming"
     :after tree-sitter
     :custom
     (tree-sitter-langs
@@ -199,7 +202,8 @@ format text in a specific region."
        (ruby-mode . ruby))))
 
   (leaf projectile
-    :tags "external" "utilities" "projectile" "programming"
+    :ensure t   
+    :tag "external" "utilities" "projectile" "programming"
     :commands (projectile-project-root
                projectile-project-name
                projectile-project-p
@@ -313,27 +317,30 @@ format text in a specific region."
   :doc ""
   :config
   (leaf asm-mode
-    :tags "builtin" "assembly" "programming"
+    :tag "builtin" "assembly" "programming"
     :mode "\\.inc$")
 
   (leaf nasm-mode
-    :tags "external" "assembly" "programming"
+    :ensure t
+    :tag "external" "assembly" "programming"
     :mode "\\.nasm$")
 
   (leaf mips-mode
-    :tags "external" "assembly" "programming"
+    :ensure t
+    :tag "external" "assembly" "programming"
     :mode "\\.mips$")
 
   (leaf masm-mode
-    :tags "external" "assembly" "programming"
     :if (or windows-nt-p cygwin-p)
+    :ensure t
+    :tag "external" "assembly" "programming"
     :mode "\\.masm$"))
 
 ;;;; C/C++, Objective-C
 ;;;;
 
 (leaf cc-mode
-  :tags "builtin" "c/c++/obj-c" "programming"
+  :tag "builtin" "c/c++/obj-c" "programming"
   :mode ("\\.mm\\'" . objc-mode)
   :hook ((c-mode-local-vars-hook
           c++-mode-local-vars-hook
@@ -372,7 +379,7 @@ format text in a specific region."
   :doc "Big skwipt kiddie."
   :config
   (leaf sh-script
-    :tags "builtin" "shell-script" "programming"
+    :tag "builtin" "shell-script" "programming"
     :mode ("\\.\\(?:zunit\\|env\\)\\'" . sh-mode)
     :mode ("/bspwmrc\\'" . sh-mode)
     :preface
@@ -421,14 +428,16 @@ format text in a specific region."
 
 
   (leaf company-shell
-    :tags "external" "shell-script" "complimentary" "programming"
+    :ensure t
+    :tag "external" "shell-script" "complimentary" "programming"
     :after sh-script
     :config
     (company:set-backend 'sh-mode '(company-shell company-files))
     (setq company-shell-delete-duplicates t))
 
   (leaf fish-mode
-    :tags "external" "shell-script" "programming"))
+    :ensure t
+    :tag "external" "shell-script" "programming"))
 
 ;;;; Emacs-Lisp
 ;;;;
@@ -437,7 +446,7 @@ format text in a specific region."
   :doc "The only Lisp that might actually get used in \"production.\""
   :config
   (leaf elisp-mode
-    :tags "builtin" "elisp" "programming"
+    :tag "builtin" "elisp" "programming"
     :mode ("\\.Cask\\'" . emacs-lisp-mode)
     :hook ((emacs-lisp-mode-hook . (outline-minor-mode
                                     raindow-delimiter-mode
@@ -518,7 +527,7 @@ format text in a specific region."
     (add-hook 'help-mode-hook 'cursor-sensor-mode))
 
   (leaf ielm
-    :tags "builtin" "elisp" "complimentary" "programming"
+    :tag "builtin" "elisp" "complimentary" "programming"
     :preface
     (defun ielm:syntax-highlighting
         (font-lock-add-keywords
@@ -537,13 +546,16 @@ format text in a specific region."
     (add-hook! 'ielm-mode-hook #'ielm:syntax-highlighting))
 
   (leaf elisp-demos
-    :tags "external" "elisp" "complimentary" "programming"
+    :ensure t
+    :require t
+    :tag "external" "elisp" "complimentary" "programming"
     :init
     (advice-add 'describe-function-1 :after #'elisp-demos-advice-describe-function-1)
     (advice-add 'helpful-update :after #'elisp-demos-advice-helpful-update))
 
   (leaf buttercup
-    :tags "external" "elisp" "complimentary" "programming"
+    :ensure t
+    :tag "external" "elisp" "complimentary" "programming"
     :mode ("/test[/-].+\\.el$" . buttercup-minor-mode)
     :preface
     (defvar buttercup-minor-mode-map (make-sparse-keymap))))
@@ -559,7 +571,8 @@ format text in a specific region."
   (add-hook 'lisp-mode-hook #'rainbow-delimiters-mode)
 
   (leaf sly
-    :tags "external" "lisp" "programming"
+    :ensure t
+    :tag "external" "lisp" "programming"
     :hook (lisp-mode-local-vars-hook . sly-editing-mode)
     :preface
     (defvar inferior-lisp-program "sbcl")
@@ -613,13 +626,15 @@ format text in a specific region."
     (add-hook! 'sly-mode-hook #'sly:init))
 
   (leaf sly-repl-ansi-color
-    :tags "external" "lisp" "complimentary" "programming"
+    :ensure t
+    :tag "external" "lisp" "complimentary" "programming"
     :after sly
     :init
     (add-to-list 'sly-contribs 'sly-repl-ansi-color))
 
   (leaf sly-asdf
-    :tags "external" "lisp" "complimentary" "programming"
+    :ensure t
+    :tag "external" "lisp" "complimentary" "programming"
     :after sly
     :config
     (add-to-list 'sly-contribs 'sly-asdf #'append)
@@ -627,12 +642,14 @@ format text in a specific region."
       (sly-enable-contrib 'sly-asdf)))
 
   (leaf sly-quicklisp
-    :tags "external" "lisp" "complimentary" "programming"
+    :ensure t
+    :tag "external" "lisp" "complimentary" "programming"
     :after sly
     :commands sly-quicklisp)
 
   (leaf sly-named-readtables
-    :tags "external" "lisp" "complimentary" "programming"
+    :ensure t
+    :tag "external" "lisp" "complimentary" "programming"
     :after sly
     :config
     (with-eval-after-load 'sly
@@ -645,7 +662,7 @@ format text in a specific region."
   :doc "LISP-1's instead of LISP-2's. The 'hacker's' Lisp. Er, except Racket."
   :config
   (leaf scheme
-    :tags "builtin" "scheme" "programming"
+    :tag "builtin" "scheme" "programming"
     :hook (scheme-mode-hook . rainbow-delimiters-mode)
     :preface
     (defvar calculate-lisp-indent-last-sexp)
@@ -690,7 +707,8 @@ format text in a specific region."
     (:override scheme-indent-function scheme:indent-function))
 
   (leaf geiser
-    :tags "external" "scheme" "complimentary" "programming"
+    :ensure t
+    :tag "external" "scheme" "complimentary" "programming"
     :preface
     (defun geiser/open-repl ()
       "Open the Geiser REPL."
@@ -700,7 +718,7 @@ format text in a specific region."
     :init
     ;; To work with Guile + Geiser
     ;; We need this first in order to set our `geiser-activate-implementation' variable
-    (leaf geiser-guile)
+    (leaf geiser-guile :ensure t)
     :custom
     ;; May work with Gambit/Gerbil, I dunno.
     ;; Guile, Chez, and Chicken are the better documented at the moment.
@@ -709,7 +727,8 @@ format text in a specific region."
     (geiser-repl-current-project-function . 'projectile-project-root))
 
   (leaf racket-mode
-    :tags "external" "racket" "scheme"  "programming"
+    :ensure t
+    :tag "external" "racket" "scheme"  "programming"
     :mode "\\.rkt\\'"
     :hook (racket-mode-local-vars-hook . (racket-xp-mode lsp-deferred))
     :preface
@@ -834,7 +853,8 @@ format text in a specific region."
 ;;;;
 
 (leaf nim-mode
-  :tags "external" "nim" "programming"
+  :ensure t
+  :tag "external" "nim" "programming"
   :hook (nim-mode-hook . lsp-deferred)
   :init
   (add-hook! 'nim-mode-hook
@@ -914,7 +934,8 @@ nimsuggest isn't installed."
   :doc "The language meant for \"developer happiness\"."
   :config
   (leaf enh-ruby-mode
-    :tags "external" "ruby" "programming"
+    :ensure t
+    :tag "external" "ruby" "programming"
     :mode "\\(?:\\.rb\\|ru\\|rake\\|thor\\|jbuilder\\|gemspec\\|podspec\\|/\\(?:Gem\\|Rake\\|Cap\\|Thor\\|Vagrant\\|Guard\\|Pod\\)file\\)\\'"
     :mode "\\.\\(?:a?rb\\|aslsx\\)\\'"
     :mode "/\\(?:Brew\\|Fast\\)file\\'"
@@ -924,17 +945,20 @@ nimsuggest isn't installed."
     (setq-mode-local enh-ruby-mode sp-max-pair-length 6))
 
   (leaf inf-ruby
-    :tags "external" "ruby" "complimentary" "programming"
+    :ensure t
+    :tag "external" "ruby" "complimentary" "programming"
     :after enh-ruby-mode
     :config
     (add-hook 'compilation-filter-hook #'inf-ruby-auto-enter))
 
   (leaf yard-mode
-    :tags "external" "ruby" "complimentary" "programming"
+    :ensure t
+    :tag "external" "ruby" "complimentary" "programming"
     :after enh-ruby-mode)
 
   (leaf rake
-    :tags "external" "ruby" "complimentary" "programming"
+    :ensure t
+    :tag "external" "ruby" "complimentary" "programming"
     :after enh-ruby-mode
     :commands (rake rake-rerun rake-regenerate-cache rake-find-task)
     :custom
@@ -942,11 +966,13 @@ nimsuggest isn't installed."
     (rake-completion-system 'default))
 
   (leaf ruby-test-mode
-    :tags "external" "ruby" "complimentary" "programming"
+    :ensure t
+    :tag "external" "ruby" "complimentary" "programming"
     :after enh-ruby-mode)
 
   (leaf projectile-rails
-    :tags "external" "ruby" "projectile" "complimentary" "programming"
+    :ensure t
+    :tag "external" "ruby" "projectile" "complimentary" "programming"
     :hook ((enh-ruby-mode inf-ruby-mode projectile-rails-server-mode) . projectile-rails-mode)
     :hook (projectile-rails-mode . auto-insert-mode)
     :init
@@ -1006,7 +1032,7 @@ nimsuggest isn't installed."
   :doc "Praise Teh Script."
   :config
   (leaf nxml-mode
-    :tags "builtin" "markup" "programming"
+    :tag "builtin" "markup" "programming"
     :mode "\\.p\\(?:list\\|om\\)\\'" ; plist, pom
     :mode "\\.xs\\(?:d\\|lt\\)\\'"   ; xslt, xsd
     :mode "\\.xaml\\'"
@@ -1020,11 +1046,12 @@ nimsuggest isn't installed."
     (company:set-backend 'nxml-mode '(company-nxml)))
 
   (leaf mhtml-mode
-    :tags "builtin" "markup" "web" "programming"
+    :tag "builtin" "markup" "web" "programming"
     :mode "\\.html?\\'")
 
   (leaf web-mode
-    :tags "external" "markup" "web" "programming"
+    :ensure t
+    :tag "external" "markup" "web" "programming"
     :mode "\\.[px]?html?\\'"
     :mode "\\.\\(?:tpl\\|blade\\)\\(?:\\.php\\)?\\'"
     :mode "\\.erb\\'"
@@ -1065,7 +1092,8 @@ nimsuggest isn't installed."
                                                         "\\(?:>\\|]\\|}\\)+\\'"))))))
 
   (leaf emmet-mode
-    :tags "external" "markup" "web" "complimentary" "programming"
+    :ensure t
+    :tag "external" "markup" "web" "complimentary" "programming"
     :hook (css-mode-hook web-mode-hook html-mode-hook haml-mode-hook nxml-mode-hook)
     :config
     (when (package-installed-p 'yasnippet)
@@ -1079,7 +1107,8 @@ nimsuggest isn't installed."
   :doc "Working with Microsoft's Language Server Protocol and the Debugger Adapter Protocol for programming."
   :config
   (leaf lsp-mode
-    :tags "external" "lsp" "programming"
+    :ensure t
+    :tag "external" "lsp" "programming"
     :defvar (lsp-intelephense-storage-path
               lsp-clients-emmy-lua-jar-path
               lsp-xml-jar-file
@@ -1159,7 +1188,8 @@ nimsuggest isn't installed."
                              (remq 'company-capf company-backends))))))))
 
   (leaf lsp-ui
-    :tags "external" "lsp" "complimentary" "programming"
+    :ensure t
+    :tag "external" "lsp" "complimentary" "programming"
     :custom
     (lsp-ui-doc-max-height . 8)
     (lsp-ui-doc-max-width . 35)
@@ -1173,8 +1203,9 @@ nimsuggest isn't installed."
     (lsp-ui-sideline-show-hover . nil))
 
   (leaf dap-mode
-    :tags "external" "lsp" "complimentary" "programming"
     :when (package-installed-p 'lsp-mode)
+    :ensure t
+    :tag "external" "lsp" "complimentary" "programming"
     :hook (dap-mode-hook . dap-tooltip-mode)
     :init
     (with-eval-after-load 'lsp
@@ -1187,8 +1218,9 @@ nimsuggest isn't installed."
       (require 'dap-gdb-lldb)))
 
   (leaf dap-ui
-    :tags "external" "lsp" "complimentary" "programming"
     :when (package-installed-p 'lsp-mode) (package-installed-p 'dap-mode)
+    :ensure t
+    :tag "external" "lsp" "complimentary" "programming"
     :hook ((dap-mode . dap-ui-mode)
            (dap-ui-mode . dap-ui-controls-mode))))
 
@@ -1196,12 +1228,14 @@ nimsuggest isn't installed."
 ;;;;
 
 (leaf dockerfile-mode
-  :tags "external" "docker" "programming"
+  :ensure t
+  :tag "external" "docker" "programming"
   :config
   (add-hook 'dockerfile-mode-local-vars-hook #'lsp-deferred))
 
 (leaf docker
-  :tags "external" "docker" "programming"
+  :ensure t
+  :tag "external" "docker" "programming"
   :bind ("C-c d" . docker))
 
 (provide 'programming)

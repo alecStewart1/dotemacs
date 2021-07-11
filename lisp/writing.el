@@ -20,7 +20,7 @@
 ;;;;
 
 (leaf ispell
-  :tags "builtin" "writing"
+  :tag "builtin" "writing"
   :init
   (add-to-list 'ispell-extra-args "--sug-mode=ultra"))
 
@@ -31,7 +31,8 @@
   :doc "The best markup language for pretty much anything. Eat it, Markdown."
   :config
   (leaf org
-    :tags "external" "org-mode" "writing"
+    :ensure t
+    :tag "external" "org-mode" "writing"
     :preface
     (defvar org-directory nil)
     (defvar org-attach-id-dir nil)
@@ -194,7 +195,8 @@
                                              :empty-lines 1))))
 
       (leaf org-chef
-        :tags "external" "org-mode" "complimentary" "writing"
+        :ensure t
+        :tag "external" "org-mode" "complimentary" "writing"
         :after org-capture
         :setq
         (org-capture-templates . ,(append org-capture-templates
@@ -209,7 +211,8 @@
             org-attach-use-inheritance t)
 
       (leaf org-attach
-        :tags "external" "org-mode" "complimentary" "writing"
+        :ensure t
+        :tag "external" "org-mode" "complimentary" "writing"
         :commands (org-attach-new
                    org-attach-open
                    org-attach-open-in-emacs
@@ -243,8 +246,9 @@
                 '("doom-repo"   . "https://github.com/hlissner/doom-emacs/%s"))
 
       (leaf org-yt
-        :tags "external" "org-mode" "complimentary" "writing"
+        :ensure t
         :doc "For YouTube links in Org-Mode."
+        :tag "external" "org-mode" "complimentary" "writing"
         :preface
         :advice
         (:before-while org-yt-image-data-fun (lambda (&rest _)
@@ -261,7 +265,8 @@
                       (apply orig-fn args))))
 
       (leaf ox-hugo
-        :tags "external" "org-mode" "complimentary" "writing"
+        :ensure t
+        :tag "external" "org-mode" "complimentary" "writing"
         :after ox))
 
     (defun org:setup-habit ()
@@ -326,7 +331,7 @@
     (add-hook 'org-mode-hook #'orgtbl-mode))
 
   (leaf org-crypt
-    :tags "builtin" "org-mode" "complimentary" "writing"
+    :tag "builtin" "org-mode" "complimentary" "writing"
     :commands org-encrypt-entries org-encrypt-entry org-decrypt-entries org-decrypt-entry
     :hook (org-reveal-start . org-decrypt-entry)
     :preface
@@ -339,7 +344,7 @@
         (add-hook 'before-save-hook 'org-encrypt-entries nil t))))
 
   (leaf org-clock
-    :tags "builtin" "org-mode" "complimentary" "writing"
+    :tag "builtin" "org-mode" "complimentary" "writing"
     :commands org-clock-save
     :preface
     (defun org-clock:lazy-load ()
@@ -360,7 +365,8 @@
     (add-hook 'kill-emacs-hook #'org-clock-save))
 
   (leaf toc-org
-    :tags "external" "org-mode" "complimentary" "writing"
+    :ensure t
+    :tag "external" "org-mode" "complimentary" "writing"
     :hook (org-mode-hook . toc-org-enable)
     :config
     (setq toc-org-hrefify-default "gh"))
@@ -369,8 +375,9 @@
   ;;;;;
 
   (leaf org-pdftools
-    :tags "external" "org-mode" "complimentary" "writing"
+    :ensure t
     :when (package-installed-p pdftools)
+    :tag "external" "org-mode" "complimentary" "writing"
     :commands org-pdftools-export
     :init
     (with-eval-after-load 'org
@@ -393,7 +400,7 @@
   :doc "Pretending that I actually write technical papers."
   :config
   (leaf tex-mode
-    :tags "builtin" "latex" "writing"
+    :tag "builtin" "latex" "writing"
     :mode ("\\.tex\\'" . LaTeX-mode)
     :custom
     (TeX-parse-self . t) ; parse on load
@@ -413,7 +420,7 @@
     (LaTeX-command . "xelatex"))
 
   (leaf context
-    :tags "builtin" "latex" "context" "writing"
+    :tag "builtin" "latex" "context" "writing"
     :magic ("%!TEX TS-PROGRAM: context" . ConTeXt-mode)))
 
 ;;;; Artist
@@ -421,7 +428,7 @@
 
 (leaf artist
   :doc "Creating ASCII art in Emacs."
-  :tags "builtin" "writing"
+  :tag "builtin" "writing"
   :preface
   ;; TODO need to be able to save art to file and clear scratch buffer
   ;; when finished
@@ -436,7 +443,7 @@
 
 (leaf skeleton
   :doc "Like a builtin `YASnippet'. Has it's own language, and can be used along side `dabbrev'."
-  :tags "builtin" "writing"
+  :tag "builtin" "writing"
   :preface
   ;; Thank you reddit user b3n:
   ;; https://old.reddit.com/r/emacs/comments/ml4wql/weekly_tipstricketc_thread/gtkc524/
@@ -505,7 +512,8 @@ globally, see `skeleton:global-snip'."
 ;;;;
 
 (leaf markdown-mode
-  :tags "external" "markdown" "writing"
+  :ensure t
+  :tag "external" "markdown" "writing"
   :mode ("/README\\(?:\\.md\\)?\\'" . gfm-mode)
   :init
   (with-eval-after-load 'org-src
@@ -547,7 +555,8 @@ globally, see `skeleton:global-snip'."
 ;;;; Literate Calc
 ;;;;
 
-(leaf literate-calc-mode)
+(leaf literate-calc-mode
+  :ensure t)
 
 (provide 'writing)
 ;;; writing.el ends here

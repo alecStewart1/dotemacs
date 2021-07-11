@@ -28,7 +28,7 @@
 ;;;;
 
 (leaf autorevert
-  :tags "builtin" "editing"
+  :tag "builtin" "editing"
   :diminish
   :hook (focus-in-hook . auto-revert-buffers!)
   :hook (after-save-hook . auto-revert-buffers!)
@@ -53,7 +53,7 @@
 ;;;;
 
 (leaf recentf
-  :tags "builtin" "editing"
+  :tag "builtin" "editing"
   :diminish
   :hook (first-file-hook . recentf-mode)
   :commands recentf-open-files
@@ -93,7 +93,7 @@
 ;;;;
 
 (leaf saveplace
-  :tags "builtin" "editing"
+  :tag "builtin" "editing"
   :diminish
   :hook (first-file-hook . save-place-mode)
   :init
@@ -116,7 +116,7 @@
 ;;;;
 
 (leaf savehist
-  :tags "builtin" "editing"
+  :tag "builtin" "editing"
   :diminish
   :hook (first-input-hook . savehist-mode)
   :custom
@@ -137,7 +137,7 @@
 ;;;;
 
 (leaf subword
-  :tags "builtin" "editing"
+  :tag "builtin" "editing"
   :diminish
   :hook ((prog-mode-hook . subword-mode)
          (minibuffer-setup-hook . subword-mode)))
@@ -146,7 +146,7 @@
 ;;;;
 
 (leaf rect
-  :tags "builtin" "editing"
+  :tag "builtin" "editing"
   :bind (:map text-mode-map
          ("C-x r RET" . rect-hydra/body)
          :map prog-mode-map
@@ -178,7 +178,7 @@
 ;;;;
 
 (leaf hideshow
-  :tags "builtin" "editing"
+  :tag "builtin" "editing"
   :diminish hs-minor-mode
   :bind (:map hs-minor-mode-map
          ("C-`" . hs-toggle-hiding)))
@@ -187,7 +187,7 @@
 ;;;;
 
 (leaf ediff
-  :tags "builtin" "editing"
+  :tag "builtin" "editing"
   :hook(;; show org ediffs unfolded
         (ediff-prepare-buffer-hook . outline-show-all)
         ;; restore window layout when done
@@ -201,7 +201,7 @@
 ;;;;
 
 (leaf elec-pair
-  :tags "builtin" "editing"
+  :tag "builtin" "editing"
   :hook (first-file-hook . electric-pair-mode)
   :pre-setq (electric-pair-inhibit-predicate . 'electric-pair-conservative-inhibit))
 
@@ -209,7 +209,7 @@
 ;;;;
 
 (leaf imenu
-  :tags "builtin" "editing"
+  :tag "builtin" "editing"
   :bind (("C-." . imenu))
   :config
   (add-hook 'imenu-after-jump-hook #'recenter))
@@ -218,7 +218,8 @@
 ;;;;
 
 (leaf avy
-  :tags "external" "editing"
+  :ensure t
+  :tag "external" "editing"
   :hook (after-init-hook . avy-setup-default)
   :preface
   (defun avy:goto-word-beg ()
@@ -246,7 +247,8 @@
   (avy-single-candidate-jump . nil))
 
 (leaf avy-zap
-  :tags "external" "editing"
+  :ensure t
+  :tag "external" "editing"
   :bind (("M-z" . avy-zap-to-char-dwim)
          ("M-Z" . avy-zap-up-to-char-dwim)))
 
@@ -254,7 +256,8 @@
 ;;;;
 
 (leaf aggressive-indent
-  :tags "external" "editing"
+  :ensure t
+  :tag "external" "editing"
   :diminish
   :hook ((after-init-hook . global-aggressive-indent-mode)
          ;; FIXME: Disable in big files due to the performance issues
@@ -282,7 +285,8 @@
 ;;;;
 
 (leaf adaptive-wrap
-  :tags "external" "editing"
+  :ensure t
+  :tag "external" "editing"
   :config
   (when (memq 'visual-line-mode text-mode-hook)
     (remove-hook 'text-mode-hook #'visual-line-mode)
@@ -292,7 +296,8 @@
 ;;;;
 
 (leaf smartparens
-  :tags "external" "editing"
+  :ensure t
+  :tag "external" "editing"
   :hook (first-buffer-hook . smartparens-global-mode)
   :commands sp-pair sp-local-pair sp-with-modes sp-point-in-comment sp-point-in-string
   :custom
@@ -352,8 +357,9 @@
 ;;;;
 
 (leaf ws-butler
+  :ensure t
   :doc "A less intrusive `delete-trailing-whitespaces' on save."
-  :tags "external" "editing"
+  :tag "external" "editing"
   :diminish
   :hook (first-buffer-hook . ws-butler-global-mode))
 
@@ -361,7 +367,8 @@
 ;;;;
 
 (leaf editorconfig-mode
-  :tags "external" "editing"
+  :ensure t
+  :tag "external" "editing"
   :diminish
   :hook ((c-mode-hook c++-mode-hook csharp-mode-hook fsharp-mode-hook java-mode-hook
                  emacs-lisp-mode-hook python-mode-hook ruby-mode-hook
@@ -405,7 +412,8 @@ an extension, try to guess one."
 ;;;;
 
 (leaf scratch-palette
-  :tags "external" "editing"
+  :ensure t
+  :tag "external" "editing"
   :commands scratch-palette-popup scratch-palette-kill)
 
 (provide 'editing)

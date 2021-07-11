@@ -87,7 +87,8 @@
 ;;;;
 
 (leaf magit
-  :tags "external" "magit" "vc"
+  :ensure t
+  :tag "external" "magit" "vc"
   :commands magit-file-delete
   :preface
   (defvar magit:fringe-size 14)
@@ -150,14 +151,16 @@
 ;;;;
 
 (leaf github-review
-  :tags "external" "magit"" complimentary" "vc"
+  :ensure t
+  :tag "external" "magit"" complimentary" "vc"
   :after magit)
 
 ;;;; TODOs for Magit
 ;;;;
 
 (leaf magit-todos
-  :tags "external" "magit"" complimentary" "vc"
+  :ensure t
+  :tag "external" "magit"" complimentary" "vc"
   :after magit
   :config
   (setq magit-todos-keyword-suffix "\\(?:([^)]+)\\)?:?") ; make colon optional
@@ -167,7 +170,8 @@
 ;;;;
 
 (leaf magit-gitflow
-  :tags "external" "magit"" complimentary" "vc"
+  :ensure t
+  :tag "external" "magit"" complimentary" "vc"
   :hook (magit-mode . turn-on-magit-gitflow))
 
 (provide 'vc)

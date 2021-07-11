@@ -22,7 +22,7 @@
 ;;;;
 
 (leaf dired
-  :tags "builtin" "emacsy"
+  :tag "builtin" "emacsy"
   :commands dired-jump
   :hook (dired-load-hook . (lambda ()
                             (require 'dired-x)
@@ -53,7 +53,7 @@
   (define-key dired-mode-map (kbd "C-c C-e") #'wdired-change-to-wdired-mode))
 
 (leaf image-dired
-  :tags "builtin" "emacsy"
+  :tag "builtin" "emacsy"
   :commands image-dired image-dired-display-thumb image-dired-display-thumbs image-dired-minor-mode
   :custom
   `(; Where to store image caches
@@ -68,7 +68,7 @@
 ;;;;
 
 (leaf ibuffer
-  :tags "builtin" "emacsy"
+  :tag "builtin" "emacsy"
   :bind (("C-x C-b" . ibuffer)
          :map ibuffer-mode-map
          ("q" . kill-current-buffer))
@@ -111,7 +111,7 @@
 ;;;;
 
 (leaf electric
-  :tags "builtin" "emacsy"
+  :tag "builtin" "emacsy"
   :hook (first-file-hook . electric-quote-mode)
   :preface
   (defvar-local electric--indent-words '()
@@ -134,6 +134,10 @@ current line.")
 ;;;;
 
 (leaf undo-fu
+  :ensure t
+  :doc "A more sane undo."
+  :tag "external" "emacsy"
+  :leaf-defer nil
   :hook (first-buffer-hook . undo-fu-mode)
   :setq
   (undo-limit . 400000)
@@ -155,6 +159,8 @@ current line.")
     :global t))
 
 (leaf undo-fu-session
+  :ensure t
+  :leaf-defer nil
   :hook (undo-fu-mode-hook . global-undo-fu-session-mode)
   :preface
   (setq undo-fu-session-directory (concat my-cache-dir "undo-fu-session/")
@@ -170,7 +176,8 @@ current line.")
 ;;;; Group projects in IBuffer
 ;;;;
 
-(use-package ibuffer-projectile
+(leaf ibuffer-projectile
+  :ensure t      
   ;; Group ibuffer's list by project root
   :hook (ibuffer-hook . ibuffer-projectile-set-filter-groups)
   :custom

@@ -30,8 +30,9 @@
 ;;;;
 
 (leaf orderless
+  :ensure t
   :doc "For ordering completions."
-  :tags "external" "completion" "complimentary"
+  :tag "external" "completion" "complimentary"
   :init
   (setq orderless-matching-styles
         '(orderless-literal orderless-strict-leading-initialism orderless-prefixes)
@@ -49,7 +50,7 @@
   :doc "Completions for finding files, executing commands, etc. The nicest thing about Emacs."
   :config
   (leaf minibuffer
-    :tags "builtin" "completion"
+    :tag "builtin" "completion"
     :custom
     ;; IMPORTANT!! Since we use Corfu, we need to set this
     (tab-always-indent . 'complete)
@@ -69,8 +70,9 @@
     (minibuffer-electric-default-mode 1))
 
   (leaf vertico
+    :ensure t
     :doc "The simplest and my preferred completion system."
-    :tags "external" "completion"
+    :tag "external" "completion"
     :defun vertico--exhibit
     :bind (:map vertico-map
            ("?" . minibuffer-completion-help)
@@ -89,8 +91,9 @@
     (vertico-cycle . t))
 
   (leaf consult
+    :ensure t
     :doc "Consulting the minibuffer for things."
-    :tags "external" "completion" "complimentary"
+    :tag "external" "completion" "complimentary"
     :bind (([remap repeat-complex-command] . consult-complex-command)
            ("C-c h" . consult-history)
            ([remap recentf-open-files] . consult-recent-file)
@@ -130,8 +133,9 @@
         (require 'consult-vertico))))
 
   (leaf marginalia
+    :ensure t
     :doc "Adding useful annotations in the margins of the minibuffer."
-    :tags "external" "completion" "complimentary"
+    :tag "external" "completion" "complimentary"
     :bind (:map minibuffer-local-map
            ("M-A" . marginalia-cycle))
     :init
@@ -140,7 +144,8 @@
     (marginalia-annotators . '(marginalia-annotators-light marginalia-annotators-heavy nil)))
 
   (leaf embark
-    :tags "external" "completion"
+    :ensure t
+    :tag "external" "completion"
     :bind ("C-S-a" . embark-act)
     :preface
     (defun embark:resize-collect-window ()
@@ -152,7 +157,8 @@
     (add-hook 'embark-collect-post-revert-hook #'embark:resize-collect-window))
 
   (leaf embark-consult
-    :tags "external" "completion" "complimentary"
+    :ensure t
+    :tag "external" "completion" "complimentary"
     :after (embark consult)
     :hook (embark-collect-mode-hook . embark-consult-preview-minor-mode)))
 
@@ -160,7 +166,7 @@
 ;;;;
 
 (use-package dabbrev
-  :tags "builtin" "completion"
+  :tag "builtin" "completion"
   :bind (("M-/" . dabbrev-completion)
          ("C-M-/" . dabbrev-expand)))
 
@@ -171,8 +177,10 @@
   :doc "Tab completion in the buffer."
   :config
   (leaf company
-    :tags "external" "completion"
+    :ensure t
+    :tag "external" "completion"
     :diminish
+    :global-minor-mode global-company-mode
     :defun (company-dabbrev-ignore-case company-dabbrev-downcase)
     :commands company-complete-common company-manual-begin company-grab-line company-cancel
     :hook (first-input-hook . global-company-mode)
@@ -246,13 +254,15 @@
       (add-to-list 'company-files--regexps "file:\\(\\(?:\\.\\{1,2\\}/\\|~/\\|/\\)[^\]\n]*\\)")))
 
   (leaf company-tng
-    :tags "external" "completion" "complimentary"
+    :tag "external" "completion" "complimentary"
+    :ensure t
     :after company
     :config
     (add-to-list 'company-frontends 'company-tng-frontend))
 
   (leaf company-dict
-    :tags "external" "completion" "complimentary"
+    :tag "external" "completion" "complimentary"
+    :ensure t
     :after company))
 
 ;;;; Corfu

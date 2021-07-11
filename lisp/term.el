@@ -23,7 +23,7 @@
 ;;;;
 
 (leaf eshell
-  :tags "builtin" "eshell" "term"
+  :tag "builtin" "eshell" "term"
   :commands (eshell eshell-toggle eshell-frame)
   :defun eshell/alias
   :defvar eshell-prompt-function eshell-command-aliases-list
@@ -293,16 +293,19 @@ Once the eshell process is killed, the previous frame layout is restored."
 ;;;;
 
 (leaf eshell-up
-  :tags "external" "eshell" "complimentary" "term"
+  :ensure t
+  :tag "external" "eshell" "complimentary" "term"
   :commands eshell-up eshell-up-peek)
 
 (leaf esh-help
-  :tags "external" "eshell" "complimentary" "term"
+  :ensure t
+  :tag "external" "eshell" "complimentary" "term"
   :after eshell
   :config (setup-esh-help-eldoc))
 
 (leaf eshell-did-you-mean
-  :tags "external" "eshell" "complimentary" "term"
+  :ensure t
+  :tag "external" "eshell" "complimentary" "term"
   :after esh-mode ; Specifically esh-mode, not eshell
   :config
   (eshell-did-you-mean-setup)
@@ -313,7 +316,8 @@ Once the eshell process is killed, the previous frame layout is restored."
   (eshell-did-you-mean-output-filter "catt: command not found"))
 
 (leaf eshell-syntax-highlighting
-  :tags "external" "eshell" "complimentary" "term"
+  :ensure t
+  :tag "external" "eshell" "complimentary" "term"
   :after esh-mode
   :leaf-defer nil
   :config
@@ -324,6 +328,8 @@ Once the eshell process is killed, the previous frame layout is restored."
 
 (leaf vterm
   :when (bound-and-true-p module-file-suffix)
+  :ensure t
+  :tag "external" "term"
   :commands vterm vterm-mode
   :preface (setq vterm-install t)
   :config
