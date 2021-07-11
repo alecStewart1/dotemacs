@@ -26,6 +26,7 @@
 This is used in my splash screen.")
 
 ;;;###autoload
+;; TODO actually use this
 (defun my-splash ()
   "My personal splash screen for Emacs.
 

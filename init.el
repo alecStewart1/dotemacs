@@ -37,22 +37,6 @@
 
 (setq file-name-handler-alist nil)
 
-;;; Some other variables we need here
-;;;
-
-;;;; Errors
-;;;;
-
-(define-error 'my-config-error "Error with my config")
-(define-error 'my-hook-error "An error with a hook of mine" 'my-config-error)
-
-;;;; Environment thingies
-;;;;
-
-;(dolist (var '(exec-path process-environment))
-;  (unless (get var 'initial-value)
-;    (put var 'initial-value (default-value var))))
-
 ;;; Restore defaults that I've set
 ;;;
 
@@ -95,63 +79,6 @@
 (update-load-path)
 
 (require 'lib)
-
-;;; Run hooks on a specific function or when switching a buffer.
-;;; We need these here for bootstraping
-
-(defun try-run-hook (hook)
-  "Run HOOK (a hook function) with better error handling.
-Meant to be used with `run-hook-wrapped'."
-  (condition-case e
-      (funcall hook)
-    ((debug error)
-     (signal 'my-hook-error (list hook e))))
-  nil)
-
-(defun run-local-var-hooks ()
-  "Run MODE-local-vars-hook after local variables are initialized."
-  (unless inhibit-local-var-hooks
-    (setq-local inhibit-local-var-hooks t)
-    (run-hook-wrapped (intern-soft (format "%s-local-vars-hook" major-mode))
-                      #'try-run-hook)))
-
-(defun run-hook-on (hook-var trigger-hooks)
-  "Configure HOOK-VAR to be invoked exactly once when any of the TRIGGER-HOOKS
-are invoked. Once HOOK-VAR is triggered, it is reset to nil.
-
-HOOK-VAR is a quoted hook.
-
-TRIGGER-HOOK is a list of quoted hooks and/or sharp-quoted functions."
-  (dolist (hook trigger-hooks)
-    (let ((fn (intern (format "%s-init-on-%s" hook-var hook))))
-      (fset
-       fn (lambda (&rest _)
-            (when (and after-init-time
-                       (boundp hook)
-                       (symbol-value hook))
-              (run-hook-wrapped hook-var #'try-run-hook)
-              (set hook-var nil))))
-      (let ((target (if (eq hook 'find-file-hook) 'after-find-file hook)))
-        (if (functionp target)
-            (advice-add target :before fn '((depth . -101)))
-          (add-hook target fn (if emacs27-p -101)))))))
-
-(defun run-switch-buffer-hooks (orig-fn buffer-or-name &rest args)
-  (if (or inhibit-switch-buffer-hooks
-          (and buffer-or-name
-               (eq (current-buffer)
-                   (get-buffer buffer-or-name)))
-          (and (eq orig-fn #'switch-to-buffer) (car args)))
-      (apply orig-fn buffer-or-name args)
-    (let ((gc-cons-threshold most-positive-fixnum)
-          (inhibit-switch-buffer-hooks t)
-          (inhibit-redisplay t))
-      (when-let (buffer (apply orig-fn buffer-or-name args))
-        (with-current-buffer (if (windowp buffer)
-                                 (window-buffer buffer)
-                               buffer)
-          (run-hooks 'switch-buffer-hook))
-        buffer))))
 
 ;;; Initialize some other things
 ;;;

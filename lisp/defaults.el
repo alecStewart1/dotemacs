@@ -359,8 +359,8 @@
   (leaf grep
     :tag "builtin" "search-replace" "defaults"
     :custom
-    `((grep-command ,(executable-find "rg"))
-      (find-program ,(executable-find "fd"))))
+    `((grep-command . ,(executable-find "rg"))
+      (find-program . ,(executable-find "fd"))))
 
   (leaf isearch
     :tag "builtin" "search-replace" "defaults"
@@ -386,7 +386,7 @@
     :tag "builtin" "defaults"
     :leaf-defer nil
     :custom
-    (network-security-level 'high))
+    (network-security-level . 'high))
 
   (leaf gnutls
     :tag "builtin" "defaults"
@@ -434,8 +434,8 @@
   (leaf bookmark
     :tag "builtin" "defaults"
     :custom
-    `((bookmark-default-file ,(concat my-etc-dir "bookmarks"))
-      (bookmark-save-flag    t)))
+    `((bookmark-default-file . ,(concat my-etc-dir "bookmarks"))
+      (bookmark-save-flag .    t)))
 
   (leaf url
     :tag "builtin" "defaults"
