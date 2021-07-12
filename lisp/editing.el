@@ -30,9 +30,13 @@
 (leaf autorevert
   :tag "builtin" "editing"
   :diminish
-  :hook (focus-in-hook . auto-revert-buffers!)
-  :hook (after-save-hook . auto-revert-buffers!)
-  :preface
+  :hook ((focus-in-hook after-save-hook) . auto-revert-buffers!)
+  :init
+  (setq auto-revert-verbose t
+        auto-revert-use-notify nil
+        auto-revert-stop-on-user-input nil
+        revert-without-query (list "."))
+  :config
   (defun auto-revert-buffer! ()
     "Auto revert current buffer, if necessary."
     (unless (or auto-revert-mode (active-minibuffer-window))
@@ -40,14 +44,9 @@
 
   (defun auto-revert-buffers! ()
     "Auto revert stale buffers in visible windows, if necessary."
-    (dolist (buf (doom-visible-buffers))
+    (dolist (buf (visible-buffers))
       (with-current-buffer buf
-        (auto-revert-buffer!))))
-  :setq
-  `((auto-revert-verbose . t)
-    (auto-revert-use-notify . nil)
-    (auto-revert-stop-on-user-input . nil)
-    (revert-without-query . ,@(list "."))))
+        (auto-revert-buffer!)))))
 
 ;;;; Recentf
 ;;;;
@@ -147,10 +146,9 @@
 
 (leaf rect
   :tag "builtin" "editing"
-  :bind (:map text-mode-map
-         ("C-x r RET" . rect-hydra/body)
-         :map prog-mode-map
-         ("C-x r RET" . rect-hydra/body))
+  :bind (("C-x r RET" . rect-hydra/body)
+         (:prog-mode-map
+          ("C-x r RET" . rect-hydra/body)))
   :pretty-hydra
   ((:title "Rectangle" :color amaranth :quit-key "q")
    ("Move"
@@ -180,7 +178,8 @@
 (leaf hideshow
   :tag "builtin" "editing"
   :diminish hs-minor-mode
-  :bind (:map hs-minor-mode-map
+  :bind (:hs-minor-mode-map
+         :package hideshow
          ("C-`" . hs-toggle-hiding)))
 
 ;;;; Ediff
@@ -342,16 +341,17 @@
 
   ;; Smartparens breaks evil-mode's replace state
   (defvar buffer-smartparens-mode nil)
-  (add-hook! 'evil-replace-state-exit-hook
-    (defun smartparens:enable-maybe? ()
-      (when buffer-smartparens-mode
-        (turn-on-smartparens-mode)
-        (kill-local-variable 'buffer-smartparens-mode))))
-  (add-hook! 'evil-replace-state-entry-hook
-    (defun smartparens:disable-maybe? ()
-      (when smartparens-mode
-        (setq-local buffer-smartparens-mode t)
-        (turn-off-smartparens-mode)))))
+  ;; (add-hook! 'evil-replace-state-exit-hook
+  ;;   (defun smartparens:enable-maybe? ()
+  ;;     (when buffer-smartparens-mode
+  ;;       (turn-on-smartparens-mode)
+  ;;       (kill-local-variable 'buffer-smartparens-mode))))
+  ;; (add-hook! 'evil-replace-state-entry-hook
+  ;;   (defun smartparens:disable-maybe? ()
+  ;;     (when smartparens-mode
+  ;;       (setq-local buffer-smartparens-mode t)
+  ;;       (turn-off-smartparens-mode))))
+  )
 
 ;;;; WS-Butler
 ;;;;
@@ -366,14 +366,14 @@
 ;;;; EditorConfig
 ;;;;
 
-(leaf editorconfig-mode
+(leaf editorconfig
   :ensure t
   :tag "external" "editing"
   :diminish
   :hook ((c-mode-hook c++-mode-hook csharp-mode-hook fsharp-mode-hook java-mode-hook
-                 emacs-lisp-mode-hook python-mode-hook ruby-mode-hook
-                 markdown-mode-hook css-mode-hook sass-mode-hook html-mode-hook mhtml-mode-hook
-                 js-mode-hook js2-mode-hook rjsx-mode-hook typescript-mode-hook json-mode-hook)
+                      emacs-lisp-mode-hook python-mode-hook ruby-mode-hook
+                      markdown-mode-hook css-mode-hook sass-mode-hook html-mode-hook mhtml-mode-hook
+                      js-mode-hook js2-mode-hook rjsx-mode-hook typescript-mode-hook json-mode-hook)
          . editorconfig-mode)
   :preface
   (defvar editorconfig-mode--alist

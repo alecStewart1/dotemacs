@@ -69,9 +69,6 @@
     (display-line-numbers-width . 3)
     (enable-recursive-minibuffers . t)
     (frame-inhibit-implied-resize . t)
-    (fringe-indicator-alist .
-     ,@(delq (assq 'continuation fringe-indicator-alist)
-             fringe-indicator-alist))
     (highlight-nonselected-windows . nil)
     (indicate-buffer-boundaries . nil)
     (indicate-empty-lines . nil)
@@ -135,6 +132,9 @@
   (vc-follow-symlinks .          t)
   (tabify-regexp .              "^\t* [ \t]+")
   :config
+  (setq fringe-indicator-alist
+        (delq (assq 'continuation fringe-indicator-alist)
+             fringe-indicator-alist))
   ;; Unicode, pls
   (when (fboundp 'set-charset-priority)
     (set-charset-priority 'unicode))
@@ -337,9 +337,10 @@
 
 (leaf files
   :tag "builtin" "defaults"
+  :init
+  (setq backup-directory-alist (list (cons "." (concat my-cache-dir "backup/"))))
   :custom
-  `((backup-directory-alist . ,@(list (cons "." (concat my-cache-dir "backup/"))))
-    (large-file-warning-threshold .          15000000)
+  `((large-file-warning-threshold .          15000000)
     (confirm-nonexistent-file-or-buffer .    t)
     (auto-mode-case-fold .                   nil)
     (require-final-newline .                 t)
@@ -386,37 +387,39 @@
   :doc "For keeping ourselves and Emacs secure as we reasonably can."
   :config
   (leaf nsm
-    :tag "builtin" "defaults"
+    :tag "builtin" "security" "defaults"
     :leaf-defer nil
     :custom
     (network-security-level . 'high))
 
   (leaf gnutls
-    :tag "builtin" "defaults"
+    :tag "builtin" "security" "defaults"
     :leaf-defer nil
+    :init
+    (setq gnutls-verify-error (not (getenv "INSECURE"))
+          gnutls-min-prime-bits 3072
+          gnutls-algorithm-priority
+          (when (boundp 'libgnutls-version)
+            (concat "SECURE128:+SECURE192:-VERS-ALL"
+                    (if (and (not windows-nt-p)
+                             (not (version< emacs-version "26.3"))
+                             (>= libgnutls-version 30605))
+                        ":+VERS-TLS1.3")
+                    ":+VERS-TLS1.2")))
     :custom
-    `(;;(gnutls-verify-error . ,(not (getenv "INSECURE")))
-      (gnutls-min-prime-bits . 3072)
-      (gnutls-algorithm-priority .
-        ,@(when (boundp 'libgnutls-version)
-           (concat "SECURE128:+SECURE192:-VERS-ALL"
-                   (if (and (not ,windows-nt-p)
-                            (not (version< emacs-version "26.3"))
-                            (>= libgnutls-version 30605))
-                       ":+VERS-TLS1.3")
-                   ":+VERS-TLS1.2")))
-      (tls-checktrust . gnutls-verify-error)
+    `((tls-checktrust . gnutls-verify-error)
       (tls-program .    '("openssl s_client -connect %h:%p -CAfile %t -nbio -no_ssl3 -no_tls1 -no_tls1_1 -ign_eof"
-                       "gnutls-cli -p %p --dh-bits=3072 --ocsp --x509cafile=%t \
+                          "gnutls-cli -p %p --dh-bits=3072 --ocsp --x509cafile=%t \
         --strict-tofu --priority='SECURE192:+SECURE128:-VERS-ALL:+VERS-TLS1.2:+VERS-TLS1.3' %h"
-                       ;; compatibility fallbacks
-                       "gnutls-cli -p %p %h"))))
+                          ;; compatibility fallbacks
+                          "gnutls-cli -p %p %h"))))
 
   (leaf auth-source
-    :tag "builtin" "defaults"
+    :tag "builtin" "security" "defaults"
     :leaf-defer nil
-    :custom
-    `((auth-sources . ,@(list (expand-file-name "authinfo.gpg" my-etc-dir "~/.authinfo.gpg"))))))
+    :init
+    (setq auth-sources
+          (list (concat my-etc-dir "authinfo.gpg") "~/.authinfo.gpg"))))
 
 ;;;; Misc.
 ;;;;
@@ -462,7 +465,7 @@
 
   (leaf misc
     :tag "builtin" "misc" "default"
-    :bind ("M-z" . zap-up-to-char)))
+    :bind (("M-z" . zap-up-to-char))))
 
 (provide 'defaults)
 ;;; defaults.el ends here

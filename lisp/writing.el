@@ -199,12 +199,12 @@
         :tag "external" "org-mode" "complimentary" "writing"
         :after org-capture
         :setq
-        (org-capture-templates . ,(append org-capture-templates
+        `((org-capture-templates . ,(append org-capture-templates
                                             '(("c" "Cookbook" entry (file "~/Documents/org/cookbook.org")
                                                "%(org-chef-get-recipe-from-url)"
                                                :empty-lines 1)
                                               ("m" "Manual Cookbook" entry (file "~/Documents/Org/cookbook.org")
-                                               "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n"))))))
+                                               "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n")))))))
 
     (defun org:setup-attachments ()
       (setq org-attach-store-link-p t
@@ -376,7 +376,7 @@
 
   (leaf org-pdftools
     :ensure t
-    :when (package-installed-p pdftools)
+    :when (package-installed-p 'pdftools)
     :tag "external" "org-mode" "complimentary" "writing"
     :commands org-pdftools-export
     :init
@@ -520,37 +520,37 @@ globally, see `skeleton:global-snip'."
     (add-to-list 'org-src-lang-modes '("md" . markdown)))
   :custom
   `((markdown-enable-math . t)
-    (markdown-enable-wiki-links t)
+    (markdown-enable-wiki-links . t)
     (markdown-italic-underscore . t)
     (markdown-asymmetric-header . t)
     (markdown-fontify-code-blocks-natively . t)
     (markdown-gfm-additional-languages . '("sh"))
     (markdown-make-gfm-checkboxes-buttons . t)
     (markdown-open-command .
-     ,(cond ,(macos-p "open")
-            ,(linux-p "xdg-open")))
+                           ,(cond (macos-p "open")
+                                  (linux-p "xdg-open")))
     (markdown-content-type . "application/xhtml+xml")
     (markdown-css-paths .
-     '("https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css"
-       "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/styles/github.min.css"))
+                        '("https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css"
+                          "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/styles/github.min.css"))
     (markdown-xhtml-header-content .
-     ,(concat "<meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>"
-             "<style> body { box-sizing: border-box; max-width: 740px; width: 100%; margin: 40px auto; padding: 0 10px; } </style>"
-             "<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>"
-             "<script src='https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/highlight.min.js'></script>"
-             "<script>document.addEventListener('DOMContentLoaded', () => { document.body.classList.add('markdown-body'); document.querySelectorAll('pre[lang] > code').forEach((code) => { code.classList.add(code.parentElement.lang); }); document.querySelectorAll('pre > code').forEach((code) => { hljs.highlightBlock(code); }); });</script>")))
+                                   ,(concat "<meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>"
+                                            "<style> body { box-sizing: border-box; max-width: 740px; width: 100%; margin: 40px auto; padding: 0 10px; } </style>"
+                                            "<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>"
+                                            "<script src='https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/highlight.min.js'></script>"
+                                            "<script>document.addEventListener('DOMContentLoaded', () => { document.body.classList.add('markdown-body'); document.querySelectorAll('pre[lang] > code').forEach((code) => { code.classList.add(code.parentElement.lang); }); document.querySelectorAll('pre > code').forEach((code) => { hljs.highlightBlock(code); }); });</script>")))
   :advice
   (:override markdown-match-generic-metadata
-   (lambda (&rest _)
-     (ignore (goto-char (point-max)))))
+             (lambda (&rest _)
+               (ignore (goto-char (point-max)))))
   :config
   (sp-local-pair '(markdown-mode gfm-mode) "`" "`"
                  :unless '(:add sp-point-before-word-p sp-point-before-same-p))
 
   ;; Don't trigger autofill in code blocks (see `auto-fill-mode')
   (setq-mode-local markdown-mode
-    fill-nobreak-predicate (cons #'markdown-code-block-at-point-p
-                                 fill-nobreak-predicate)))
+                   fill-nobreak-predicate (cons #'markdown-code-block-at-point-p
+                                                fill-nobreak-predicate)))
 
 ;;;; Literate Calc
 ;;;;

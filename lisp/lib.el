@@ -35,13 +35,12 @@
 (when (and windows-nt-p (null (getenv "HOME")))
   (setenv "HOME" (getenv "USERPROFILE")))
 
-;;;###autoload
 (defconst my-emacs-dir (eval-when-compile (file-truename user-emacs-directory)))
-;;;###autoload
+
 (defconst my-local-dir (concat my-emacs-dir ".local/"))
-;;;###autoload
-(defconst my-etc-dir (concat my-local-dir "etc/"))
-;;;###autoload
+
+(defconst my-etc-dir (concat (expand-file-name my-local-dir) "etc/"))
+
 (defconst my-cache-dir (concat my-local-dir "cache/"))
 
 ;;; Errors
@@ -101,6 +100,15 @@ If DERIVED-P, test with `derived-mode-p', otherwise use `eq'."
                         (lambda (buf)
                           (memq (buffer-local-value 'major-mode buf) modes)))
                       (buffer-list))))
+
+;;;###autoload
+(defun visible-buffers (&optional buffer-list)
+  "Return a list of visible buffers (i.e. not buried)."
+  (let ((buffers (delete-dups (mapcar #'window-buffer (window-list)))))
+    (if buffer-list
+        (cl-delete-if (lambda (b) (memq b buffer-list))
+                      buffers)
+      (delete-dups buffers))))
 
 ;;;###autoload
 (defvar fallback-buffer-name "*scratch*"

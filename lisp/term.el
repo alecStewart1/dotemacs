@@ -26,7 +26,7 @@
   :tag "builtin" "eshell" "term"
   :commands (eshell eshell-toggle eshell-frame)
   :defun eshell/alias
-  :defvar eshell-prompt-function eshell-command-aliases-list
+  :defvar eshell-prompt-function
   :preface
   ;;; Some basics
   ;;;
@@ -226,21 +226,6 @@ Once the eshell process is killed, the previous frame layout is restored."
 
   (defvar eshell:default-aliases nil)
 
-  (defun eshell:set-alias! (&rest aliases)
-    (or (cl-evenp (length aliases))
-        (signal 'wrong-number-of-arguments (list 'even (length aliases))))
-    (with-eval-after-load 'em-alias
-      (while aliases
-        (let ((alias (pop aliases))
-              (command (pop aliases)))
-          (if-let* ((oldval (assoc alias eshell:my-aliases)))
-              (setcdr oldval (list command))
-            (push (list alias command) eshell:my-aliases))))
-      (when (boundp 'eshell-command-aliases-list)
-        (if eshell:default-aliases
-            (setq eshell-command-aliases-list
-                  (append eshell:default-aliases eshell:my-aliases))
-          (setq eshell-command-aliases-list eshell:my-aliases)))))
   :custom
   (eshell-banner-message .
      '(format "%s %s\n"
@@ -260,13 +245,29 @@ Once the eshell process is killed, the previous frame layout is restored."
   :advice
   ;; Need to do this before we add our aliases
   (:override eshell-write-aliases-list ignore)
-  :config
+  :config  
   (add-hook 'eshell-mode-hook #'smartparens-mode)
   (add-hook 'eshell-mode-hook #'hide-mode-line-mode)
-
+  :defer-config
   ;;; Alias Stuff
   ;;;
 
+  (defun eshell:set-alias! (&rest aliases)
+    (or (cl-evenp (length aliases))
+        (signal 'wrong-number-of-arguments (list 'even (length aliases))))
+    (with-eval-after-load 'em-alias
+      (while aliases
+        (let ((alias (pop aliases))
+              (command (pop aliases)))
+          (if-let* ((oldval (assoc alias eshell:my-aliases)))
+              (setcdr oldval (list command))
+            (push (list alias command) eshell:my-aliases))))
+      (when (boundp 'eshell-command-aliases-list)
+        (if eshell:default-aliases
+            (setq eshell-command-aliases-list
+                  (append eshell:default-aliases eshell:my-aliases))
+          (setq eshell-command-aliases-list eshell:my-aliases)))))
+  
   (eval-after-load 'em-alias
     (setq eshell:default-aliases eshell-command-aliases-list
           eshell-command-aliases-list
@@ -276,7 +277,7 @@ Once the eshell process is killed, the previous frame layout is restored."
   ;;; Running CLI commands in Emacs
   ;;;
 
-  (after! em-term
+  (eval-after-load 'em-term
     (pushnew! eshell-visual-commands "tmux" "htop" "vim" "nvim" "ncmpcpp"))
 
   ;;; Keys

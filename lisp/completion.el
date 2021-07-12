@@ -74,7 +74,8 @@
     :doc "The simplest and my preferred completion system."
     :tag "external" "completion"
     :defun vertico--exhibit
-    :bind (:map vertico-map
+    :bind (:vertico-map
+           :package vertico
            ("?" . minibuffer-completion-help)
            ("M-RET" . minibuffer-force-complete-and-exit)
            ("M-TAB" . minibuffer-complete))
@@ -92,6 +93,7 @@
 
   (leaf consult
     :ensure t
+    :require (consult-vertico consult-org)
     :doc "Consulting the minibuffer for things."
     :tag "external" "completion" "complimentary"
     :bind (([remap repeat-complex-command] . consult-complex-command)
@@ -117,8 +119,9 @@
            ("M-s m" . consult-multi-occur)
            ([remap yank-pop] . consult-yank-pop)
            ([remap apropos] . consult-apropos)
-           :map isearch-map-mode
-           ([remap isearch-edit-string] . consult-isearch))
+           (:isearch-mode-map
+            :package isearch
+            ([remap isearch-edit-string] . consult-isearch)))
     :init
     (fset 'multi-occur #'consult-multi-occur)
     (autoload 'projectile-project-root "projectile")
@@ -126,17 +129,14 @@
     (register-preview-delay . 0)
     (register-preview-function . #'consult-register-preview)
     (consult-preview-key . 'any)
-    (consult-project-root-function . #'projectile-project-root)
-    :config
-    (when (package-installed-p 'vertico)
-      (eval-after-load 'vertico
-        (require 'consult-vertico))))
+    (consult-project-root-function . #'projectile-project-root))
 
   (leaf marginalia
     :ensure t
     :doc "Adding useful annotations in the margins of the minibuffer."
     :tag "external" "completion" "complimentary"
-    :bind (:map minibuffer-local-map
+    :bind (:minibuffer-local-map
+           :package minibuffer
            ("M-A" . marginalia-cycle))
     :init
     (marginalia-mode)
@@ -165,7 +165,7 @@
 ;;;; Dabbrev
 ;;;;
 
-(use-package dabbrev
+(leaf dabbrev
   :tag "builtin" "completion"
   :bind (("M-/" . dabbrev-completion)
          ("C-M-/" . dabbrev-expand)))
@@ -229,8 +229,8 @@
 
     :custom
     `((company-idle-delay . 0.2)
-      (company-idle-delay 0.2)
-      (company-echo-delay . ,(if ,(display-graphic-p) nil 0))
+      (company-idle-delay . 0.2)
+      (company-echo-delay . ,(if (display-graphic-p) nil 0))
       (company-tooltip-idle-delay . 0.2)
       (company-tooltip-limit . 14)
       (company-tooltip-align-annotations . t)
@@ -244,20 +244,15 @@
       (company-dabbrev-other-buffers . nil)
       (company-dabbrev-ignore-case . nil)
       (company-dabbrev-downcase . nil))
-    :config
-    (when (package-installed-p evil)
+    :defer-config
+    (when (package-installed-p 'evil)
       (add-hook 'company-mode-hook #'evil-normalize-keymaps)
       (advice-add 'company-begin-backend :before
                   (defun company:abort-previous (&rest _)
                     (company-abort))))
-    (after! company-files
-      (add-to-list 'company-files--regexps "file:\\(\\(?:\\.\\{1,2\\}/\\|~/\\|/\\)[^\]\n]*\\)")))
-
-  (leaf company-tng
-    :tag "external" "completion" "complimentary"
-    :ensure t
-    :after company
-    :config
+    (eval-after-load 'company-files
+      (add-to-list 'company-files--regexps "file:\\(\\(?:\\.\\{1,2\\}/\\|~/\\|/\\)[^\]\n]*\\)"))
+    (require 'company-tng)
     (add-to-list 'company-frontends 'company-tng-frontend))
 
   (leaf company-dict

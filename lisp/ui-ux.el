@@ -20,7 +20,7 @@
 
 ;;;###autoload
 (defvar my-splash-text (with-temp-buffer
-                         (insert-file-contents (expand-file-name "../splash.txt"))
+                         (insert-file-contents (expand-file-name "./splash.txt"))
                          (buffer-string))
   "A string that's the text found in splash.txt.
 This is used in my splash screen.")
@@ -86,8 +86,9 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
     :tag "builtin" "ui-ux"
     :bind
     (("C-?" . help-command)
-     :map mode-specific-map
-     ("h" . help-command)))
+     (:mode-specific-map
+      :package help
+      ("h" . help-command))))
 
   (leaf helpful
     ;; a better *help* buffer
@@ -169,12 +170,12 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
   :tag "builtin" "ui-ux"
   :hook (after-init-hook . show-paren-mode)
   :custom
-  (blink-matching-paren 'show)
-  (show-paren-style 'paren)
-  (show-paren-delay 0.03)
-  (show-paren-highlight-openparen t)
-  (show-paren-when-point-inside-paren nil)
-  (show-paren-when-point-in-periphery t)
+  (blink-matching-paren . 'show)
+  (show-paren-style . 'paren)
+  (show-paren-delay . 0.03)
+  (show-paren-highlight-openparen . t)
+  (show-paren-when-point-inside-paren . nil)
+  (show-paren-when-point-in-periphery . t)
   :config
   ;; we will call `blink-matching-open` ourselves...
   (remove-hook 'post-self-insert-hook
@@ -233,18 +234,19 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
 ;;;; Solaire-Mode
 ;;;;
 
-(leaf solaire-mode
-  :ensure t
-  :leaf-defer nil
-  :tag "external" "ui-ux"
-  :global-minor-mode solaire-global-mode
-  :hook (((change-major-mode-hook after-revert-hook) . turn-on-solaire-mode)
-         (minibuffer-setup-hook . solaire-mode-in-minibuffer))
-  :config
-  (solaire-mode-swap-bg)
-  (add-hook 'focus-in-hook #'solaire-mode-reset)
-  (add-hook 'org-capture-mode-hook #'turn-on-solaire-mode)
-  (add-hook 'solaire-mode-hook (lambda () (set-window-fringes (minibuffer-window) 0 0 nil))))
+;(leaf solaire-mode
+;  :ensure t
+;  :leaf-defer nil
+;  :tag "external" "ui-ux"
+;  :defun solair-mode-in-minibuffer
+;  :global-minor-mode solaire-global-mode
+;  :hook ((change-major-mode-hook after-revert-hook) . turn-on-solaire-mode)
+;  :config
+;  (solaire-mode-swap-bg)
+;  (add-hook 'minibuffer-setup-hook #'solaire-mode-in-minibuffer)
+;  (add-hook 'focus-in-hook #'solaire-mode-reset)
+;  (add-hook 'org-capture-mode-hook #'turn-on-solaire-mode)
+;  (add-hook 'solaire-mode-hook (lambda () (set-window-fringes (minibuffer-window) 0 0 nil))))
 
 ;;;; Highlighting
 ;;;;
@@ -261,11 +263,12 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
   (leaf hl-todo
     :ensure t
     :tag "external" "highlight" "ui-ux"
-    :bind (:map hl-todo-mode-map
-           ([C-f3] . hl-todo-occur)
-           ("C-x M-t p" . hl-todo-previous)
-           ("C-x M-t n" . hl-todo-next)
-           ("C-x M-t o" . hl-todo-occur))
+    :bind ((:hl-todo-mode-map
+            :package hl-todo
+            ([C-f3] . hl-todo-occur)
+            ("C-x M-t p" . hl-todo-previous)
+            ("C-x M-t n" . hl-todo-next)
+            ("C-x M-t o" . hl-todo-occur)))
     :hook (after-init-hook . global-hl-todo-mode)
     :config
     (dolist (keyword '("BUG" "DEFECT" "ISSUE"))
@@ -282,7 +285,8 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
     (diff-hl-change . '((t (:inherit 'highlight))))
     (diff-hl-delete . '((t (:inherit 'error :inverse-video t))))
     (diff-hl-insert . '((t (:inherit 'success :inverse-video t))))
-    :bind (:map diff-hl-command-map
+    :bind (:diff-hl-command-map
+           :package diff-hl
            ("SPC" . diff-hl-mark-hunk))
     :hook ((after-init-hook . global-diff-hl-mode)
            (dired-mode-hook . diff-hl-dired-mode))
@@ -389,10 +393,10 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
 ;;;; Themes
 ;;;;
 
-(leaf doom-themes
-  :ensure t
-  :tag "external" "themes" "ui-ux"
-  :hook (org-load-hook . doom-themes-org-config))
+;(leaf doom-themes
+;  :ensure t
+;  :tag "external" "themes" "ui-ux"
+;  :hook (org-load-hook . doom-themes-org-config))
 
 (provide 'ui-ux)
 ;;; ui-ux.el ends here

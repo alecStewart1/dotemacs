@@ -17,8 +17,8 @@
 ;;; Code:
 
 (require 'lib)
-(require 'cl-macs)
-(require 'subr)
+(require 'cl-lib)
+(require 'subr-x)
 (require 'mode-local)
 
 ;;; Personal Code
@@ -254,27 +254,27 @@ format text in a specific region."
     (:override projectile-get-ext-command projectile:only-use-generic-command)
     (:around projectile-default-generic-command projectile:default-generic-command)
     :custom
-    `((projectile-cache-file . ,(concat ,my-cache-dir "projectile.cache"))
+    `((projectile-cache-file . ,(concat my-cache-dir "projectile.cache"))
       (projectile-auto-discover . nil)
       (projectile-enable-caching . doom-interactive-p)
       (projectile-globally-ignored-files . '(".DS_Store" "TAGS"))
       (projectile-globally-ignored-file-suffixes . '(".elc" ".pyc" ".o"))
       (projectile-kill-buffers-filter . 'kill-only-files)
-      (projectile-known-projects-file . ,(concat ,my-cache-dir "projectile.projects"))
+      (projectile-known-projects-file . ,(concat my-cache-dir "projectile.projects"))
       (projectile-ignored-projects . ,(list "~/" temporary-file-directory))
       (projectile-project-root-files-bottom-up .
        ,(append '(".projectile"  ; projectile's root marker
                  ".project"     ; doom project marker
                  ".git")        ; Git VCS root dir
-               ,(when ,(executable-find "hg")
+               (when (executable-find "hg")
                  '(".hg"))      ; Mercurial VCS root dir
-               ,(when ,(executable-find "bzr")
+               (when (executable-find "bzr")
                  '(".bzr"))))  ; Bazaar VCS root dir
       (projectile-project-root-files . '())
       (projectile-project-root-files-top-down-recurring . '("Makefile"))
       (projectile-git-submodule-command . nil)
       (projectile-indexing-method . 'hybrid)
-      (projectile-generic-command . ,(concat ,projectile:fd-binary " . -0 -H --color=never --type file --type symlink --follow --exclude .git")))
+      (projectile-generic-command . ,(concat projectile:fd-binary " . -0 -H --color=never --type file --type symlink --follow --exclude .git")))
     :config
     (projectile-mode +1)
 

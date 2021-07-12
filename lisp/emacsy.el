@@ -22,12 +22,19 @@
 ;;;;
 
 (leaf dired
-  :tag "builtin" "emacsy"
+  :tag "builtin" "dired" "emacsy"
   :commands dired-jump
   :hook (dired-load-hook . (lambda ()
                             (require 'dired-x)
                             (require 'dired-aux)
                             (require 'dired-guess)))
+  :init
+  (setq image-dired-dir (concat my-cache-dir "image-dired/")
+        image-dired-db-file (concat image-dired-dir "db.el")
+        image-dired-gallery-dir (concat image-dired-dir "gallery/")
+        image-dired-temp-image-file (concat image-dired-dir "temp-image")
+        image-dired-temp-rotate-image-file (concat image-dired-dir "temp-rotate-image")
+        image-dired-thumb-size 150)
   :custom
   ; don't prompt to revert; just do it
   (dired-auto-revert-buffer . t)
@@ -37,10 +44,8 @@
   (dired-dwim-target . t)
   (dired-hide-details-hide-symlink-targets . nil)
   (dired-omit-verbose . nil)
-  (dired-omit-files .
-   "\\`[.]?#\\|\\`[.][.]?\\'\\|^.DS_Store\\'\\|^.project\\(?:ile\\)?\\'\\|^.\\(svn\\|git\\)\\'\\|^.ccls-cache\\'\\|\\(?:\\.js\\)?\\.meta\\'\\|\\.\\(?:elc\\|o\\|pyo\\|swp\\|class\\)\\'")
-  (dired-garbage-files-regexp
-   "\\.idx\\|\\.run\\.xml$\\|\\.bbl$\\|\\.bcf$\\|.blg$\\|-blx.bib$\\|.nav$\\|.snm$\\|.out$\\|.synctex.gz$\\|\\(?:\\.\\(?:aux\\|bak\\|dvi\\|log\\|orig\\|rej\\|toc\\|pyg\\)\\)\\'")
+  (dired-omit-files . "\\`[.]?#\\|\\`[.][.]?\\'\\|^.DS_Store\\'\\|^.project\\(?:ile\\)?\\'\\|^.\\(svn\\|git\\)\\'\\|^.ccls-cache\\'\\|\\(?:\\.js\\)?\\.meta\\'\\|\\.\\(?:elc\\|o\\|pyo\\|swp\\|class\\)\\'")
+  (dired-garbage-files-regexp . "\\.idx\\|\\.run\\.xml$\\|\\.bbl$\\|\\.bcf$\\|.blg$\\|-blx.bib$\\|.nav$\\|.snm$\\|.out$\\|.synctex.gz$\\|\\(?:\\.\\(?:aux\\|bak\\|dvi\\|log\\|orig\\|rej\\|toc\\|pyg\\)\\)\\'")
   ; Always copy/delete recursively
   (dired-recursive-copies . 'always)
   (dired-recursive-deletes . 'top)
@@ -53,16 +58,8 @@
   (define-key dired-mode-map (kbd "C-c C-e") #'wdired-change-to-wdired-mode))
 
 (leaf image-dired
-  :tag "builtin" "emacsy"
-  :commands image-dired image-dired-display-thumb image-dired-display-thumbs image-dired-minor-mode
-  :custom
-  `(; Where to store image caches
-    (image-dired-dir . ,(concat my-cache-dir "image-dired/"))
-    (image-dired-db-file . ,(concat image-dired-dir "db.el"))
-    (image-dired-gallery-dir . ,(concat image-dired-dir "gallery/"))
-    (image-dired-temp-image-file . ,(concat image-dired-dir "temp-image"))
-    (image-dired-temp-rotate-image-file . ,(concat image-dired-dir "temp-rotate-image"))
-    (image-dired-thumb-size . 150)))
+  :tag "builtin" "dired" "emacsy"
+  :commands (image-dired image-dired-display-thumb image-dired-display-thumbs image-dired-minor-mode))
 
 ;;;; IBuffer
 ;;;;
@@ -70,14 +67,16 @@
 (leaf ibuffer
   :tag "builtin" "emacsy"
   :bind (("C-x C-b" . ibuffer)
-         :map ibuffer-mode-map
-         ("q" . kill-current-buffer))
+         (:ibuffer-mode-map
+          :package ibuffer
+          ("q" . kill-current-buffer)))
+  :custom-face
+  (ibuffer-filter-group-name-face . '(:inherit (success bold)))
   :custom
   (ibuffer-show-empty-filter-groups . nil)
-  (ibuffer-filter-group-name-face . '(:inherit (success bold)))
   (ibuffer-formats .
    `((mark modified read-only locked
-           ,@(if (featurep! +icons)
+           ,@(if (package-installed-p 'all-the-icons)
                  `(;; Here you may adjust by replacing :right with :center
                    ;; or :left According to taste, if you want the icon
                    ;; further from the name
