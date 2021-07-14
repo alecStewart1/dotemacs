@@ -21,10 +21,9 @@
 ;;;; Dired
 ;;;;
 
-(leaf dired
-  :tag "builtin" "dired" "emacsy"
+(use-package dired
   :commands dired-jump
-  :hook (dired-load-hook . (lambda ()
+  :hook (dired-load . (lambda ()
                             (require 'dired-x)
                             (require 'dired-aux)
                             (require 'dired-guess)))
@@ -37,18 +36,18 @@
         image-dired-thumb-size 150)
   :custom
   ; don't prompt to revert; just do it
-  (dired-auto-revert-buffer . t)
+  (dired-auto-revert-buffer t)
   ; don't pass --dired to ls
-  (dired-use-ls-dired . nil)
+  (dired-use-ls-dired nil)
   ; suggest a target for moving/copying intelligently
-  (dired-dwim-target . t)
-  (dired-hide-details-hide-symlink-targets . nil)
-  (dired-omit-verbose . nil)
-  (dired-omit-files . "\\`[.]?#\\|\\`[.][.]?\\'\\|^.DS_Store\\'\\|^.project\\(?:ile\\)?\\'\\|^.\\(svn\\|git\\)\\'\\|^.ccls-cache\\'\\|\\(?:\\.js\\)?\\.meta\\'\\|\\.\\(?:elc\\|o\\|pyo\\|swp\\|class\\)\\'")
-  (dired-garbage-files-regexp . "\\.idx\\|\\.run\\.xml$\\|\\.bbl$\\|\\.bcf$\\|.blg$\\|-blx.bib$\\|.nav$\\|.snm$\\|.out$\\|.synctex.gz$\\|\\(?:\\.\\(?:aux\\|bak\\|dvi\\|log\\|orig\\|rej\\|toc\\|pyg\\)\\)\\'")
+  (dired-dwim-target t)
+  (dired-hide-details-hide-symlink-targets nil)
+  (dired-omit-verbose nil)
+  (dired-omit-files "\\`[.]?#\\|\\`[.][.]?\\'\\|^.DS_Store\\'\\|^.project\\(?:ile\\)?\\'\\|^.\\(svn\\|git\\)\\'\\|^.ccls-cache\\'\\|\\(?:\\.js\\)?\\.meta\\'\\|\\.\\(?:elc\\|o\\|pyo\\|swp\\|class\\)\\'")
+  (dired-garbage-files-regexp "\\.idx\\|\\.run\\.xml$\\|\\.bbl$\\|\\.bcf$\\|.blg$\\|-blx.bib$\\|.nav$\\|.snm$\\|.out$\\|.synctex.gz$\\|\\(?:\\.\\(?:aux\\|bak\\|dvi\\|log\\|orig\\|rej\\|toc\\|pyg\\)\\)\\'")
   ; Always copy/delete recursively
-  (dired-recursive-copies . 'always)
-  (dired-recursive-deletes . 'top)
+  (dired-recursive-copies 'always)
+  (dired-recursive-deletes 'top)
   :config
   (put 'dired-find-alternate-file 'disabled nil)
 
@@ -57,24 +56,22 @@
 
   (define-key dired-mode-map (kbd "C-c C-e") #'wdired-change-to-wdired-mode))
 
-(leaf image-dired
-  :tag "builtin" "dired" "emacsy"
+(use-package image-dired
   :commands (image-dired image-dired-display-thumb image-dired-display-thumbs image-dired-minor-mode))
 
 ;;;; IBuffer
 ;;;;
 
-(leaf ibuffer
-  :tag "builtin" "emacsy"
+(use-package ibuffer
   :bind (("C-x C-b" . ibuffer)
          (:ibuffer-mode-map
           :package ibuffer
           ("q" . kill-current-buffer)))
   :custom-face
-  (ibuffer-filter-group-name-face . '(:inherit (success bold)))
+  (ibuffer-filter-group-name-face '(:inherit (success bold)))
   :custom
-  (ibuffer-show-empty-filter-groups . nil)
-  (ibuffer-formats .
+  (ibuffer-show-empty-filter-groups nil)
+  (ibuffer-formats
    `((mark modified read-only locked
            ,@(if (package-installed-p 'all-the-icons)
                  `(;; Here you may adjust by replacing :right with :center
@@ -109,9 +106,8 @@
 ;;;; Electric
 ;;;;
 
-(leaf electric
-  :tag "builtin" "emacsy"
-  :hook (first-file-hook . electric-quote-mode)
+(use-package electric
+  :hook (first-file . electric-quote-mode)
   :preface
   (defvar-local electric--indent-words '()
     "The list of electric words. Typing these will trigger reindentation of the
@@ -132,16 +128,13 @@ current line.")
 ;;;; Undo-fu
 ;;;;
 
-(leaf undo-fu
-  :ensure t
-  :doc "A more sane undo."
-  :tag "external" "emacsy"
-  :leaf-defer nil
-  :hook (first-buffer-hook . undo-fu-mode)
-  :setq
-  (undo-limit . 400000)
-  (undo-strong-limit . 3000000)
-  (undo-outer-limit . 3000000)
+(use-package undo-fu
+  :demand t
+  :hook (first-buffer . undo-fu-mode)
+  :init
+  (setq undo-limit        400000
+        undo-strong-limit 3000000
+        undo-outer-limit  3000000)
   :config
   (define-minor-mode undo-fu-mode
     "Enables `undo-fu' for the current session."
@@ -157,14 +150,13 @@ current line.")
     :init-value nil
     :global t))
 
-(leaf undo-fu-session
-  :ensure t
-  :leaf-defer nil
-  :hook (undo-fu-mode-hook . global-undo-fu-session-mode)
-  :preface
+(use-package undo-fu-session
+  :demnad t
+  :hook (undo-fu-mode . global-undo-fu-session-mode)
+  :init
   (setq undo-fu-session-directory (concat my-cache-dir "undo-fu-session/")
         undo-fu-session-incompatible-files '("\\.gpg$" "/COMMIT_EDITMSG\\'" "/git-rebase-todo\\'"))
-  :defer-config
+  :config
   (when (executable-find "zstd")
     (advice-add #'undo-fu-session--make-file-name :filter-return
                 (defun undo-fu-session-use-zstd (filename)
@@ -175,19 +167,18 @@ current line.")
 ;;;; Group projects in IBuffer
 ;;;;
 
-(leaf ibuffer-projectile
-  :ensure t      
+(use-package ibuffer-projectile
   ;; Group ibuffer's list by project root
-  :hook (ibuffer-hook . ibuffer-projectile-set-filter-groups)
+  :hook (ibuffer-mode . ibuffer-projectile-set-filter-groups)
   :custom
-  `((ibuffer-projectile-prefix .
-     ,(if (package-installed-p 'all-the-icons)
-         ,(concat (all-the-icons-octicon
+  (ibuffer-projectile-prefix
+     (if (package-installed-p 'all-the-icons)
+         (concat (all-the-icons-octicon
                   "file-directory"
                   :face ibuffer-filter-group-name-face
                   :v-adjust -0.05)
                  " ")
-       "Project: "))))
+       "Project: ")))
 
 ;;;; Bufler
 ;;;;
