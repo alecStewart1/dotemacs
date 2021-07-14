@@ -180,7 +180,6 @@
     :ensure t
     :tag "external" "completion"
     :diminish
-    :global-minor-mode global-company-mode
     :defun (company-dabbrev-ignore-case company-dabbrev-downcase)
     :commands company-complete-common company-manual-begin company-grab-line company-cancel
     :hook (first-input-hook . global-company-mode)
@@ -238,7 +237,7 @@
       (company-global-modes . '(not erc-mode message-mode help-mode gud-mode))
       (company-frontends . '(company-pseudo-tooltip-frontend
                              company-echo-metadata-frontend))
-      (company-backends . '(company-semantic company-capf))
+      (company-backends . '(company-capf))
       (company-auto-complete . nil)
       (company-auto-complete-chars . nil)
       (company-dabbrev-other-buffers . nil)
@@ -250,8 +249,11 @@
       (advice-add 'company-begin-backend :before
                   (defun company:abort-previous (&rest _)
                     (company-abort))))
-    (eval-after-load 'company-files
-      (add-to-list 'company-files--regexps "file:\\(\\(?:\\.\\{1,2\\}/\\|~/\\|/\\)[^\]\n]*\\)"))
+
+    (add-hook 'after-change-major-mode-hook #'company:init-backends 'append)
+
+    ;; (eval-after-load 'company-files
+    ;;   (add-to-list 'company-files--regexps "file:\\(\\(?:\\.\\{1,2\\}/\\|~/\\|/\\)[^\]\n]*\\)"))
     (require 'company-tng)
     (add-to-list 'company-frontends 'company-tng-frontend))
 

@@ -20,7 +20,7 @@
 
 ;;;###autoload
 (defvar my-splash-text (with-temp-buffer
-                         (insert-file-contents (expand-file-name "./splash.txt"))
+                         (insert-file-contents (expand-file-name (concat user-emacs-directory "splash.txt")))
                          (buffer-string))
   "A string that's the text found in splash.txt.
 This is used in my splash screen.")

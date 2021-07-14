@@ -18,6 +18,7 @@
 
 (require 'lib)
 (require 'cl-lib)
+(require 'cl-seq)
 (require 'subr-x)
 (require 'mode-local)
 
@@ -210,11 +211,6 @@ format text in a specific region."
                projectile-locate-dominating-file
                projectile-relevant-known-projects)
     :preface
-    (defvar projectile:cache-limit 10000)
-    (defvar projectile:cache-blacklist '("~" "/tmp" "/"))
-    (defvar projectile:cache-purge-non-projects nil)
-    (defvar projectile:fd-binary (cl-find-if #'executable-find (list "fdfind" "fd")))
-
     (defun projectile:cleanup-project-cache ()
       "Purge projectile cache entries that:
 
@@ -228,7 +224,7 @@ format text in a specific region."
               (cl-remove-if #'projectile-ignored-project-p
                             projectile-known-projects))
         (projectile-cleanup-known-projects)
-        (cl-loop with blacklist = (mapcar #'file-truename doom-projectile-cache-blacklist)
+        (cl-loop with blacklist = (mapcar #'file-truename projectile:cache-blacklist)
                  for proot in (hash-table-keys projectile-projects-cache)
                  if (or (not (stringp proot))
                         (>= (length (gethash proot projectile-projects-cache))
@@ -250,6 +246,11 @@ format text in a specific region."
 
     (defun projectile:default-generic-command (orig-fn &rest args)
       (ignore-errors (apply orig-fn args)))
+    :init
+    (defvar projectile:cache-limit 10000)
+    (defvar projectile:cache-blacklist '("~" "/tmp" "/"))
+    (defvar projectile:cache-purge-non-projects nil)
+    (defvar projectile:fd-binary (cl-find-if #'executable-find (list "fdfind" "fd")))
     :advice
     (:override projectile-get-ext-command projectile:only-use-generic-command)
     (:around projectile-default-generic-command projectile:default-generic-command)
@@ -448,21 +449,12 @@ format text in a specific region."
   (leaf elisp-mode
     :tag "builtin" "elisp" "programming"
     :mode ("\\.Cask\\'" . emacs-lisp-mode)
-    :hook ((emacs-lisp-mode-hook . (outline-minor-mode
-                                    raindow-delimiter-mode
-                                    highlight-quoted-mode
-                                    (lambda ()
-                                     "Disable the checkdoc checker."
-                                     (setq-local flycheck-disabled-checkers
-                                                '(emacs-lisp-checkdoc)))))
-           (before-save-hook . format:format-current-file))
+    :hook (before-save-hook . format:format-current-file)
     :preface
     (defun elisp-mode:indent-function (indent-point state)
       "A replacement for `lisp-indent-function'.
-
-  Indenting more sensibly there. Especially plists.
-
-  See: https://emacs.stackexchange.com/questions/10230/how-to-indent-keywords-aligned"
+Indents plists more sensibly. Adapted from
+https://emacs.stackexchange.com/questions/10230/how-to-indent-keywords-aligned"
       (let ((normal-indent (current-column))
             (orig-point (point))
             ;; TODO Refactor `target' usage (ew!)
@@ -507,43 +499,64 @@ format text in a specific region."
     (defun elisp-mode:append-val-to-eldoc (orig-fn sym)
       "Display variable value next to documentation in eldoc."
       (when-let (ret (funcall orig-fn sym))
-        (concat ret " "
-                (let* ((truncated " [...]")
-                       (print-escape-newlines t)
-                       (str (symbol-value sym))
-                       (str (prin1-to-string str))
-                       (limit (- (frame-width) (length ret) (length truncated) 1)))
-                  (format (format "%%0.%ds%%s" limit)
-                          (propertize str 'face 'warning)
-                          (if (< (length str) limit) "" truncated))))))
+        (if (boundp sym)
+            (concat ret " "
+                    (let* ((truncated " [...]")
+                           (print-escape-newlines t)
+                           (str (symbol-value sym))
+                           (str (prin1-to-string str))
+                           (limit (- (frame-width) (length ret) (length truncated) 1)))
+                      (format (format "%%0.%ds%%s" (max limit 0))
+                              (propertize str 'face 'warning)
+                              (if (< (length str) limit) "" truncated))))))) 
     :custom
-    (tab-width . 0)
+    (tab-width . 8)
     (mode-name . "Elisp")
     (outline-regexp . "[ \t];;;; [^ \t\n]")
     (lisp-indent-function . #'elisp-mode:indent-function)
     :advice
     (:around elisp-get-var-docstring elisp-mode:append-val-to-eldoc)
     :config
+    (add-hook! 'emacs-lisp-mode-hook
+               #'outline-minor-mode
+               #'rainbow-delimiters-mode
+               #'highlight-quoted-mode
+               (lambda () 
+                 "Disable the checkdoc checker."
+                 (setq-local flycheck-disabled-checkers
+                             '(emacs-lisp-checkdoc))))
     (add-hook 'help-mode-hook 'cursor-sensor-mode))
 
   (leaf ielm
     :tag "builtin" "elisp" "complimentary" "programming"
-    :preface
-    (defun ielm:syntax-highlighting
-        (font-lock-add-keywords
-         nil (loop for (matcher . match-highlights)
-                   in (append lisp-el-font-lock-keywords-2 lisp-cl-font-lock-keywords-2)
-                   collect `((lambda (limit)
-                               (and ,(if (symbolp matcher)
-                                         `(,matcher limit)
-                                       `(re-search-forward ,matcher limit t))
-                                    (> (match-beginning 0) (car comint-last-prompt))
-                                    (let ((state (sp--syntax-ppss)))
-                                      (not (or (nth 3 state)
-                                               (nth 4 state))))))
-                             ,@match-highlights))))
+    ;; Adapted from http://www.modernemacs.com/post/comint-highlighting/ to add
+    ;; syntax highlighting to ielm REPLs.
     :config
-    (add-hook! 'ielm-mode-hook #'ielm:syntax-highlighting))
+    (setq ielm-font-lock-keywords
+        (append '(("\\(^\\*\\*\\*[^*]+\\*\\*\\*\\)\\(.*$\\)"
+                   (1 font-lock-comment-face)
+                   (2 font-lock-constant-face)))
+                (when (require 'highlight-numbers nil t)
+                  (highlight-numbers--get-regexp-for-mode 'emacs-lisp-mode))
+                (cl-loop for (matcher . match-highlights)
+                         in (append lisp-el-font-lock-keywords-2
+                                    lisp-cl-font-lock-keywords-2)
+                         collect
+                         `((lambda (limit)
+                             (when ,(if (symbolp matcher)
+                                        `(,matcher limit)
+                                      `(re-search-forward ,matcher limit t))
+                               ;; Only highlight matches after the prompt
+                               (> (match-beginning 0) (car comint-last-prompt))
+                               ;; Make sure we're not in a comment or string
+                               (let ((state (syntax-ppss)))
+                                 (not (or (nth 3 state)
+                                          (nth 4 state))))))
+                           ,@match-highlights)))))
+
+  (leaf overseer
+    :config
+    (remove-hook 'emacs-lisp-mode-hook #'overseer-enable-mode))
 
   (leaf elisp-demos
     :ensure t
@@ -609,19 +622,19 @@ format text in a specific region."
       (with-eval-after-load 'sly
         (sly-setup)))
     :custom
-    `((sly-mrepl-history-file-name ,(concat ,my-cache-dir "sly-mrepl-history"))
-      (sly-net-coding-system 'utf-8-unix)
-      (sly-kill-without-query-p t)
-      (sly-lisp-implementations
+    `((sly-mrepl-history-file-name . ,(concat my-cache-dir "sly-mrepl-history"))
+      (sly-net-coding-system . 'utf-8-unix)
+      (sly-kill-without-query-p . t)
+      (sly-lisp-implementations .
        `((sbcl (,(executable-find "sbcl")))
          (ccl (,(executable-find "ccl")))
          (ecl (,(executable-find "ecl")))
          (abcl (,(executable-find "abcl")))
          (clisp (,(executable-find "clisp")))))
-      (sly-description-autofocus t)
-      (sly-inhibit-pipelining nil)
-      (sly-load-failed-fasl 'always)
-      (sly-complete-symbol-function 'sly-flex-completions))
+      (sly-description-autofocus . t)
+      (sly-inhibit-pipelining . nil)
+      (sly-load-failed-fasl . 'always)
+      (sly-complete-symbol-function . 'sly-flex-completions))
     :config
     (add-hook! 'sly-mode-hook #'sly:init))
 
@@ -962,8 +975,8 @@ nimsuggest isn't installed."
     :after enh-ruby-mode
     :commands (rake rake-rerun rake-regenerate-cache rake-find-task)
     :custom
-    (rake-cache-file (concat my-cache-dir "rake.cache"))
-    (rake-completion-system 'default))
+    `((rake-cache-file . ,(concat my-cache-dir "rake.cache"))
+      (rake-completion-system . 'default)))
 
   (leaf ruby-test-mode
     :ensure t
@@ -974,7 +987,7 @@ nimsuggest isn't installed."
     :ensure t
     :tag "external" "ruby" "projectile" "complimentary" "programming"
     :hook ((enh-ruby-mode inf-ruby-mode projectile-rails-server-mode) . projectile-rails-mode)
-    :hook (projectile-rails-mode . auto-insert-mode)
+    :hook (projectile-rails-mode-hook . auto-insert-mode)
     :init
     (setq auto-insert-query nil)
     (setq inf-ruby-console-environment "development")))
@@ -1041,7 +1054,6 @@ nimsuggest isn't installed."
     :custom
     (nxml-slash-auto-complete-flag . t)
     (nxml-auto-insert-xml-declaration-flag . t)
-    (tab-width . nxml-child-indent)
     :config
     (company:set-backend 'nxml-mode '(company-nxml)))
 
@@ -1110,10 +1122,10 @@ nimsuggest isn't installed."
     :ensure t
     :tag "external" "lsp" "programming"
     :defvar (lsp-intelephense-storage-path
-              lsp-clients-emmy-lua-jar-path
-              lsp-xml-jar-file
-              lsp-groovy-server-file
-              lsp-clients-python-library-directories)
+             lsp-clients-emmy-lua-jar-path
+             lsp-xml-jar-file
+             lsp-groovy-server-file
+             lsp-clients-python-library-directories)
     :commands (lsp-format-buffer
                lsp-organize-imports
                lsp-install-server)
@@ -1153,18 +1165,20 @@ nimsuggest isn't installed."
                                            (let ((lsp-restart 'ignore))
                                              (funcall orig-fn)))))
                lsp--cur-workspace))))
+    :init
+    (setq lsp-session-file (concat my-etc-dir "lsp-seesion")
+          lsp-server-install-dir (concat my-etc-dir "lsp/"))
     :custom
-    `((lsp-session-file . ,(concat ,my-etc-dir "lsp-seesion"))
-      (lsp-server-install-dir . ,(concat ,my-etc-dir "lsp/"))
-      (lsp-keep-workspace-alive . nil)
-      (lsp-intelephense-storage-path . ,(concat ,my-cache-dir "lsp-intelephense/"))
-      (lsp-clients-emmy-lua-jar-path . ,(concat ,lsp-server-install-dir "EmmyLua-LS-all.jar"))
-      (lsp-xml-jar-file .              ,(concat ,lsp-server-install-dir "org.eclipse.lsp4xml-0.3.0-uber.jar"))
-      (lsp-groovy-server-file .        ,(concat ,lsp-server-install-dir "groovy-language-server-all.jar"))
+    `((lsp-keep-workspace-alive . nil)
+      (lsp-intelephense-storage-path . ,(concat my-cache-dir "lsp-intelephense/"))
+      (lsp-clients-emmy-lua-jar-path . ,(concat lsp-server-install-dir "EmmyLua-LS-all.jar"))
+      (lsp-xml-jar-file .              ,(concat lsp-server-install-dir "org.eclipse.lsp4xml-0.3.0-uber.jar"))
+      (lsp-groovy-server-file .        ,(concat lsp-server-install-dir "groovy-language-server-all.jar"))
       (lsp-clients-python-library-directories . '("/usr/local/" "/usr/"))
       (lsp-enable-folding . nil)
       (lsp-enable-text-document-color . nil)
       (lsp-enable-on-type-formatting . nil)
+      (lsp-headerline-breadcrumb-enable . nil)
       (lsp-keymap-prefix . nil))
     :advice
     (:around lsp-diagnostics-flycheck-enable lsp:respect-user-defined-checkers)
@@ -1211,8 +1225,8 @@ nimsuggest isn't installed."
     (with-eval-after-load 'lsp
       (require 'dap-mode))
     :custom
-    `((dap-breakpoints-file . ,(concat ,my-etc-dir "dap-breakpoints"))
-      (dap-utils-extension-path . ,(concat ,my-etc-dir "dap-extension/")))
+    `((dap-breakpoints-file . ,(concat my-etc-dir "dap-breakpoints"))
+      (dap-utils-extension-path . ,(concat my-etc-dir "dap-extension/")))
     :config
     (eval-after-load 'nim-mode
       (require 'dap-gdb-lldb)))

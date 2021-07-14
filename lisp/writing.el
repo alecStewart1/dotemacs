@@ -21,7 +21,7 @@
 
 (leaf ispell
   :tag "builtin" "writing"
-  :init
+  :config
   (add-to-list 'ispell-extra-args "--sug-mode=ultra"))
 
 ;;;; Org-Mode

@@ -249,43 +249,48 @@ Once the eshell process is killed, the previous frame layout is restored."
   (add-hook 'eshell-mode-hook #'smartparens-mode)
   (add-hook 'eshell-mode-hook #'hide-mode-line-mode)
   :defer-config
-  ;;; Alias Stuff
-  ;;;
-
-  (defun eshell:set-alias! (&rest aliases)
-    (or (cl-evenp (length aliases))
-        (signal 'wrong-number-of-arguments (list 'even (length aliases))))
-    (with-eval-after-load 'em-alias
-      (while aliases
-        (let ((alias (pop aliases))
-              (command (pop aliases)))
-          (if-let* ((oldval (assoc alias eshell:my-aliases)))
-              (setcdr oldval (list command))
-            (push (list alias command) eshell:my-aliases))))
-      (when (boundp 'eshell-command-aliases-list)
-        (if eshell:default-aliases
-            (setq eshell-command-aliases-list
-                  (append eshell:default-aliases eshell:my-aliases))
-          (setq eshell-command-aliases-list eshell:my-aliases)))))
-  
-  (eval-after-load 'em-alias
-    (setq eshell:default-aliases eshell-command-aliases-list
-          eshell-command-aliases-list
-          (append eshell-command-aliases-list
-                  eshell:my-aliases)))
-
-  ;;; Running CLI commands in Emacs
-  ;;;
-
-  (eval-after-load 'em-term
-    (pushnew! eshell-visual-commands "tmux" "htop" "vim" "nvim" "ncmpcpp"))
 
   ;;; Keys
   ;;;
 
   (define-key 'eshell-mode-map (kbd "C-e") #'end-of-line)
   (define-key 'eshell-mode-map (kbd "C-a") #'beginning-of-line)
-  (define-key 'eshell-mode-map (kbd "C-s") #'eshell:search-history))
+  (define-key 'eshell-mode-map (kbd "C-s") #'eshell:search-history)
+
+  ;;; Alias Stuff
+  ;;;
+
+  (leaf em-alias
+    :after eshell
+    :config
+    (defun eshell:set-alias! (&rest aliases)
+      (or (cl-evenp (length aliases))
+          (signal 'wrong-number-of-arguments (list 'even (length aliases))))
+      (with-eval-after-load 'em-alias
+        (while aliases
+          (let ((alias (pop aliases))
+                (command (pop aliases)))
+            (if-let* ((oldval (assoc alias eshell:my-aliases)))
+                (setcdr oldval (list command))
+              (push (list alias command) eshell:my-aliases))))
+        (when (boundp 'eshell-command-aliases-list)
+          (if eshell:default-aliases
+              (setq eshell-command-aliases-list
+                    (append eshell:default-aliases eshell:my-aliases))
+            (setq eshell-command-aliases-list eshell:my-aliases)))))
+      :defer-config
+      (setq eshell:default-aliases eshell-command-aliases-list
+            eshell-command-aliases-list
+            (append eshell-command-aliases-list
+                    eshell:my-aliases)))
+
+  ;;; Running CLI commands in Emacs
+  ;;;
+
+  (leaf em-term
+    :after eshell
+    :defer-config
+    (pushnew! eshell-visual-commands "tmux" "htop" "btm" "vim" "nvim" "ncmpcpp")))
 
 ;;; External Packages
 ;;;
