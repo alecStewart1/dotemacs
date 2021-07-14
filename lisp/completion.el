@@ -79,7 +79,7 @@
                 (setq-local completion-auto-help nil
                             completion-show-inline-help nil)))
   :custom
-  (vertico-cycle . t))
+  (vertico-cycle t))
 
 (use-package consult
   :bind (([remap repeat-complex-command] . consult-complex-command)
@@ -124,7 +124,7 @@
   :init
   (marginalia-mode)
   :custom
-  (marginalia-annotators . '(marginalia-annotators-light marginalia-annotators-heavy nil)))
+  (marginalia-annotators '(marginalia-annotators-light marginalia-annotators-heavy nil)))
 
 (use-package embark
   :bind ("C-S-a" . embark-act)
