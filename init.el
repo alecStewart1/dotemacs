@@ -94,7 +94,7 @@
   (require 'ui-ux)
   (require 'emacsy)
   (require 'completion)
-  ;;(require 'term)
+  (require 'term)
   ;;(require 'editing)
   ;;(require 'writing)
   ;;(require 'programming)

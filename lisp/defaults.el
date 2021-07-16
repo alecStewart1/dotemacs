@@ -104,9 +104,15 @@
   ;; No tabs, only spaces
   (indent-tabs-mode nil)
   (tab-width 4)
+  ;; Autosave
+  (auto-save-list-file-prefix (concat my-cache-dir "autosave/"))
+  (auto-save-include-big-deletions t)
+  (auto-save-file-name-transformers
+   (list (list "\\`/[^/]*:\\([^/]*/\\)*\\([^/]*\\)\\'"
+     ;; Prefix tramp autosaves to prevent conflicts with local ones
+               (concat auto-save-list-file-prefix "tramp-\\2") t)
+         (list ".*" auto-save-list-file-prefix t)))
   ;; Don't clutter my Emacs directory
-  (auto-save-file-name-transformers   (concat my-cache-dir "auto-save-list/"))
-  (auto-save-list-file-name           (concat my-cache-dir "autosave"))
   (shared-game-score-directory        (concat my-etc-dir "shared-game-score/"))
   (gamegrid-user-score-file-directory (concat my-etc-dir "games/"))
   (request-storage-directory          (concat my-cache-dir "request/"))
@@ -319,6 +325,58 @@
 ;;;; Files
 ;;;;
 
+;;;;; Hooks and advice related to files
+;;;;;
+
+(add-hook! 'find-file-not-found-functions
+  (defun files:create-missing-directories ()
+    "Automatically create missing directories when creatign new files."
+    (unless (file-remote-p buffer-file-name)
+      (let ((parent-directory (file-name-directory buffer-file-name)))
+        (and (not (file-directory-p parent-directory))
+             (y-or-n-p (format "Directory `%s' does not exist! Create it?"
+                               parent-directory))
+             (progn (make-directory parent-directory 'parents)
+                    t))))))
+
+;; HACK
+;;;###autoload
+(defun files:make-hashed-auto-save-file-name (orig-fn)
+  "Compress the auto-save file name so paths don't get too long."
+  (let ((buffer-file-name
+         (if (or
+              (null buffer-file-name)
+              (find-file-name-handler buffer-file-name
+                                      'make-auto-save-file-name))
+             buffer-file-name
+           (sha1 buffer-file-name))))
+    (funcall orig-fn)))
+
+(advice-add #'make-auto-save-file-name :around #'make-hashed-auto-save-file-name)
+
+;; HACK
+;;;###autoload
+(defun files:make-hashed-backup-file-name (orig-fn file)
+  "A few places use the backup file name so paths don't get too long."
+  (let ((alist backup-directory-alist)
+        backup-directory)
+    (while alist
+      (let ((elt (pop alist)))
+        (if (string-match (car elt) file)
+            (setq backup-directory (cdr elt)
+                  alist nil))))
+    (let ((file (funcall orig-fn file)))
+      (if (or (null backup-directory)
+              (not (file-name-absolute-p backup-directory)))
+          file
+        (expand-file-name (sha1 (file-name-nondirectory file))
+                          (file-name-directory file))))))
+
+(advice-add #'make-backup-file-name-1 :around #'files:make-hashed-backup-file-name)
+
+;;;;; Package itself
+;;;;;
+
 (use-package files
   :ensure nil
   :defer 0.2
@@ -329,7 +387,7 @@
   (auto-mode-case-fold                   nil)
   (require-final-newline                 t)
   (make-backup-files                     nil)
-  (auto-save-default                     nil)
+  (auto-save-default                     t)
   ; resolve symlinks when opening files
   (find-file-visit-truename              t) 
   (find-file-suppress-same-file-warnings t)

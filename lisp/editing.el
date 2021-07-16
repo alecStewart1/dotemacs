@@ -21,16 +21,34 @@
 (put 'narrow-to-region 'disabled nil)
 (put 'upcase-region 'disabled nil)
 
+;;; Some variables we'll use later on
+;;;
+
+(defvar editing:detect-indent-excluded-modes
+  '(fundamental-mode pascal-mode so-long-mode))
+
+(defvar-local editing:inhibit-indent-detection nil)
+
+(defvar editing:large-file-p nil)
+(put 'large-file-p 'permanent-local t)
+
+(defvar editing:large-file-size-alist '(("." . 1.0)))
+
+(defvar editing:large-file-excluded-modes
+  '(so-long-mode special-mode archive-mode tar-mode jka-compr
+    git-commit-mode image-mode doc-view-mode doc-view-mode-maybe
+    ebrowse-tree-mode pdf-view-mode tags-table-mode))
+
 ;;; Packages
 ;;;
 
 ;;;; Autorevert
 ;;;;
 
-(leaf autorevert
-  :tag "builtin" "editing"
+(use-package autorevert
+  :ensure nil
   :diminish
-  :hook ((focus-in-hook after-save-hook) . auto-revert-buffers!)
+  :hook ((focus-in after-save) . auto-revert-buffers!)
   :init
   (setq auto-revert-verbose t
         auto-revert-use-notify nil
@@ -51,19 +69,19 @@
 ;;;; Recentf
 ;;;;
 
-(leaf recentf
-  :tag "builtin" "editing"
+(use-package recentf
+  :ensure nil
   :diminish
-  :hook (first-file-hook . recentf-mode)
+  :hook (first-file . recentf-mode)
   :commands recentf-open-files
   :custom
-  (recentf-filename-handlers .
+  (recentf-filename-handlers
    '(substring-no-properties    ; strip out lingering text properties
      recent-file-truename       ; resolve symlinks of local files
      abbreviate-file-name))
-  (recentf-auto-cleanup . 'never)
-  (recentf-max-menu-items . 0)
-  (recentf-max-saved-items . 200)
+  (recentf-auto-cleanup 'never)
+  (recentf-max-menu-items 0)
+  (recentf-max-saved-items 200)
   :config
   (defun recent-file-truename (file)
     (if (or (file-remote-p file nil t)
@@ -91,38 +109,39 @@
 ;;;; Saveplace
 ;;;;
 
-(leaf saveplace
-  :tag "builtin" "editing"
+(use-package saveplace
+  :ensure nil
   :diminish
-  :hook (first-file-hook . save-place-mode)
+  :hook (first-file . save-place-mode)
   :init
   (setq save-place-file (concat my-cache-dir "saveplace")
         save-place-limit 100)
-  :advice
-  (:after-while save-place-find-file-hook
+  :config
+  (advice-add 'save-place-find-file-hook :after-while
    (lambda (&rest _)
      (if buffer-file-name (ignore-errors (recenter)))))
 
-  (:around save-place-to-alist
+  (advice-add 'save-place-alist :around
    (lambda (orig-fn &rest args)
      (unless large-file-p (apply orig-fn args))))
 
-  (:around save-place-alist-to-file
+  (advice-add 'save-place-alist-to-file :around
    (lambda (orig-fn)
      (letf! ((#'pp #'prin1)) (funcall orig-fn)))))
 
 ;;;; Savehist
 ;;;;
 
-(leaf savehist
-  :tag "builtin" "editing"
+(use-package savehist
+  :ensure nil
   :diminish
-  :hook (first-input-hook . savehist-mode)
+  :hook (first-input . savehist-mode)
   :custom
-  `((savehist-file . ,(concat my-cache-dir "savehist"))
-    (savehist-save-minibuffer-history . t)
-    (savehist-autosave-interval . nil) ; save on kill only
-    (savehist-additional-variables . '(kill-ring search-ring regexp-search-ring)))
+  (savehist-file (concat my-cache-dir "savehist"))
+  (savehist-save-minibuffer-history t)
+  ; save on kill only
+  (savehist-autosave-interval nil)
+  (savehist-additional-variables '(kill-ring search-ring regexp-search-ring))
   :config
   (add-hook 'kill-emacs-hook
             (defun savehist:unpropertize-kill-ring ()
@@ -135,20 +154,20 @@
 ;;;; Subword
 ;;;;
 
-(leaf subword
-  :tag "builtin" "editing"
+(use-package subword
+  :ensure nil
   :diminish
-  :hook ((prog-mode-hook . subword-mode)
-         (minibuffer-setup-hook . subword-mode)))
+  :hook ((prog-mode . subword-mode)
+         (minibuffer-setup . subword-mode)))
 
 ;;;; Rect
 ;;;;
 
-(leaf rect
-  :tag "builtin" "editing"
+(use-package rect
+  :ensure nil
   :bind (("C-x r RET" . rect-hydra/body)
-         (:prog-mode-map
-          ("C-x r RET" . rect-hydra/body)))
+         :map prog-mode-map
+         ("C-x r RET" . rect-hydra/body))
   :pretty-hydra
   ((:title "Rectangle" :color amaranth :quit-key "q")
    ("Move"
@@ -175,40 +194,40 @@
 ;;;; Hideshow
 ;;;;
 
-(leaf hideshow
-  :tag "builtin" "editing"
+(use-package hideshow
+  :ensure nil
   :diminish hs-minor-mode
-  :bind (:hs-minor-mode-map
-         :package hideshow
+  :bind (:map hs-minor-mode-map
          ("C-`" . hs-toggle-hiding)))
 
 ;;;; Ediff
 ;;;;
 
-(leaf ediff
-  :tag "builtin" "editing"
+(use-package ediff
+  :ensure nil
   :hook(;; show org ediffs unfolded
-        (ediff-prepare-buffer-hook . outline-show-all)
+        (ediff-prepare-buffer . outline-show-all)
         ;; restore window layout when done
-        (ediff-quit-hook . winner-undo))
+        (ediff-quit . winner-undo))
   :custom
-  (ediff-window-setup-function . 'ediff-setup-windows-plain)
-  (ediff-split-window-function . 'split-window-horizontally)
-  (ediff-merge-split-window-function . 'split-window-horizontally))
+  (ediff-window-setup-function 'ediff-setup-windows-plain)
+  (ediff-split-window-function 'split-window-horizontally)
+  (ediff-merge-split-window-function 'split-window-horizontally))
 
 ;;;; Electric
 ;;;;
 
-(leaf elec-pair
-  :tag "builtin" "editing"
-  :hook (first-file-hook . electric-pair-mode)
-  :pre-setq (electric-pair-inhibit-predicate . 'electric-pair-conservative-inhibit))
+(use-package elec-pair
+  :ensure nil
+  :hook (first-file . electric-pair-mode)
+  :init
+  (setq electric-pair-inhibit-predicate 'electric-pair-conservative-inhibit))
 
 ;;;; IMenu
 ;;;;
 
-(leaf imenu
-  :tag "builtin" "editing"
+(use-package imenu
+  :ensure nil
   :bind (("C-." . imenu))
   :config
   (add-hook 'imenu-after-jump-hook #'recenter))
@@ -216,10 +235,8 @@
 ;;;; Avy
 ;;;;
 
-(leaf avy
-  :ensure t
-  :tag "external" "editing"
-  :hook (after-init-hook . avy-setup-default)
+(use-package avy
+  :hook (after-init . avy-setup-default)
   :preface
   (defun avy:goto-word-beg ()
     "Jump to beginning of word in line."
@@ -239,15 +256,13 @@
     (interactive)
     (avy--generic-jump "\\s(\\(if\\|cond\\|when\\|unless\\)\\b" nil 'pre))
   :custom
-  (avy-all-windows . nil)
-  (avy-all-windows-alt . t)
-  (avy-background . t)
-  (avy-style . 'pre)
-  (avy-single-candidate-jump . nil))
+  (avy-all-windows nil)
+  (avy-all-windows-alt t)
+  (avy-background t)
+  (avy-style 'pre)
+  (avy-single-candidate-jump nil))
 
-(leaf avy-zap
-  :ensure t
-  :tag "external" "editing"
+(use-package avy-zap
   :bind (("M-z" . avy-zap-to-char-dwim)
          ("M-Z" . avy-zap-up-to-char-dwim)))
 
@@ -255,8 +270,6 @@
 ;;;;
 
 (leaf aggressive-indent
-  :ensure t
-  :tag "external" "editing"
   :diminish
   :hook ((after-init-hook . global-aggressive-indent-mode)
          ;; FIXME: Disable in big files due to the performance issues
@@ -283,9 +296,7 @@
 ;;;; Adaptive-Wrap
 ;;;;
 
-(leaf adaptive-wrap
-  :ensure t
-  :tag "external" "editing"
+(use-package adaptive-wrap
   :config
   (when (memq 'visual-line-mode text-mode-hook)
     (remove-hook 'text-mode-hook #'visual-line-mode)
@@ -294,18 +305,16 @@
 ;;;; Smartparens
 ;;;;
 
-(leaf smartparens
-  :ensure t
-  :tag "external" "editing"
-  :hook (first-buffer-hook . smartparens-global-mode)
+(use-package smartparens
+  :hook (first-buffer . smartparens-global-mode)
   :commands sp-pair sp-local-pair sp-with-modes sp-point-in-comment sp-point-in-string
   :custom
-  (sp-highlight-pair-overlay . nil)
-  (sp-highlight-wrap-overlay . nil)
-  (sp-highlight-wrap-tag-overlay . nil)
-  (sp-max-prefix-length . 25)
-  (sp-max-pair-length . 4)
-  (sp-escape-quotes-after-insert . nil)
+  (sp-highlight-pair-overlay nil)
+  (sp-highlight-wrap-overlay nil)
+  (sp-highlight-wrap-tag-overlay nil)
+  (sp-max-prefix-length 25)
+  (sp-max-pair-length 4)
+  (sp-escape-quotes-after-insert nil)
   :config
   ;; smartparens recognizes `slime-mrepl-mode', but not `sly-mrepl-mode', so...
   (add-to-list 'sp-lisp-modes 'sly-mrepl-mode)
@@ -356,64 +365,59 @@
 ;;;; WS-Butler
 ;;;;
 
-(leaf ws-butler
-  :ensure t
-  :doc "A less intrusive `delete-trailing-whitespaces' on save."
-  :tag "external" "editing"
+(use-package ws-butler
   :diminish
-  :hook (first-buffer-hook . ws-butler-global-mode))
+  :hook (first-buffer . ws-butler-global-mode))
 
 ;;;; EditorConfig
 ;;;;
 
-(leaf editorconfig
-  :ensure t
-  :tag "external" "editing"
-  :diminish
-  :hook ((c-mode-hook c++-mode-hook csharp-mode-hook fsharp-mode-hook java-mode-hook
-                      emacs-lisp-mode-hook python-mode-hook ruby-mode-hook
-                      markdown-mode-hook css-mode-hook sass-mode-hook html-mode-hook mhtml-mode-hook
-                      js-mode-hook js2-mode-hook rjsx-mode-hook typescript-mode-hook json-mode-hook)
-         . editorconfig-mode)
-  :preface
-  (defvar editorconfig-mode--alist
-    '((emacs-lisp-mode . "el")
-      (csharp-mode . "cs")
-      (fsharp-mode . "fs")
-      (java-mode . "java")
-      (js-mode . "js")
-      (js2-mode "js")
-      (perl-mode . "pl")
-      (php-mode . "php")
-      (python-mode . "py")
-      (ruby-mode . "rb")
-      (sh-mode . "sh")
-      (markdown-mode . "md"))
-    "An alist mapping major modes to their proper file extensions.
+;;;###autoload
+(defvar editorconfig-mode--alist
+  '((emacs-lisp-mode . "el")
+    (csharp-mode . "cs")
+    (fsharp-mode . "fs")
+    (java-mode . "java")
+    (js-mode . "js")
+    (js2-mode "js")
+    (perl-mode . "pl")
+    (php-mode . "php")
+    (python-mode . "py")
+    (ruby-mode . "rb")
+    (sh-mode . "sh")
+    (markdown-mode . "md"))
+  "An alist mapping major modes to their proper file extensions.
 Used in our `editorconfig--smart-detection' function.")
 
-  (defun editorconfig:smart-detection (orig-fn)
-    "Retrieve the properties for the current file. If it doesn't have
+;;;###autoload
+(defun editorconfig:smart-detection (orig-fn)
+  "Retrieve the properties for the current file. If it doesn't have
 an extension, try to guess one."
-    (let ((buffer-file-name (if (and (not (bound-and-true-p org-src-mode))
-                                     (file-name-extension buffer-file-name))
-                                buffer-file-name
-                              (format "%s%s" (buffer-file-name (buffer-base-buffer))
-                                      (if-let (ext (alist-get major-mode editorconfig-mode--alist))
-                                          (concat "." ext)
-                                        "")))))
-      (funcall orig-fn)))
+  (let ((buffer-file-name (if (and (not (bound-and-true-p org-src-mode))
+                                   (file-name-extension buffer-file-name))
+                              buffer-file-name
+                            (format "%s%s" (buffer-file-name (buffer-base-buffer))
+                                    (if-let (ext (alist-get major-mode editorconfig-mode--alist))
+                                        (concat "." ext)
+                                      "")))))
+    (funcall orig-fn)))
+
+(use-package editorconfig
+  :diminish
+  :hook ((c-mode c++-mode csharp-mode fsharp-mode java-mode
+                      emacs-lisp-mode python-mode ruby-mode
+                      markdown-mode css-mode-hook sass-mode html-mode mhtml-mode
+                      js-mode js2-mode rjsx-mode typescript-mode json-mode)
+         . editorconfig-mode)
   :custom
-  (editorconfig-trim-whitespace-mode . 'ws-butler-mode)
+  (editorconfig-trim-whitespace-mode 'ws-butler-mode)
   :advice
   (:around editorconfig-call-editorconfig-exec editorconfig:smart-detection))
 
 ;;;; Scratch-Palette
 ;;;;
 
-(leaf scratch-palette
-  :ensure t
-  :tag "external" "editing"
+(use-package scratch-palette
   :commands scratch-palette-popup scratch-palette-kill)
 
 (provide 'editing)

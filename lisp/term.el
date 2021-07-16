@@ -19,7 +19,7 @@
 ;;; Builtin Emacs Packages
 ;;;
 
-;;;; TODO Eshell
+;;;; Eshell
 ;;;;
 
 ;;;###autoload
