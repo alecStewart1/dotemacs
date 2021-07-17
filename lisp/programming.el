@@ -51,9 +51,8 @@
                                       (scss . " -w --parser scss")
                                       (json . " -w --parser json")
                                       (yaml . " -w --parser yaml")))
-
-;;;###autoload
 ;; TODO
+;;;###autoload
 (defvar format:formatter-region-args-alist '((py   . " -c")))
 
 (defun format::shfmt-lang-args ()
@@ -119,235 +118,232 @@ format text in a specific region."
 ;;; Packages
 ;;;
 
-(leaf *utilities
-  :doc "Things that make programming in Emacs a bit nicer."
+;;;; Utilities
+;;;;
+
+(use-package compile
+  :hook (compilation-filter . compile:colorize-compilation-buffer)
+  :preface
+  (defun compile:colorize-compilation-buffer ()
+    "ANSI coloring in the compilation buffers."
+    (when (eq major-mode 'compilation-mode)
+      (ansi-color-apply-on-region compilation-filter-start (point-max))))
+  :custom
+  (compilation-always-kill . 1)
+  (compilation-ask-about-save . nil)
+  (compilation-scroll-output . 'first-error))
+
+(use-package flymake
+  :hook (prog-mode . flymake-mode)
   :config
-  (leaf compile
-    :tag "builtin" "utilities" "programming"
-    :hook (compilation-filter-hook . compile:colorize-compilation-buffer)
-    :preface
-    (defun compile:colorize-compilation-buffer ()
-      "ANSI coloring in the compilation buffers."
-      (when (eq major-mode 'compilation-mode)
-        (ansi-color-apply-on-region compilation-filter-start (point-max))))
-    :custom
-    (compilation-always-kill . 1)
-    (compilation-ask-about-save . nil)
-    (compilation-scroll-output . 'first-error))
+  (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake))
 
-  (leaf flymake
-    :tag "builtin" "utilities" "syntax" "programming"
-    :hook (prog-mode-hook . flymake-mode)
-    :config
-    (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake))
+(use-package goto-addr
+  :hook (prog-mode . goto-address-mode))
 
-  (leaf goto-addr
-    :tag "builtin" "utilities" "programming"
-    :hook (prog-mode-hook . goto-address-mode))
+(use-package eldoc
+  :diminish)
 
-  (leaf eldoc
-    :tag "builtin" "utilities" "programming"
-    :diminish)
+(use-package rmsbolt
+  :after (:any c-mode c++-mode objc-mode emacs-lisp-mode common-lisp-mode))
 
-  (leaf rmsbolt
-    :ensure t
-    :tag "external" "utilities" "programming"
-    :after (:any c-mode c++-mode objc-mode emacs-lisp-mode common-lisp-mode))
+(use-package tree-sitter
+  :if (functionp 'module-load)
+  :hook ((sh-mode . tree-sitter-mode)
+         (c-mode . (tree-sitter-mode tree-sitter-hl-mode))
+         (csharp-mode . (tree-sitter-mode tree-sitter-hl-mode))
+         (c++-mode . (tree-sitter-mode tree-sitter-hl-mode))
+         (css-mode . tree-sitter-mode)
+         (html-mode . tree-sitter-mode)
+         (mhtml-mode . tree-sitter-mode)
+         (java-mode . (tree-sitter-mode tree-sitter-hl-mode))
+         (js-mode . tree-sitter-mode)
+         (js-jsx-mode . tree-sitter-mode)
+         (js2-mode . tree-sitter-mode)
+         (ruby-mode  . (tree-sitter-mode tree-sitter-hl-mode))
+         (enh-ruby-mode . (tree-sitter-mode tree-sitter-hl-mode))
+         (rjsx-mode . tree-sitter-mode)
+         (typescript-mode . tree-sitter-mode)
+         (json-mode . (tree-sitter-mode tree-sitter-hl-mode))
+         (jsonc-mode . (tree-sitter-mode tree-sitter-hl-mode))
+         (python-mode . (tree-sitter-mode tree-sitter-hl-mode))
+         (ruby-mode . (tree-sitter-mode tree-sitter-hl-mode))))
 
-  (leaf tree-sitter
-    :if (functionp 'module-load)
-    :ensure t
-    :tag "external" "utilities" "syntax" "programming"
-    :hook ((sh-mode . tree-sitter-mode)
-           (c-mode . (tree-sitter-mode tree-sitter-hl-mode))
-           (csharp-mode . (tree-sitter-mode tree-sitter-hl-mode))
-           (c++-mode . (tree-sitter-mode tree-sitter-hl-mode))
-           (css-mode . tree-sitter-mode)
-           (html-mode . tree-sitter-mode)
-           (mhtml-mode . tree-sitter-mode)
-           (java-mode . (tree-sitter-mode tree-sitter-hl-mode))
-           (js-mode . tree-sitter-mode)
-           (js-jsx-mode . tree-sitter-mode)
-           (js2-mode . tree-sitter-mode)
-           (ruby-mode  . (tree-sitter-mode tree-sitter-hl-mode))
-           (enh-ruby-mode . (tree-sitter-mode tree-sitter-hl-mode))
-           (rjsx-mode . tree-sitter-mode)
-           (typescript-mode . tree-sitter-mode)
-           (json-mode . (tree-sitter-mode tree-sitter-hl-mode))
-           (jsonc-mode . (tree-sitter-mode tree-sitter-hl-mode))
-           (python-mode . (tree-sitter-mode tree-sitter-hl-mode))
-           (ruby-mode . (tree-sitter-mode tree-sitter-hl-mode))))
+(use-package tree-sitter-langs
+  :after tree-sitter
+  :custom
+  (tree-sitter-langs
+   '((sh-mode . bash)
+     (c-mode . c)
+     (csharp-mode . c-sharp)
+     (c++-mode . cpp)
+     (css-mode . css)
+     (html-mode . html)
+     (mhtml-mode . html)
+     (java-mode . java)
+     (js-mode . javascript)
+     (js2-mode . javascript)
+     (ruby-mode . ruby)
+     (rjsx-mode . javascript)
+     (typescript-mode . typescript)
+     (json-mode . json)
+     (jsonc-mode . json)
+     (python-mode . python)
+     (ruby-mode . ruby))))
 
-  (leaf tree-sitter-langs
-    :ensure t
-    :tag "external" "syntax" "complimentary" "programming"
-    :after tree-sitter
-    :custom
-    (tree-sitter-langs
-     '((sh-mode . bash)
-       (c-mode . c)
-       (csharp-mode . c-sharp)
-       (c++-mode . cpp)
-       (css-mode . css)
-       (html-mode . html)
-       (mhtml-mode . html)
-       (java-mode . java)
-       (js-mode . javascript)
-       (js2-mode . javascript)
-       (ruby-mode . ruby)
-       (rjsx-mode . javascript)
-       (typescript-mode . typescript)
-       (json-mode . json)
-       (jsonc-mode . json)
-       (python-mode . python)
-       (ruby-mode . ruby))))
-
-  (leaf projectile
-    :ensure t   
-    :tag "external" "utilities" "projectile" "programming"
-    :commands (projectile-project-root
-               projectile-project-name
-               projectile-project-p
-               projectile-locate-dominating-file
-               projectile-relevant-known-projects)
-    :preface
-    (defun projectile:cleanup-project-cache ()
-      "Purge projectile cache entries that:
+(use-package projectile
+  :commands (projectile-project-root
+             projectile-project-name
+             projectile-project-p
+             projectile-locate-dominating-file
+             projectile-relevant-known-projects)
+  :preface
+  (defun projectile:cleanup-project-cache ()
+    "Purge projectile cache entries that:
 
     a) have too many files (see `projectile:cache-limit'),
     b) represent blacklisted directories that are too big, change too often or are
        private. (see `projectile:cache-blacklist'),
     c) are not valid projectile projects."
-      (when (and (bound-and-true-p projectile-projects-cache)
-                 projectile-enable-caching)
-        (setq projectile-known-projects
-              (cl-remove-if #'projectile-ignored-project-p
-                            projectile-known-projects))
-        (projectile-cleanup-known-projects)
-        (cl-loop with blacklist = (mapcar #'file-truename projectile:cache-blacklist)
-                 for proot in (hash-table-keys projectile-projects-cache)
-                 if (or (not (stringp proot))
-                        (>= (length (gethash proot projectile-projects-cache))
-                            projectile:cache-limit)
-                        (member (substring proot 0 -1) blacklist)
-                        (and projectile:cache-purge-non-projects
-                             (not (projectile-project-p proot)))
-                        (projectile-ignored-project-p proot))
-                 do (doom-log "Removed %S from projectile cache" proot)
-                 and do (remhash proot projectile-projects-cache)
-                 and do (remhash proot projectile-projects-cache-time)
-                 and do (remhash proot projectile-project-type-cache))
-        (projectile-serialize-cache)))
-
-    (defun projectile:only-use-generic-command (vcs)
-      (if (functionp projectile-generic-command)
-          (funcall projectile-generic-command vcs)
-        projectile-generic-command))
-
-    (defun projectile:default-generic-command (orig-fn &rest args)
-      (ignore-errors (apply orig-fn args)))
-    :init
-    (defvar projectile:cache-limit 10000)
-    (defvar projectile:cache-blacklist '("~" "/tmp" "/"))
-    (defvar projectile:cache-purge-non-projects nil)
-    (defvar projectile:fd-binary (cl-find-if #'executable-find (list "fdfind" "fd")))
-    :advice
-    (:override projectile-get-ext-command projectile:only-use-generic-command)
-    (:around projectile-default-generic-command projectile:default-generic-command)
-    :custom
-    `((projectile-cache-file . ,(concat my-cache-dir "projectile.cache"))
-      (projectile-auto-discover . nil)
-      (projectile-enable-caching . doom-interactive-p)
-      (projectile-globally-ignored-files . '(".DS_Store" "TAGS"))
-      (projectile-globally-ignored-file-suffixes . '(".elc" ".pyc" ".o"))
-      (projectile-kill-buffers-filter . 'kill-only-files)
-      (projectile-known-projects-file . ,(concat my-cache-dir "projectile.projects"))
-      (projectile-ignored-projects . ,(list "~/" temporary-file-directory))
-      (projectile-project-root-files-bottom-up .
-       ,(append '(".projectile"  ; projectile's root marker
-                 ".project"     ; doom project marker
-                 ".git")        ; Git VCS root dir
-               (when (executable-find "hg")
-                 '(".hg"))      ; Mercurial VCS root dir
-               (when (executable-find "bzr")
-                 '(".bzr"))))  ; Bazaar VCS root dir
-      (projectile-project-root-files . '())
-      (projectile-project-root-files-top-down-recurring . '("Makefile"))
-      (projectile-git-submodule-command . nil)
-      (projectile-indexing-method . 'hybrid)
-      (projectile-generic-command . ,(concat projectile:fd-binary " . -0 -H --color=never --type file --type symlink --follow --exclude .git")))
-    :config
-    (projectile-mode +1)
-
-    (add-transient-hook! 'projectile-relevant-known-projects
+    (when (and (bound-and-true-p projectile-projects-cache)
+               projectile-enable-caching)
+      (setq projectile-known-projects
+            (cl-remove-if #'projectile-ignored-project-p
+                          projectile-known-projects))
       (projectile-cleanup-known-projects)
-      (projectile-discover-projects-in-search-path))
+      (cl-loop with blacklist = (mapcar #'file-truename projectile:cache-blacklist)
+               for proot in (hash-table-keys projectile-projects-cache)
+               if (or (not (stringp proot))
+                      (>= (length (gethash proot projectile-projects-cache))
+                          projectile:cache-limit)
+                      (member (substring proot 0 -1) blacklist)
+                      (and projectile:cache-purge-non-projects
+                           (not (projectile-project-p proot)))
+                      (projectile-ignored-project-p proot))
+               do (doom-log "Removed %S from projectile cache" proot)
+               and do (remhash proot projectile-projects-cache)
+               and do (remhash proot projectile-projects-cache-time)
+               and do (remhash proot projectile-project-type-cache))
+      (projectile-serialize-cache)))
 
-    (push (abbreviate-file-name my-local-dir) projectile-globally-ignored-directories)
+  :init
+  (defvar projectile:cache-limit 10000)
+  (defvar projectile:cache-blacklist '("~" "/tmp" "/"))
+  (defvar projectile:cache-purge-non-projects nil)
+  (defvar projectile:fd-binary (cl-find-if #'executable-find (list "fdfind" "fd")))
+  :custom
+  (projectile-cache-file (concat my-cache-dir "projectile.cache"))
+  (projectile-auto-discover nil)
+  ;;(projectile-enable-caching doom-interactive-p)
+  (projectile-globally-ignored-files '(".DS_Store" "TAGS"))
+  (projectile-globally-ignored-file-suffixes '(".elc" ".pyc" ".o"))
+  (projectile-kill-buffers-filter 'kill-only-files)
+  (projectile-known-projects-file (concat my-cache-dir "projectile.projects"))
+  (projectile-ignored-projects (list "~/" temporary-file-directory))
+  (projectile-project-root-files-bottom-up
+                                           (append '(".projectile"  ; projectile's root marker
+                                                     ".project"     ; doom project marker
+                                                     ".git")        ; Git VCS root dir
+                                                   (when (executable-find "hg")
+                                                     '(".hg"))      ; Mercurial VCS root dir
+                                                   (when (executable-find "bzr")
+                                                     '(".bzr"))))  ; Bazaar VCS root dir
+  (projectile-project-root-files '())
+  (projectile-project-root-files-top-down-recurring '("Makefile"))
+  (projectile-git-submodule-command nil)
+  (projectile-indexing-method 'hybrid)
+  (projectile-generic-command
+   (lambda (_)
+     (cond ((when-let (bin (if (ignore-errors (file-remote-p default-directory nil t))
+                               (cl-find-if (-rpartial #'executable-find t)
+                                           (list "fdfind" "fd"))
+                             projectile:fd-binary))
+              (concat (format "%s . -0 -H --color=never --type file --type symlink --follow --exclude .git" bin)
+                      (if windows-nt-p "--path-separator=/"))))
+           ((executable-find "rg" t)
+            (concat "rg -0 --files --follow --color=never --hidden -g!.git"
+                    (if window-nt-p "--path-separator=/")))
+           ("find . -type f -print0"))))
+  :config
+  (projectile-mode +1)
 
-    (setq compilation-buffer-name-function #'projectile-compilation-buffer-name
-          compilation-save-buffers-predicate #'projectile-current-project-buffer-p)
+  (add-transient-hook! 'projectile-relevant-known-projects
+    (projectile-cleanup-known-projects)
+    (projectile-discover-projects-in-search-path))
 
-    (put 'projectile-ag 'disabled "Use +{vertico,selectrum}/project-search instead")
-    (put 'projectile-ripgrep 'disabled "Use +{vertico,seletrum}/project-search instead")
-    (put 'projectile-grep 'disabled "Use +{vertico,seletrum}/project-search instead")
+  (push (abbreviate-file-name my-local-dir) projectile-globally-ignored-directories)
 
-    ;; Accidentally indexing big directories like $HOME or / will massively bloat
-    ;; projectile's cache (into the hundreds of MBs). This purges those entries
-    ;; when exiting Emacs to prevent slowdowns/freezing when cache files are
-    ;; loaded or written to.
-    (add-hook! 'kill-emacs-hook #'projectile:cleanup-project-cache)
+  (setq compilation-buffer-name-function #'projectile-compilation-buffer-name
+        compilation-save-buffers-predicate #'projectile-current-project-buffer-p)
 
-    ;; It breaks projectile's project root resolution if HOME is a project (e.g.
-    ;; it's a git repo). In that case, we disable bottom-up root searching to
-    ;; prevent issues. This makes project resolution a little slower and less
-    ;; accurate in some cases.
-    (let ((default-directory "~"))
-      (when (cl-find-if #'projectile-file-exists-p
-                        projectile-project-root-files-bottom-up)
-        (doom-log "HOME appears to be a project. Disabling bottom-up root search.")
-        (setq projectile-project-root-files
-              (append projectile-project-root-files-bottom-up
-                      projectile-project-root-files)
-              projectile-project-root-files-bottom-up nil)))))
+  (defadvice! projectile:dirconfig-file ()
+    :override #'projectile-dirconfig-file
+    (cond ((file-exists-p! (or ".projectile" ".project") (projectile-project-root)))
+          ((expand-file-name ".project" (projectile-project-root)))))
+
+  (put 'projectile-ag 'disabled "Use +{vertico,selectrum}/project-search instead")
+  (put 'projectile-ripgrep 'disabled "Use +{vertico,seletrum}/project-search instead")
+  (put 'projectile-grep 'disabled "Use +{vertico,seletrum}/project-search instead")
+
+  ;; Accidentally indexing big directories like $HOME or / will massively bloat
+  ;; projectile's cache (into the hundreds of MBs). This purges those entries
+  ;; when exiting Emacs to prevent slowdowns/freezing when cache files are
+  ;; loaded or written to.
+  (add-hook! 'kill-emacs-hook #'projectile:cleanup-project-cache)
+
+  (add-hook 'dired-before-readin-hook #'projectile-track-known-projects-find-file-hook)
+
+  (defadvice! projectile:only-use-generic-command (vcs)
+    "Only use `projectile-generic-command' for indexing project files.
+And if it's a function, evaluate it."
+    :override #'projectile-get-ext-command
+    (if (functionp projectile-generic-command)
+        (funcall projectile-generic-command vcs)
+      projectile-generic-command))
+
+  (defadvice! projectile:default-generic-command (orig-fn &rest args)
+    :around #'projectile-default-generic-command
+    (ignore-errors (apply orig-fn args)))
+
+  ;; It breaks projectile's project root resolution if HOME is a project (e.g.
+  ;; it's a git repo). In that case, we disable bottom-up root searching to
+  ;; prevent issues. This makes project resolution a little slower and less
+  ;; accurate in some cases.
+  (let ((default-directory "~"))
+    (when (cl-find-if #'projectile-file-exists-p
+                      projectile-project-root-files-bottom-up)
+      ;(doom-log "HOME appears to be a project. Disabling bottom-up root search.")
+      (setq projectile-project-root-files
+            (append projectile-project-root-files-bottom-up
+                    projectile-project-root-files)
+            projectile-project-root-files-bottom-up nil))))
 
 ;;;; Assembler
 ;;;;
 
-(leaf *assembly
-  :doc ""
-  :config
-  (leaf asm-mode
-    :tag "builtin" "assembly" "programming"
-    :mode "\\.inc$")
+(use-package asm-mode
+  :mode "\\.inc$")
 
-  (leaf nasm-mode
-    :ensure t
-    :tag "external" "assembly" "programming"
-    :mode "\\.nasm$")
+(use-package nasm-mode
+  :mode "\\.nasm$")
 
-  (leaf mips-mode
-    :ensure t
-    :tag "external" "assembly" "programming"
-    :mode "\\.mips$")
+(use-package mips-mode
+  :mode "\\.mips$")
 
-  (leaf masm-mode
-    :if (or windows-nt-p cygwin-p)
-    :ensure t
-    :tag "external" "assembly" "programming"
-    :mode "\\.masm$"))
+(use-package masm-mode
+  :if (or windows-nt-p cygwin-p)
+  :mode "\\.masm$")
 
 ;;;; C/C++, Objective-C
 ;;;;
 
-(leaf cc-mode
-  :tag "builtin" "c/c++/obj-c" "programming"
+(use-package cc-mode
   :mode ("\\.mm\\'" . objc-mode)
-  :hook ((c-mode-local-vars-hook
-          c++-mode-local-vars-hook
-          objc-mode-local-vars-hook
-          cmake-mode-local-vars-hook) . lsp-deferred)
-  :hook (c-mode-common-hook . rainbow-delimiters-mode)
+  :hook ((c-mode-local-vars
+          c++-mode-local-vars
+          objc-mode-local-vars
+          cmake-mode-local-vars) . lsp-deferred)
+  :hook (c-mode-common . rainbow-delimiters-mode)
   :custom
   (c-default-style . "bsd")
   (c-basic-offset . tab-width)
@@ -376,163 +372,151 @@ format text in a specific region."
 ;;;; Shell
 ;;;;
 
-(leaf *shell
-  :doc "Big skwipt kiddie."
+(use-package sh-script
+  :mode ("\\.\\(?:zunit\\|env\\)\\'" . sh-mode)
+  :mode ("/bspwmrc\\'" . sh-mode)
+  :preface
+  (defvar sh-shell-file)
+  (defvar sh-builtin-keywords
+    '("cat" "cd" "chmod" "chown" "cp" "curl" "date" "echo" "find" "git" "grep"
+      "kill" "less" "ln" "ls" "make" "mkdir" "mv" "pgrep" "pkill" "pwd" "rm"
+      "sleep" "sudo" "touch")
+    "A list of common shell commands to be fontified especially in `sh-mode'.")
   :config
-  (leaf sh-script
-    :tag "builtin" "shell-script" "programming"
-    :mode ("\\.\\(?:zunit\\|env\\)\\'" . sh-mode)
-    :mode ("/bspwmrc\\'" . sh-mode)
-    :preface
-    (defvar sh-shell-file)
-    (defvar sh-builtin-keywords
-      '("cat" "cd" "chmod" "chown" "cp" "curl" "date" "echo" "find" "git" "grep"
-        "kill" "less" "ln" "ls" "make" "mkdir" "mv" "pgrep" "pkill" "pwd" "rm"
-        "sleep" "sudo" "touch")
-      "A list of common shell commands to be fontified especially in `sh-mode'.")
+  ;; TODO uhhh...where do I use these two functions?
+  (defun sh-script:match-variables-in-quotes (limit)
+    "Search for variables in double-quoted strings bounded by LIMIT."
+    (with-syntax-table sh-mode-syntax-table
+      (let (res)
+        (while (and (setq res (re-search-forward
+                               "[^\\]\\(\\$\\)\\({.+?}\\|\\<[a-zA-Z0-9_]+\\|[@*#!]\\)"
+                               limit t))
+                    (not (eq (nth 3 (syntax-ppss)) ?\"))))
+        res)))
 
-    (defun sh-script:match-variables-in-quotes (limit)
-      "Search for variables in double-quoted strings bounded by LIMIT."
-      (with-syntax-table sh-mode-syntax-table
-        (let (res)
-          (while (and (setq res (re-search-forward
-                                 "[^\\]\\(\\$\\)\\({.+?}\\|\\<[a-zA-Z0-9_]+\\|[@*#!]\\)"
-                                 limit t))
-                      (not (eq (nth 3 (syntax-ppss)) ?\"))))
-          res)))
+  (defun sh-script:match-command-subst-in-quotes (limit)
+    "Search for variables in double-quoted strings bounded by LIMIT."
+    (with-syntax-table sh-mode-syntax-table
+      (let (res)
+        (while (and (setq res (re-search-forward "[^\\]\\(\\$(.+?)\\|`.+?`\\)"
+                                                 limit t))
+                    (not (eq (nth 3 (syntax-ppss)) ?\"))))
+        res)))
 
-    (defun sh-script:match-command-subst-in-quotes (limit)
-      "Search for variables in double-quoted strings bounded by LIMIT."
-      (with-syntax-table sh-mode-syntax-table
-        (let (res)
-          (while (and (setq res (re-search-forward "[^\\]\\(\\$(.+?)\\|`.+?`\\)"
-                                                   limit t))
-                      (not (eq (nth 3 (syntax-ppss)) ?\"))))
-          res)))
-    :config
-    (setq sh-indent-after-continuation 'always)
-    (add-to-list 'sh-imenu-generic-expression
-                 'sh (nil "^\\s-*function\\s-+\\([[:alpha:]_-][[:alnum:]_-]*\\)\\s-*\\(?:()\\)?" 1)
-                 (nil "^\\s-*\\([[:alpha:]_-][[:alnum:]_-]*\\)\\s-*()" 1))
-    (add-hook! 'sh-mode-hook
-      (defun sh-init-extra-fontification ()
-        (font-lock-add-keywords nil
-                                `((sh--match-variables-in-quotes
-                                   (1 'font-lock-constant-face preprend)
-                                   (2 'font-lock-variable-name-face prepend))
-                                  (sh--match-command-subst-in-quotes
-                                   (1 'sh-quoted-exec prepend))
-                                  (,(regexp-opt sh-builtin-keywords 'symbols)
-                                   (0 'font-lock-type-face append))))))
-    (add-hook 'sh-mode-hook #'rainbow-delimiters-mode)
-    (sp-local-pair 'sh-mode "`" "`" :unless '(sp-point-before-word-p sp-point-before-same-p)))
+  (setq sh-indent-after-continuation 'always)
 
+  (add-to-list 'sh-imenu-generic-expression
+               'sh (nil "^\\s-*function\\s-+\\([[:alpha:]_-][[:alnum:]_-]*\\)\\s-*\\(?:()\\)?" 1)
+               (nil "^\\s-*\\([[:alpha:]_-][[:alnum:]_-]*\\)\\s-*()" 1))
+  (add-hook! 'sh-mode-hook
+    (defun sh-init-extra-fontification ()
+      (font-lock-add-keywords nil
+                              `((sh--match-variables-in-quotes
+                                 (1 'font-lock-constant-face preprend)
+                                 (2 'font-lock-variable-name-face prepend))
+                                (sh--match-command-subst-in-quotes
+                                 (1 'sh-quoted-exec prepend))
+                                (,(regexp-opt sh-builtin-keywords 'symbols)
+                                 (0 'font-lock-type-face append))))))
+  (add-hook 'sh-mode-hook #'rainbow-delimiters-mode)
+  (sp-local-pair 'sh-mode "`" "`" :unless '(sp-point-before-word-p sp-point-before-same-p)))
 
-  (leaf company-shell
-    :ensure t
-    :tag "external" "shell-script" "complimentary" "programming"
-    :after sh-script
-    :config
-    (company:set-backend 'sh-mode '(company-shell company-files))
-    (setq company-shell-delete-duplicates t))
+(use-package company-shell
+  :after sh-script
+  :config
+  (company:set-backend 'sh-mode '(company-shell company-files))
+  (setq company-shell-delete-duplicates t))
 
-  (leaf fish-mode
-    :ensure t
-    :tag "external" "shell-script" "programming"))
+(use-package fish-mode)
 
 ;;;; Emacs-Lisp
 ;;;;
 
-(leaf *emacs-lisp
-  :doc "The only Lisp that might actually get used in \"production.\""
-  :config
-  (leaf elisp-mode
-    :tag "builtin" "elisp" "programming"
-    :mode ("\\.Cask\\'" . emacs-lisp-mode)
-    :hook (before-save-hook . format:format-current-file)
-    :preface
-    (defun elisp-mode:indent-function (indent-point state)
-      "A replacement for `lisp-indent-function'.
+(use-package elisp-mode
+  :mode ("\\.Cask\\'" . emacs-lisp-mode)
+  :hook (before-save . format:format-current-file)
+  :init
+  (defun elisp-mode:indent-function (indent-point state)
+    "A replacement for `lisp-indent-function'.
 Indents plists more sensibly. Adapted from
 https://emacs.stackexchange.com/questions/10230/how-to-indent-keywords-aligned"
-      (let ((normal-indent (current-column))
-            (orig-point (point))
-            ;; TODO Refactor `target' usage (ew!)
-            target)
-        (goto-char (1+ (elt state 1)))
-        (parse-partial-sexp (point) calculate-lisp-indent-last-sexp 0 t)
-        (cond ((and (elt state 2)
-                    (or (not (looking-at-p "\\sw\\|\\s_"))
-                        (eq (char-after) ?:)))
-               (unless (> (save-excursion (forward-line 1) (point))
-                          calculate-lisp-indent-last-sexp)
-                 (goto-char calculate-lisp-indent-last-sexp)
-                 (beginning-of-line)
-                 (parse-partial-sexp (point) calculate-lisp-indent-last-sexp 0 t))
-               (backward-prefix-chars)
-               (current-column))
-              ((and (save-excursion
-                      (goto-char indent-point)
-                      (skip-syntax-forward " ")
-                      (not (eq (char-after) ?:)))
-                    (save-excursion
-                      (goto-char orig-point)
-                      (and (eq (char-after) ?:)
-                           (eq (char-before) ?\()
-                           (setq target (current-column)))))
-               (save-excursion
-                 (move-to-column target t)
-                 target))
-              ((let* ((function (buffer-substring (point) (progn (forward-sexp 1) (point))))
-                      (method (or (function-get (intern-soft function) 'lisp-indent-function)
-                                  (get (intern-soft function) 'lisp-indent-hook))))
-                 (cond ((or (eq method 'defun)
-                            (and (null method)
-                                 (> (length function) 3)
-                                 (string-match-p "\\`def" function)))
-                        (lisp-indent-defform state indent-point))
-                       ((integerp method)
-                        (lisp-indent-specform method state indent-point normal-indent))
-                       (method
-                        (funcall method indent-point state))))))))
+    (let ((normal-indent (current-column))
+          (orig-point (point))
+          ;; TODO Refactor `target' usage (ew!)
+          target)
+      (goto-char (1+ (elt state 1)))
+      (parse-partial-sexp (point) calculate-lisp-indent-last-sexp 0 t)
+      (cond ((and (elt state 2)
+                  (or (not (looking-at-p "\\sw\\|\\s_"))
+                      (eq (char-after) ?:)))
+             (unless (> (save-excursion (forward-line 1) (point))
+                        calculate-lisp-indent-last-sexp)
+               (goto-char calculate-lisp-indent-last-sexp)
+               (beginning-of-line)
+               (parse-partial-sexp (point) calculate-lisp-indent-last-sexp 0 t))
+             (backward-prefix-chars)
+             (current-column))
+            ((and (save-excursion
+                    (goto-char indent-point)
+                    (skip-syntax-forward " ")
+                    (not (eq (char-after) ?:)))
+                  (save-excursion
+                    (goto-char orig-point)
+                    (and (eq (char-after) ?:)
+                         (eq (char-before) ?\()
+                         (setq target (current-column)))))
+             (save-excursion
+               (move-to-column target t)
+               target))
+            ((let* ((function (buffer-substring (point) (progn (forward-sexp 1) (point))))
+                    (method (or (function-get (intern-soft function) 'lisp-indent-function)
+                                (get (intern-soft function) 'lisp-indent-hook))))
+               (cond ((or (eq method 'defun)
+                          (and (null method)
+                               (> (length function) 3)
+                               (string-match-p "\\`def" function)))
+                      (lisp-indent-defform state indent-point))
+                     ((integerp method)
+                      (lisp-indent-specform method state indent-point normal-indent))
+                     (method
+                      (funcall method indent-point state))))))))
 
-    (defun elisp-mode:append-val-to-eldoc (orig-fn sym)
-      "Display variable value next to documentation in eldoc."
-      (when-let (ret (funcall orig-fn sym))
-        (if (boundp sym)
-            (concat ret " "
-                    (let* ((truncated " [...]")
-                           (print-escape-newlines t)
-                           (str (symbol-value sym))
-                           (str (prin1-to-string str))
-                           (limit (- (frame-width) (length ret) (length truncated) 1)))
-                      (format (format "%%0.%ds%%s" (max limit 0))
-                              (propertize str 'face 'warning)
-                              (if (< (length str) limit) "" truncated))))))) 
-    :custom
-    (tab-width . 8)
-    (mode-name . "Elisp")
-    (outline-regexp . "[ \t];;;; [^ \t\n]")
-    (lisp-indent-function . #'elisp-mode:indent-function)
-    :advice
-    (:around elisp-get-var-docstring elisp-mode:append-val-to-eldoc)
-    :config
-    (add-hook! 'emacs-lisp-mode-hook
-               #'outline-minor-mode
-               #'rainbow-delimiters-mode
-               #'highlight-quoted-mode
-               (lambda () 
-                 "Disable the checkdoc checker."
-                 (setq-local flycheck-disabled-checkers
-                             '(emacs-lisp-checkdoc))))
-    (add-hook 'help-mode-hook 'cursor-sensor-mode))
+  :custom
+  (tab-width . 8)
+  (mode-name . "Elisp")
+  (outline-regexp . "[ \t];;;; [^ \t\n]")
+  (lisp-indent-function . #'elisp-mode:indent-function)
+  :config
+  (defadvice! elisp-mode:append-val-to-eldoc (orig-fn sym)
+    "Display variable value next to documentation in eldoc."
+    :around #'elisp-get-var-docstring
+    (when-let (ret (funcall orig-fn sym))
+      (if (boundp sym)
+          (concat ret " "
+                  (let* ((truncated " [...]")
+                         (print-escape-newlines t)
+                         (str (symbol-value sym))
+                         (str (prin1-to-string str))
+                         (limit (- (frame-width) (length ret) (length truncated) 1)))
+                    (format (format "%%0.%ds%%s" (max limit 0))
+                            (propertize str 'face 'warning)
+                            (if (< (length str) limit) "" truncated)))))))
 
-  (leaf ielm
-    :tag "builtin" "elisp" "complimentary" "programming"
-    ;; Adapted from http://www.modernemacs.com/post/comint-highlighting/ to add
-    ;; syntax highlighting to ielm REPLs.
-    :config
-    (setq ielm-font-lock-keywords
+  (add-hook! 'emacs-lisp-mode-hook
+             #'outline-minor-mode
+             #'rainbow-delimiters-mode
+             #'highlight-quoted-mode
+             (lambda ()
+               "Disable the checkdoc checker."
+               (setq-local flycheck-disabled-checkers
+                           '(emacs-lisp-checkdoc))))
+  (add-hook 'help-mode-hook 'cursor-sensor-mode))
+
+(use-package ielm
+  ;; Adapted from http://www.modernemacs.com/post/comint-highlighting/ to add
+  ;; syntax highlighting to ielm REPLs.
+  :config
+  (setq ielm-font-lock-keywords
         (append '(("\\(^\\*\\*\\*[^*]+\\*\\*\\*\\)\\(.*$\\)"
                    (1 font-lock-comment-face)
                    (2 font-lock-constant-face)))
@@ -554,215 +538,188 @@ https://emacs.stackexchange.com/questions/10230/how-to-indent-keywords-aligned"
                                           (nth 4 state))))))
                            ,@match-highlights)))))
 
-  (leaf overseer
-    :config
-    (remove-hook 'emacs-lisp-mode-hook #'overseer-enable-mode))
+(use-package overseer
+  :config
+  (remove-hook 'emacs-lisp-mode-hook #'overseer-enable-mode))
 
-  (leaf elisp-demos
-    :ensure t
-    :require t
-    :tag "external" "elisp" "complimentary" "programming"
-    :init
-    (advice-add 'describe-function-1 :after #'elisp-demos-advice-describe-function-1)
-    (advice-add 'helpful-update :after #'elisp-demos-advice-helpful-update))
+(use-package elisp-demos
+  :demand t
+  :init
+  (advice-add 'describe-function-1 :after #'elisp-demos-advice-describe-function-1)
+  (advice-add 'helpful-update :after #'elisp-demos-advice-helpful-update))
 
-  (leaf buttercup
-    :ensure t
-    :tag "external" "elisp" "complimentary" "programming"
-    :mode ("/test[/-].+\\.el$" . buttercup-minor-mode)
-    :preface
-    (defvar buttercup-minor-mode-map (make-sparse-keymap))))
+(use-package buttercup
+  :mode ("/test[/-].+\\.el$" . buttercup-minor-mode)
+  :preface
+  (defvar buttercup-minor-mode-map (make-sparse-keymap)))
 
 ;;;; Common Lisp
 ;;;;
 
-(leaf *common-lisp
-  :doc "The master of all Lisps, the OG (kinda): Common Lisp."
+(defer-feature! lisp-mode)
+
+(add-hook 'lisp-mode-hook #'rainbow-delimiters-mode)
+
+(use-package sly
+  :hook (lisp-mode-local-vars-hook . sly-editing-mode)
+  :preface
+  (defvar inferior-lisp-program "sbcl")
+  :init
+  (add-hook! 'after-init-hook
+    (with-eval-after-load 'sly
+      (sly-setup)))
+  :custom
+  (sly-mrepl-history-file-name (concat my-cache-dir "sly-mrepl-history"))
+  (sly-net-coding-system 'utf-8-unix)
+  (sly-kill-without-query-p t)
+  (sly-lisp-implementations
+   `((sbcl (,(executable-find "sbcl")))
+     (ccl (,(executable-find "ccl")))
+     (ecl (,(executable-find "ecl")))
+     (abcl (,(executable-find "abcl")))
+     (clisp (,(executable-find "clisp")))))
+  (sly-description-autofocus t)
+  (sly-inhibit-pipelining nil)
+  (sly-load-failed-fasl 'always)
+  (sly-complete-symbol-function 'sly-flex-completions)
   :config
-  (defer-feature! lisp-mode)
+  (defun sly:cleanup-maybe ()
+    "Kill processes and leftover buffers when killing the last sly buffer."
+    (let ((buf-list (delq (current-buffer) (buffer-list))))
+      (unless (cl-loop for buf in buf-list
+                       if (and (buffer-local-value 'sly-mode buf)
+                               (get-buffer-window buf))
+                       return t)
+        (dolist (conn (sly--purge-connections))
+          (sly-quit-list-internal conn 'sly-quit-sentinel t))
+        (let (kill-buffer-hook kill-buffer-query-functions)
+          (mapc #'kill-buffer
+                (cl-loop for buf in buf-list
+                         if (buffer-local-value 'sly-mode buf)
+                         collect buf))))))
 
-  (add-hook 'lisp-mode-hook #'rainbow-delimiters-mode)
+  (defun sly:init ()
+    "Attempt to auto-start sly when opening a lisp buffer."
+    (cl-labels ((temp-buf-p (buf)
+                            (equal (substring (buffer-name buf) 0 1) " ")))
+      (cond ((or (temp-buf-p (current-buffer))
+                 (sly-connected-p)))
+            ((executable-find interfior-lisp-program)
+             (let ((sly-auto-start 'always))
+               (sly-auto-start)
+               (add-hook 'kill-buffer-hook #'sly:cleanup-maybe nil t)))
+            ((message "WARNING: Couldn't find `inferior-lisp-program' (%s)"
+                      inferior-lisp-program)))))
+  (add-hook! 'sly-mode-hook #'sly:init))
 
-  (leaf sly
-    :ensure t
-    :tag "external" "lisp" "programming"
-    :hook (lisp-mode-local-vars-hook . sly-editing-mode)
-    :preface
-    (defvar inferior-lisp-program "sbcl")
+(use-package sly-repl-ansi-color
+  :after sly
+  :init
+  (add-to-list 'sly-contribs 'sly-repl-ansi-color))
 
-    (defun sly:cleanup-maybe ()
-      "Kill processes and leftover buffers when killing the last sly buffer."
-      (let ((buf-list (delq (current-buffer) (buffer-list))))
-        (unless (cl-loop for buf in buf-list
-                         if (and (buffer-local-value 'sly-mode buf)
-                                 (get-buffer-window buf))
-                         return t)
-          (dolist (conn (sly--purge-connections))
-            (sly-quit-list-internal conn 'sly-quit-sentinel t))
-          (let (kill-buffer-hook kill-buffer-query-functions)
-            (mapc #'kill-buffer
-                  (cl-loop for buf in buf-list
-                           if (buffer-local-value 'sly-mode buf)
-                           collect buf))))))
+(use-package sly-asdf
+  :after sly
+  :config
+  (add-to-list 'sly-contribs 'sly-asdf #'append)
+  (with-eval-after-load 'sly
+    (sly-enable-contrib 'sly-asdf)))
 
-    (defun sly:init ()
-      "Attempt to auto-start sly when opening a lisp buffer."
-      (cl-labels ((temp-buf-p (buf)
-                              (equal (substring (buffer-name buf) 0 1) " ")))
-        (cond ((or (temp-buf-p (current-buffer))
-                   (sly-connected-p)))
-              ((executable-find interfior-lisp-program)
-               (let ((sly-auto-start 'always))
-                 (sly-auto-start)
-                 (add-hook 'kill-buffer-hook #'sly:cleanup-maybe nil t)))
-              ((message "WARNING: Couldn't find `inferior-lisp-program' (%s)"
-                        inferior-lisp-program)))))
-    :init
-    (add-hook! 'after-init-hook
-      (with-eval-after-load 'sly
-        (sly-setup)))
-    :custom
-    `((sly-mrepl-history-file-name . ,(concat my-cache-dir "sly-mrepl-history"))
-      (sly-net-coding-system . 'utf-8-unix)
-      (sly-kill-without-query-p . t)
-      (sly-lisp-implementations .
-       `((sbcl (,(executable-find "sbcl")))
-         (ccl (,(executable-find "ccl")))
-         (ecl (,(executable-find "ecl")))
-         (abcl (,(executable-find "abcl")))
-         (clisp (,(executable-find "clisp")))))
-      (sly-description-autofocus . t)
-      (sly-inhibit-pipelining . nil)
-      (sly-load-failed-fasl . 'always)
-      (sly-complete-symbol-function . 'sly-flex-completions))
-    :config
-    (add-hook! 'sly-mode-hook #'sly:init))
+(use-package sly-quicklisp
+  :after sly
+  :commands sly-quicklisp)
 
-  (leaf sly-repl-ansi-color
-    :ensure t
-    :tag "external" "lisp" "complimentary" "programming"
-    :after sly
-    :init
-    (add-to-list 'sly-contribs 'sly-repl-ansi-color))
-
-  (leaf sly-asdf
-    :ensure t
-    :tag "external" "lisp" "complimentary" "programming"
-    :after sly
-    :config
-    (add-to-list 'sly-contribs 'sly-asdf #'append)
-    (with-eval-after-load 'sly
-      (sly-enable-contrib 'sly-asdf)))
-
-  (leaf sly-quicklisp
-    :ensure t
-    :tag "external" "lisp" "complimentary" "programming"
-    :after sly
-    :commands sly-quicklisp)
-
-  (leaf sly-named-readtables
-    :ensure t
-    :tag "external" "lisp" "complimentary" "programming"
-    :after sly
-    :config
-    (with-eval-after-load 'sly
-      (sly-enable-contrib 'sly-named-readtables))))
+(use-package sly-named-readtables
+  :after sly
+  :config
+  (with-eval-after-load 'sly
+    (sly-enable-contrib 'sly-named-readtables)))
 
 ;;;; Schemes
 ;;;;
 
-(leaf *schemes
-  :doc "LISP-1's instead of LISP-2's. The 'hacker's' Lisp. Er, except Racket."
+(use-package scheme
+  :hook (scheme-mode . rainbow-delimiters-mode)
+  :preface
+  (defvar calculate-lisp-indent-last-sexp)
   :config
-  (leaf scheme
-    :tag "builtin" "scheme" "programming"
-    :hook (scheme-mode-hook . rainbow-delimiters-mode)
-    :preface
-    (defvar calculate-lisp-indent-last-sexp)
+  (defadvice! scheme:indent-function (indent-point state)
+    "A better indenting function for `scheme-mode'."
+    :override #'scheme-indent-function
+    (let ((normal-indent (current-column)))
+      (goto-char (1+ (elt state 1)))
+      (parse-partial-sexp (point) calculate-lisp-indnet-last-sexp 0 t)
+      (if (and (elt state 2)
+               (not (looking-at-p "\\sw\\|\\s_")))
+          (progn
+            (unless (> (save-excursion (forward-line 1) (point))
+                       calculate-lisp-indent-last-sexp)
+              (goto-char calculate-lisp-indent-last-sexp)
+              (beginning-of-line)
+              (parse-partial-sexp (point) calculate-lisp-indent-last-sexp 0 t))
+            (backward-prefix-chars)
+            (current-column))
+        (let* ((function (buffer-substring
+                          (point)
+                          (progn
+                            (forward-sexp 1)
+                            (point))))
+               (method (or (get (intern-soft function) 'scheme-indent-function)
+                           (get (intern-soft function) 'scheme-indent-hook))))
+          (cond ((or (eq method 'defun)
+                     (and (null method)
+                          (> (length function) 3)
+                          (string-match-p "\\`def" function)))
+                 (lisp-indent-defform state indent-point))
+                ((and (null method)
+                      (> (length function) 1)
+                      (string-match-p "\\`:" function))
+                 (let ((lisp-body-indent 1))
+                   (lisp-indent-defform state indent-point)))
+                ((integerp method)
+                 (lisp-indent-specform method state indent-point normal-indent))
+                (method
+                 (funcall method state indent-point normal-indent))))))))
 
-    (defun scheme:indent-function (indent-point state)
-      "A better indenting function for `scheme-mode'."
-      (let ((normal-indent (current-column)))
-        (goto-char (1+ (elt state 1)))
-        (parse-partial-sexp (point) calculate-lisp-indnet-last-sexp 0 t)
-        (if (and (elt state 2)
-                 (not (looking-at-p "\\sw\\|\\s_")))
-            (progn
-              (unless (> (save-excursion (forward-line 1) (point))
-                         calculate-lisp-indent-last-sexp)
-                (goto-char calculate-lisp-indent-last-sexp)
-                (beginning-of-line)
-                (parse-partial-sexp (point) calculate-lisp-indent-last-sexp 0 t))
-              (backward-prefix-chars)
-              (current-column))
-          (let* ((function (buffer-substring
-                            (point)
-                            (progn
-                              (forward-sexp 1)
-                              (point))))
-                 (method (or (get (intern-soft function) 'scheme-indent-function)
-                             (get (intern-soft function) 'scheme-indent-hook))))
-            (cond ((or (eq method 'defun)
-                       (and (null method)
-                            (> (length function) 3)
-                            (string-match-p "\\`def" function)))
-                   (lisp-indent-defform state indent-point))
-                  ((and (null method)
-                        (> (length function) 1)
-                        (string-match-p "\\`:" function))
-                   (let ((lisp-body-indent 1))
-                     (lisp-indent-defform state indent-point)))
-                  ((integerp method)
-                   (lisp-indent-specform method state indent-point normal-indent))
-                  (method
-                   (funcall method state indent-point normal-indent)))))))
-    :advice
-    (:override scheme-indent-function scheme:indent-function))
+(use-package geiser
+  :preface
+  (defun geiser/open-repl ()
+    "Open the Geiser REPL."
+    (interactive)
+    (call-interactively #'switch-to-geiser)
+    (current-buffer))
+  :init
+  ;; To work with Guile + Geiser
+  ;; We need this first in order to set our `geiser-activate-implementation' variable
+  (use-package geiser-guile :ensure t)
+  :custom
+  ;; May work with Gambit/Gerbil, I dunno.
+  ;; Guile, Chez, and Chicken are the better documented at the moment.
+  (geiser-active-implementations . '(guile chez chicken))
+  (geiser-autodoc-identifier-format . "%s => %s")
+  (geiser-repl-current-project-function . 'projectile-project-root))
 
-  (leaf geiser
-    :ensure t
-    :tag "external" "scheme" "complimentary" "programming"
-    :preface
-    (defun geiser/open-repl ()
-      "Open the Geiser REPL."
-      (interactive)
-      (call-interactively #'switch-to-geiser)
-      (current-buffer))
-    :init
-    ;; To work with Guile + Geiser
-    ;; We need this first in order to set our `geiser-activate-implementation' variable
-    (leaf geiser-guile :ensure t)
-    :custom
-    ;; May work with Gambit/Gerbil, I dunno.
-    ;; Guile, Chez, and Chicken are the better documented at the moment.
-    (geiser-active-implementations . '(guile chez chicken))
-    (geiser-autodoc-identifier-format . "%s => %s")
-    (geiser-repl-current-project-function . 'projectile-project-root))
+(use-package racket-mode
+  :mode "\\.rkt\\'"
+  :hook (racket-mode-local-vars . (racket-xp-mode lsp-deferred))
+  :preface
+  (defun racket:open-repl ()
+    "Open the Racket REPL."
+    (interactive)
+    (pop-to-buffer
+     (or (get-buffer "*Racket REPL*")
+         (progn (racket-run-and-switch-to-repl)
+                (let ((buf (get-buffer "*Racket REPL*")))
+                  (bury-buffer buf)
+                  buf)))))
+  :config
+  (require 'smartparens-racket)
+  (add-hook! 'racket-mode-hook
+             #'rainbow-delimiters-mode
+             #'highlight-quoted-mode)
 
-  (leaf racket-mode
-    :ensure t
-    :tag "external" "racket" "scheme"  "programming"
-    :mode "\\.rkt\\'"
-    :hook (racket-mode-local-vars-hook . (racket-xp-mode lsp-deferred))
-    :preface
-    (defun racket:open-repl ()
-      "Open the Racket REPL."
-      (interactive)
-      (pop-to-buffer
-       (or (get-buffer "*Racket REPL*")
-           (progn (racket-run-and-switch-to-repl)
-                  (let ((buf (get-buffer "*Racket REPL*")))
-                    (bury-buffer buf)
-                    buf)))))
-    :config
-    (require 'smartparens-racket)
-    (add-hook! 'racket-mode-hook
-               #'rainbow-delimiters-mode
-               #'highlight-quoted-mode)
-
-    (add-hook! 'racket-xp-mode-hook
-      (defun racket-xp-disable-flycheck ()
-        (cl-pushnew 'racket flyheck-disabled-checkers)))))
+  (add-hook! 'racket-xp-mode-hook
+    (defun racket-xp-disable-flycheck ()
+      (cl-pushnew 'racket flyheck-disabled-checkers))))
 
 ;;;; .NET Core
 ;;;;
@@ -865,10 +822,8 @@ https://emacs.stackexchange.com/questions/10230/how-to-indent-keywords-aligned"
 ;;;; Nim
 ;;;;
 
-(leaf nim-mode
-  :ensure t
-  :tag "external" "nim" "programming"
-  :hook (nim-mode-hook . lsp-deferred)
+(use-package nim-mode
+  :hook (nim-mode . lsp-deferred)
   :init
   (add-hook! 'nim-mode-hook
     (defun nim:init-nimsuggest-mode ()
@@ -943,55 +898,39 @@ nimsuggest isn't installed."
 ;;;; Ruby
 ;;;;
 
-(leaf *ruby
-  :doc "The language meant for \"developer happiness\"."
+(use-package enh-ruby-mode
+  :mode "\\(?:\\.rb\\|ru\\|rake\\|thor\\|jbuilder\\|gemspec\\|podspec\\|/\\(?:Gem\\|Rake\\|Cap\\|Thor\\|Vagrant\\|Guard\\|Pod\\)file\\)\\'"
+  :mode "\\.\\(?:a?rb\\|aslsx\\)\\'"
+  :mode "/\\(?:Brew\\|Fast\\)file\\'"
+  :interpreter "j?ruby\\(?:[0-9.]+\\)"
   :config
-  (leaf enh-ruby-mode
-    :ensure t
-    :tag "external" "ruby" "programming"
-    :mode "\\(?:\\.rb\\|ru\\|rake\\|thor\\|jbuilder\\|gemspec\\|podspec\\|/\\(?:Gem\\|Rake\\|Cap\\|Thor\\|Vagrant\\|Guard\\|Pod\\)file\\)\\'"
-    :mode "\\.\\(?:a?rb\\|aslsx\\)\\'"
-    :mode "/\\(?:Brew\\|Fast\\)file\\'"
-    :interpreter "j?ruby\\(?:[0-9.]+\\)"
-    :config
-    (add-hook 'enh-ruby-mode-local-vars-hook #'lsp-deferred)
-    (setq-mode-local enh-ruby-mode sp-max-pair-length 6))
+  (add-hook 'enh-ruby-mode-local-vars-hook #'lsp-deferred)
+  (setq-mode-local enh-ruby-mode sp-max-pair-length 6))
 
-  (leaf inf-ruby
-    :ensure t
-    :tag "external" "ruby" "complimentary" "programming"
-    :after enh-ruby-mode
-    :config
-    (add-hook 'compilation-filter-hook #'inf-ruby-auto-enter))
+(use-package inf-ruby
+  :after enh-ruby-mode
+  :config
+  (add-hook 'compilation-filter-hook #'inf-ruby-auto-enter))
 
-  (leaf yard-mode
-    :ensure t
-    :tag "external" "ruby" "complimentary" "programming"
-    :after enh-ruby-mode)
+(use-package yard-mode
+  :after enh-ruby-mode)
 
-  (leaf rake
-    :ensure t
-    :tag "external" "ruby" "complimentary" "programming"
-    :after enh-ruby-mode
-    :commands (rake rake-rerun rake-regenerate-cache rake-find-task)
-    :custom
-    `((rake-cache-file . ,(concat my-cache-dir "rake.cache"))
-      (rake-completion-system . 'default)))
+(use-package rake
+  :after enh-ruby-mode
+  :commands (rake rake-rerun rake-regenerate-cache rake-find-task)
+  :custom
+  (rake-cache-file (concat my-cache-dir "rake.cache"))
+  (rake-completion-system 'default))
 
-  (leaf ruby-test-mode
-    :ensure t
-    :tag "external" "ruby" "complimentary" "programming"
-    :after enh-ruby-mode)
+(use-package ruby-test-mode
+  :after enh-ruby-mode)
 
-  (leaf projectile-rails
-    :ensure t
-    :tag "external" "ruby" "projectile" "complimentary" "programming"
-    :hook ((enh-ruby-mode inf-ruby-mode projectile-rails-server-mode) . projectile-rails-mode)
-    :hook (projectile-rails-mode-hook . auto-insert-mode)
-    :init
-    (setq auto-insert-query nil)
-    (setq inf-ruby-console-environment "development")))
-
+(use-package projectile-rails
+  :hook ((enh-ruby-mode inf-ruby-mode projectile-rails-server-mode) . projectile-rails-mode)
+  :hook (projectile-rails-mode-hook . auto-insert-mode)
+  :init
+  (setq auto-insert-query nil)
+  (setq inf-ruby-console-environment "development"))
 
 ;;;; Python
 ;;;;
@@ -1041,215 +980,185 @@ nimsuggest isn't installed."
 ;;;; Webdev
 ;;;;
 
-(leaf *webdev
-  :doc "Praise Teh Script."
+(use-package nxml-mode
+  :mode "\\.p\\(?:list\\|om\\)\\'" ; plist, pom
+  :mode "\\.xs\\(?:d\\|lt\\)\\'"   ; xslt, xsd
+  :mode "\\.xaml\\'"
+  :mode "\\.rss\\'"
+  :magic "<\\?xml"
+  :custom
+  (nxml-slash-auto-complete-flag t)
+  (nxml-auto-insert-xml-declaration-flag t)
   :config
-  (leaf nxml-mode
-    :tag "builtin" "markup" "programming"
-    :mode "\\.p\\(?:list\\|om\\)\\'" ; plist, pom
-    :mode "\\.xs\\(?:d\\|lt\\)\\'"   ; xslt, xsd
-    :mode "\\.xaml\\'"
-    :mode "\\.rss\\'"
-    :magic "<\\?xml"
-    :custom
-    (nxml-slash-auto-complete-flag . t)
-    (nxml-auto-insert-xml-declaration-flag . t)
-    :config
-    (company:set-backend 'nxml-mode '(company-nxml)))
+  (company:set-backend 'nxml-mode '(company-nxml)))
 
-  (leaf mhtml-mode
-    :tag "builtin" "markup" "web" "programming"
-    :mode "\\.html?\\'")
+(use-package mhtml-mode
+  :mode "\\.html?\\'")
 
-  (leaf web-mode
-    :ensure t
-    :tag "external" "markup" "web" "programming"
-    :mode "\\.[px]?html?\\'"
-    :mode "\\.\\(?:tpl\\|blade\\)\\(?:\\.php\\)?\\'"
-    :mode "\\.erb\\'"
-    :mode "\\.l?eex\\'"
-    :mode "\\.jsp\\'"
-    :mode "\\.as[cp]x\\'"
-    :mode "\\.hbs\\'"
-    :mode "\\.mustache\\'"
-    :mode "\\.svelte\\'"
-    :mode "\\.twig\\'"
-    :mode "\\.jinja2?\\'"
-    :mode "\\.eco\\'"
-    :mode "wp-content/themes/.+/.+\\.php\\'"
-    :mode "templates/.+\\.php\\'"
-    :mode "\\.vue\\'"
-    :init
-    ;; If the user has installed `vue-mode' then, by appending this to
-    ;; `auto-mode-alist' rather than prepending it, its autoload will have
-    ;; priority over this one.
-    (add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode) 'append)
-    :custom
-    (web-mode-enable-html-entities-fontification . t)
-    (web-mode-auto-close-style . 1)
-    (web-mode-enable-auto-quoting . nil)
-    (web-mode-enable-auto-pairing . t)
-    :config
-    ;; 1. Remove web-mode auto pairs whose end pair starts with a latter
-    ;;    (truncated autopairs like <?p and hp ?>). Smartparens handles these
-    ;;    better.
-    ;; 2. Strips out extra closing pairs to prevent redundant characters
-    ;;    inserted by smartparens.
-    (dolist (alist web-mode-engines-auto-pairs)
-      (setcdr alist
-              (cl-loop for pair in (cdr alist)
-                       unless (string-match-p "^[a-z-]" (cdr pair))
-                       collect (cons (car pair)
-                                     (string-trim-right (cdr pair)
-                                                        "\\(?:>\\|]\\|}\\)+\\'"))))))
+(use-package web-mode
+  :mode "\\.[px]?html?\\'"
+  :mode "\\.\\(?:tpl\\|blade\\)\\(?:\\.php\\)?\\'"
+  :mode "\\.erb\\'"
+  :mode "\\.l?eex\\'"
+  :mode "\\.jsp\\'"
+  :mode "\\.as[cp]x\\'"
+  :mode "\\.hbs\\'"
+  :mode "\\.mustache\\'"
+  :mode "\\.svelte\\'"
+  :mode "\\.twig\\'"
+  :mode "\\.jinja2?\\'"
+  :mode "\\.eco\\'"
+  :mode "wp-content/themes/.+/.+\\.php\\'"
+  :mode "templates/.+\\.php\\'"
+  :mode "\\.vue\\'"
+  :init
+  ;; If the user has installed `vue-mode' then, by appending this to
+  ;; `auto-mode-alist' rather than prepending it, its autoload will have
+  ;; priority over this one.
+  (add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode) 'append)
+  :custom
+  (web-mode-enable-html-entities-fontification t)
+  (web-mode-auto-close-style 1)
+  (web-mode-enable-auto-quoting nil)
+  (web-mode-enable-auto-pairing t)
+  :config
+  ;; 1. Remove web-mode auto pairs whose end pair starts with a latter
+  ;;    (truncated autopairs like <?p and hp ?>). Smartparens handles these
+  ;;    better.
+  ;; 2. Strips out extra closing pairs to prevent redundant characters
+  ;;    inserted by smartparens.
+  (dolist (alist web-mode-engines-auto-pairs)
+    (setcdr alist
+            (cl-loop for pair in (cdr alist)
+                     unless (string-match-p "^[a-z-]" (cdr pair))
+                     collect (cons (car pair)
+                                   (string-trim-right (cdr pair)
+                                                      "\\(?:>\\|]\\|}\\)+\\'"))))))
 
-  (leaf emmet-mode
-    :ensure t
-    :tag "external" "markup" "web" "complimentary" "programming"
-    :hook (css-mode-hook web-mode-hook html-mode-hook haml-mode-hook nxml-mode-hook)
-    :config
-    (when (package-installed-p 'yasnippet)
-      (add-hook 'emmet-mode-hook #'yas-minor-mode-on))
-    (setq emmet-move-cursor-between-quotes t)))
+(use-package emmet-mode
+  :hook (css-mode-hook web-mode-hook html-mode-hook haml-mode-hook nxml-mode-hook)
+  :config
+  (when (package-installed-p 'yasnippet)
+    (add-hook 'emmet-mode-hook #'yas-minor-mode-on))
+  (setq emmet-move-cursor-between-quotes t))
 
 ;;;; LSP and DAP
 ;;;;
 
-(leaf *lsp
-  :doc "Working with Microsoft's Language Server Protocol and the Debugger Adapter Protocol for programming."
+(use-package lsp-mode
+  :commands (lsp-format-buffer
+             lsp-organize-imports
+             lsp-install-server)
+  :hook
+  (lsp-mode . (lambda ()
+                     (add-hook 'before-save-hook #'lsp-format-buffer t t)
+                     (add-hook 'before-save-hook #'lsp-organize-imports t t)))
+  :preface
+  (defvar lsp-company-backends 'company-capf)
+  (defvar lsp--deferred-shutdown-timer nil)
+  :init
+  (setq lsp-session-file (concat my-etc-dir "lsp-seesion")
+        lsp-server-install-dir (concat my-etc-dir "lsp/"))
+  :custom
+  (lsp-keep-workspace-alive nil)
+  (lsp-intelephense-storage-path (concat my-cache-dir "lsp-intelephense/"))
+  (lsp-clients-emmy-lua-jar-path (concat lsp-server-install-dir "EmmyLua-LS-all.jar"))
+  (lsp-xml-jar-file              (concat lsp-server-install-dir "org.eclipse.lsp4xml-0.3.0-uber.jar"))
+  (lsp-groovy-server-file        (concat lsp-server-install-dir "groovy-language-server-all.jar"))
+  (lsp-clients-python-library-directories '("/usr/local/" "/usr/"))
+  (lsp-enable-folding nil)
+  (lsp-enable-text-document-color nil)
+  (lsp-enable-on-type-formatting nil)
+  (lsp-headerline-breadcrumb-enable nil)
+  (lsp-keymap-prefix nil)
   :config
-  (leaf lsp-mode
-    :ensure t
-    :tag "external" "lsp" "programming"
-    :defvar (lsp-intelephense-storage-path
-             lsp-clients-emmy-lua-jar-path
-             lsp-xml-jar-file
-             lsp-groovy-server-file
-             lsp-clients-python-library-directories)
-    :commands (lsp-format-buffer
-               lsp-organize-imports
-               lsp-install-server)
-    :hook
-    (lsp-mode-hook . (lambda ()
-                      (add-hook 'before-save-hook #'lsp-format-buffer t t)
-                      (add-hook 'before-save-hook #'lsp-organize-imports t t)))
-    :preface
-    (defvar lsp-company-backends 'company-capf)
-    (defvar lsp--deferred-shutdown-timer nil)
+  (defadvice! lsp:respect-user-defuned-checkers (orig-fn &rest args)
+    :around #'lsp-diagnostics-flycheck-enable
+    (if flycheck-checker
+        (let ((old-checker flycheck-checker))
+          (apply orig-fn args)
+          (setq-local flycheck-checker old-checker))
+      (apply orig-fn args)))
 
-    (defun lsp:respect-user-defined-checkers (orig-fn &rest args)
-      (if flycheck-checker
-          (let ((old-checker flycheck-checker))
-            (apply orig-fn args)
-            (setq-local flycheck-checker old-checker))
-        (apply orig-fn args)))
-
-    (defun lsp:defer-server-shutdown (orig-fn &optional restart)
-      "Defer server shutdown for a few seconds.
+  (defadvice! lsp:defer-server-shutdown (orig-fn &optional restart)
+    "Defer server shutdown for a few seconds.
   This gives the user a chance to open other project files before the server is
   auto-killed (which is a potentially expensive process). It also prevents the
   server getting expensively restarted when reverting buffers."
-      (if (or lsp-keep-workspace-alive
-              restart
-              (null lsp-defer-shutdown)
-              (= lsp-defer-shutdown 0))
-          (funcall orig-fn restart)
-        (when (timerp lsp--deferred-shutdown-timer)
-          (cancel-timer lsp--deferred-shutdown-timer))
-        (setq lsp--deferred-shutdown-timer
-              (run-at-time
-               (if (numberp lsp-defer-shutdown) lsp-defer-shutdown 3)
-               nil (lambda (workspace)
-                     (with-lsp-workspace workspace
-                                         (unless (lsp--workspace-buffers workspace)
-                                           (let ((lsp-restart 'ignore))
-                                             (funcall orig-fn)))))
-               lsp--cur-workspace))))
-    :init
-    (setq lsp-session-file (concat my-etc-dir "lsp-seesion")
-          lsp-server-install-dir (concat my-etc-dir "lsp/"))
-    :custom
-    `((lsp-keep-workspace-alive . nil)
-      (lsp-intelephense-storage-path . ,(concat my-cache-dir "lsp-intelephense/"))
-      (lsp-clients-emmy-lua-jar-path . ,(concat lsp-server-install-dir "EmmyLua-LS-all.jar"))
-      (lsp-xml-jar-file .              ,(concat lsp-server-install-dir "org.eclipse.lsp4xml-0.3.0-uber.jar"))
-      (lsp-groovy-server-file .        ,(concat lsp-server-install-dir "groovy-language-server-all.jar"))
-      (lsp-clients-python-library-directories . '("/usr/local/" "/usr/"))
-      (lsp-enable-folding . nil)
-      (lsp-enable-text-document-color . nil)
-      (lsp-enable-on-type-formatting . nil)
-      (lsp-headerline-breadcrumb-enable . nil)
-      (lsp-keymap-prefix . nil))
-    :advice
-    (:around lsp-diagnostics-flycheck-enable lsp:respect-user-defined-checkers)
-    (:around lsp--shutdown-workspace lsp:defer-server-shutdown)
-    :config
-    (add-hook! 'lsp-mode-hook
-      (defun lsp:display-guessed-project-root ()
-        "Log what LSP things is the root of the current project."
-        ;; Makes it easier to detect root resolution issues.
-        (when-let (path (buffer-file-name (buffer-base-buffer)))
-          (if-let (root (lsp--calculate-root (lsp-session) path))
-              (lsp--info "Guessed project root is %s" (abbreviate-file-name root))
-            (lsp--info "Could not guess project root.")))))
+    :around #'lsp--shutdown-workspace
+    (if (or lsp-keep-workspace-alive
+            restart
+            (null lsp-defer-shutdown)
+            (= lsp-defer-shutdown 0))
+        (funcall orig-fn restart)
+      (when (timerp lsp--deferred-shutdown-timer)
+        (cancel-timer lsp--deferred-shutdown-timer))
+      (setq lsp--deferred-shutdown-timer
+            (run-at-time
+             (if (numberp lsp-defer-shutdown) lsp-defer-shutdown 3)
+             nil (lambda (workspace)
+                   (with-lsp-workspace workspace
+                                       (unless (lsp--workspace-buffers workspace)
+                                         (let ((lsp-restart 'ignore))
+                                           (funcall orig-fn)))))
+             lsp--cur-workspace))))
 
-    (add-hook! 'lsp-completion-mode-hook
-      (defun lsp:init-company-backends ()
-        (when lsp-completion-mode
-          (set (make-local-variable 'company-backends)
-               (cons lsp-company-backends
-                     (remove lsp-company-backends
-                             (remq 'company-capf company-backends))))))))
+  (add-hook! 'lsp-mode-hook
+    (defun lsp:display-guessed-project-root ()
+      "Log what LSP things is the root of the current project."
+      ;; Makes it easier to detect root resolution issues.
+      (when-let (path (buffer-file-name (buffer-base-buffer)))
+        (if-let (root (lsp--calculate-root (lsp-session) path))
+            (lsp--info "Guessed project root is %s" (abbreviate-file-name root))
+          (lsp--info "Could not guess project root.")))))
 
-  (leaf lsp-ui
-    :ensure t
-    :tag "external" "lsp" "complimentary" "programming"
-    :custom
-    (lsp-ui-doc-max-height . 8)
-    (lsp-ui-doc-max-width . 35)
-    (lsp-ui-sideline-ignore-duplicate . t)
-    (lsp-ui-doc-enable . t)
-    (lsp-ui-doc-show-with-mouse . nil)  ; don't disappear on mouseover
-    (lsp-ui-doc-position . 'at-point)
-    ;; Don't show symbol definitions in the sideline. They are pretty noisy,
-    ;; and there is a bug preventing Flycheck errors from being shown (the
-    ;; errors flash briefly and then disappear).
-    (lsp-ui-sideline-show-hover . nil))
+  (add-hook! 'lsp-completion-mode-hook
+    (defun lsp:init-company-backends ()
+      (when lsp-completion-mode
+        (set (make-local-variable 'company-backends)
+             (cons lsp-company-backends
+                   (remove lsp-company-backends
+                           (remq 'company-capf company-backends))))))))
 
-  (leaf dap-mode
-    :when (package-installed-p 'lsp-mode)
-    :ensure t
-    :tag "external" "lsp" "complimentary" "programming"
-    :hook (dap-mode-hook . dap-tooltip-mode)
-    :init
-    (with-eval-after-load 'lsp
-      (require 'dap-mode))
-    :custom
-    `((dap-breakpoints-file . ,(concat my-etc-dir "dap-breakpoints"))
-      (dap-utils-extension-path . ,(concat my-etc-dir "dap-extension/")))
-    :config
-    (eval-after-load 'nim-mode
-      (require 'dap-gdb-lldb)))
+(use-package lsp-ui
+  :custom
+  (lsp-ui-doc-max-height 8)
+  (lsp-ui-doc-max-width 35)
+  (lsp-ui-sideline-ignore-duplicate t)
+  (lsp-ui-doc-enable t)
+  (lsp-ui-doc-show-with-mouse nil)  ; don't disappear on mouseover
+  (lsp-ui-doc-position 'at-point)
+  ;; Don't show symbol definitions in the sideline. They are pretty noisy,
+  ;; and there is a bug preventing Flycheck errors from being shown (the
+  ;; errors flash briefly and then disappear).
+  (lsp-ui-sideline-show-hover nil))
 
-  (leaf dap-ui
-    :when (package-installed-p 'lsp-mode) (package-installed-p 'dap-mode)
-    :ensure t
-    :tag "external" "lsp" "complimentary" "programming"
-    :hook ((dap-mode . dap-ui-mode)
-           (dap-ui-mode . dap-ui-controls-mode))))
+(use-package dap-mode
+  :when (package-installed-p 'lsp-mode)
+  :hook (dap-mode . dap-tooltip-mode)
+  :init
+  (with-eval-after-load 'lsp
+    (require 'dap-mode))
+  :custom
+  (dap-breakpoints-file (concat my-etc-dir "dap-breakpoints"))
+  (dap-utils-extension-path (concat my-etc-dir "dap-extension/"))
+  :config
+  (eval-after-load 'nim-mode
+    (require 'dap-gdb-lldb)))
+
+(use-package dap-ui
+  :when (and (package-installed-p 'lsp-mode) (package-installed-p 'dap-mode))
+  :hook ((dap-mode . dap-ui-mode)
+         (dap-ui-mode . dap-ui-controls-mode)))
 
 ;;;; Docker
 ;;;;
 
-(leaf dockerfile-mode
-  :ensure t
-  :tag "external" "docker" "programming"
+(use-package dockerfile-mode
   :config
   (add-hook 'dockerfile-mode-local-vars-hook #'lsp-deferred))
 
-(leaf docker
-  :ensure t
-  :tag "external" "docker" "programming"
+(use-package docker
   :bind ("C-c d" . docker))
 
 (provide 'programming)
