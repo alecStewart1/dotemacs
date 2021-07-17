@@ -82,35 +82,60 @@
   (vertico-cycle t))
 
 (use-package consult
-  :bind (([remap repeat-complex-command] . consult-complex-command)
-         ("C-c h" . consult-history)
-         ([remap recentf-open-files] . consult-recent-file)
-         ("C-c m" . consult-mode-command)
-         ([remap switch-to-buffer] . consult-buffer)
-         ([remap switch-to-buffer-other-window] . consult-buffer-other-window)
-         ([remap switch-to-buffer-other-frame] . consult-buffer-other-frame)
-         ("C-x r C-r" . consult-register)
-         ([remap bookmark-jump] . consult-bookmark)
-         ("C-x C-k C-r" . consult-kmacro)
-         ([remap goto-line] . consult-goto-line)
-         ("M-g o" . consult-outline)     ;; "M-s o" is a good alternative.
-         ("M-g l" . consult-line)        ;; "M-s l" is a good alternative.
-         ("M-g m" . consult-mark)        ;; I recommend to bind Consult navigation
-         ("M-g k" . consult-global-mark) ;; commands under the "M-g" prefix.
-         ("M-g r" . consult-git-grep)    ;; or consult-grep, consult-ripgrep
-         ("M-g f" . consult-fdfind)      ;; or consult-fdfind, consult-locate
-         ([remap imenu] . consult-imenu)
-         ("M-g M-i" . consult-any-imenu)
-         ("M-g e" . consult-error)
-         ("M-s m" . consult-multi-occur)
-         ([remap yank-pop] . consult-yank-pop)
-         ([remap apropos] . consult-apropos)
-         (:isearch-mode-map
-          :package isearch
-          ([remap isearch-edit-string] . consult-isearch)))
+  :general
+  ;; Remappings
+  ([remap recentf-open-files]            #'consult-recent-file)
+  ([remap switch-to-buffer]              #'consult-buffer)
+  ([remap switch-to-buffer-other-window] #'consult-buffer-other-window)
+  ([remap switch-to-buffer-other-frame]  #'consult-buffer-other-frame)
+  ([remap bookmark-jump]                 #'consult-bookmark)
+  ([remap yank]                          #'consult-yank-from-kill-ring)
+  ([remap yank-pop]                      #'consult-yank-pop)
+  ([remap locate]                        #'consult-locate)
+  ([remap repeat-complex-command]        #'consult-complex-command)
+  ;; Editing
+  ("C-x C-k C-r" #'consult-kmacro)
+  ;; Register
+  ("C-x r C-r" #'consult-register)
+  ("C-x r C-s" #'consult-register-store)
+  ;; Navigation
+  ("M-g e"   #'consult-error)
+  ("M-g M-e" #'consult-compile-error)
+  ("M-g f"   #'consult-flymake)
+  ("M-g g"   #'consult-goto-line)
+  ("M-g o"   #'consult-outline)
+  ("M-g m"   #'consult-mark)
+  ("M-g k"   #'consult-global-mark)
+  ("M-g i"   #'consult-imenu)
+  ("M-g I"   #'consult-project-imenu)
+  ;; Searching
+  ("M-s L" #'consult-line)
+  ("M-s k" #'consult-keep-lines)
+  ("M-s u" #'consult-focus-lines)
+  ("M-s m" #'consult-multi-occur)
+  ;; Grep and Find
+  ("M-s g" #'consult-ripgrep)
+  ("M-s f" #'consult-fdfind)
+  ;; Histories
+  ("C-c h" #'consult-history)
+  ;; Modes
+  ("M-SPC m m"   #'consult-minor-mode-menu)
+  ("M-SPC m M-m" #'consult-mode-command)
+  ;; Isearch
+  ("M-s e"                      #'consult-isearch)
+  (:keymaps 'isearch-mode-map
+   ([remap isearch-edit-string] #'consult-isearch)
+   ("M-s l"                     #'consult-line))
+  ;; Misc.
+  ([remap apropos] #'consult-apropos)
   :init
   (fset 'multi-occur #'consult-multi-occur)
+
   (autoload 'projectile-project-root "projectile")
+  (setq consult-project-root-function #'projectile-project-root)
+
+  (advice-add #'register-preview :override #'consult-register-window)
+  (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
   :custom
   (register-preview-delay 0)
   (register-preview-function #'consult-register-preview)
@@ -127,13 +152,24 @@
   (marginalia-annotators '(marginalia-annotators-light marginalia-annotators-heavy nil)))
 
 (use-package embark
-  :bind ("C-S-a" . embark-act)
+  :bind (("M-." . embark-act)
+         ("C-;" . embark-dwim)
+         ("C-h B" . embark-bindings)
+         :map vertico-map
+         ("M-e" . embark-export)
+         ("M-c" . embark-collect-snapshot))
   :preface
   (defun embark:resize-collect-window ()
     (when (memq embark-collect--kind '(:live :completions))
       (fit-window-to-buffer (get-buffer-window)
                             (floor (frame-height) 2) 1)))
+  :init
+  (setq prefix-help-command #'embark-prefix-help-command)
   :config
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none))))
   (add-hook 'embark-post-action-hook #'embark-collect--update-linked)
   (add-hook 'embark-collect-post-revert-hook #'embark:resize-collect-window))
 

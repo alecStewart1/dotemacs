@@ -115,19 +115,49 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
          (helpful-variable (button-get button 'apropos-symbol)))))))
 
 ;;;; So-Long
-;;;;
+;;;; So we manage working with large files easier.
 
-;;;###autoload
-(defun so-long:does-buffer-have-long-lines ()
-  (let ((so-long-skip-leading-comments (bound-and-true-p comment-use-syntax))
-        (so-long-threshold
-         (if visual-line-mode
-             (* so-long-threshold
-                (if (derived-mode-p 'text-mode)
-                    3
-                  2))
-           so-long-threshold)))
-    (so-long-detected-long-line-p)))
+(defvar ui-ux:inhibit-large-file-detection nil
+  "If non-nil, inhibit large/long file detection when opening files.")
+
+(defvar ui-ux:large-file-p nil)
+(put 'large-file-p 'permanent-local t)
+
+(defvar ui-ux:large-file-size-alist '(("." . 1.0)))
+
+(defvar ui-ux:large-file-excluded-modes
+  '(so-long-mode special-mode archive-mode tar-mode jka-compr
+    git-commit-mode image-mode doc-view-mode doc-view-mode-maybe
+    ebrowse-tree-mode pdf-view-mode tags-table-mode))
+
+(defadvice! ui-ux:prepare-for-large-files (size _ filename &rest _)
+  "From Doom Emacs.
+Sets `ui-ux:large-file-p' if the file is considered large.
+Uses `ui-ux:large-file-size-alist' to determine when a file is too large. When
+`ui-ux:large-file-p' is set, other plugins can detect this and reduce their
+runtime costs (or disable themselves) to ensure the buffer is as fast as
+possible."
+  :before #'abort-if-file-too-large
+  (and (numberp size)
+       (null ui-ux:inhibit-large-file-detection)
+       (ignore-errors
+         (> size
+            (* 1024 1024
+               (assoc-default filename ui-ux:large-file-size-alist
+                              #'string-match-p))))
+       (setq-local ui-ux:large-file-p size)))
+
+(add-hook! 'find-file-hook
+  (defun ui-ux:optimize-for-large-files ()
+    "Trigger `so-long-minor-mode' if the file is large."
+    (when (and ui-ux:large-file-p buffer-file-name)
+      (if (or ui-ux:inhibit-large-file-detection
+              (memq major-mode ui-ux:large-file-excluded-modes))
+          (kill-local-variable 'ui-ux:large-file-p)
+        (when (fboundp 'so-long-minor-mode)
+          (so-long-minor-mode +1))
+        (message "Large file detected! Cutting a few corners to improve performance...")))))
+
 
 (use-package so-long
   :diminish
@@ -135,6 +165,17 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
          (org-mode . so-long-minor-mode)
          (prog-mode . so-long-minor-mode))
   :config
+  (defun so-long:does-buffer-have-long-lines ()
+    (let ((so-long-skip-leading-comments (bound-and-true-p comment-use-syntax))
+          (so-long-threshold
+           (if visual-line-mode
+               (* so-long-threshold
+                  (if (derived-mode-p 'text-mode)
+                      3
+                    2))
+             so-long-threshold)))
+      (so-long-detected-long-line-p)))
+
   (setq so-long-threshold 400
         so-long-predicate #'so-long:does-buffer-have-long-lines)
   (delq! 'font-lock-mode so-long-minor-modes)
@@ -144,7 +185,8 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
   (add-to-list 'so-long-variable-overrides '(save-place-alist . nil))
   (add-to-list 'so-long-target-modes 'text-mode)
   (appendq! so-long-minor-modes
-            '(flycheck-mode
+            '(flymake-mode
+              flycheck-mode
               flyspell-mode
               spell-fu-mode
               eldoc-mode
@@ -153,6 +195,7 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
               better-jumper-local-mode
               ws-butler-mode
               auto-composition-mode
+              undo-fu-mode
               undo-tree-mode
               highlight-indent-guides-mode
               hl-fill-column-mode)))

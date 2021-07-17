@@ -21,23 +21,13 @@
 (put 'narrow-to-region 'disabled nil)
 (put 'upcase-region 'disabled nil)
 
-;;; Some variables we'll use later on
+;;; Some variables we'll use later
 ;;;
 
 (defvar editing:detect-indent-excluded-modes
   '(fundamental-mode pascal-mode so-long-mode))
 
 (defvar-local editing:inhibit-indent-detection nil)
-
-(defvar editing:large-file-p nil)
-(put 'large-file-p 'permanent-local t)
-
-(defvar editing:large-file-size-alist '(("." . 1.0)))
-
-(defvar editing:large-file-excluded-modes
-  '(so-long-mode special-mode archive-mode tar-mode jka-compr
-    git-commit-mode image-mode doc-view-mode doc-view-mode-maybe
-    ebrowse-tree-mode pdf-view-mode tags-table-mode))
 
 ;;; Packages
 ;;;
@@ -266,32 +256,68 @@
   :bind (("M-z" . avy-zap-to-char-dwim)
          ("M-Z" . avy-zap-up-to-char-dwim)))
 
-;;;; Aggressive Indent
+;;;; DTRT Indent
 ;;;;
 
-(leaf aggressive-indent
-  :diminish
-  :hook ((after-init-hook . global-aggressive-indent-mode)
-         ;; FIXME: Disable in big files due to the performance issues
-         ;; https://github.com/Malabarba/aggressive-indent-mode/issues/73
-         (find-file-hook . (lambda ()
-                             (if (> (buffer-size) (* 3000 80))
-                                 (aggressive-indent-mode -1)))))
+(use-package dtrt-indent
+  :hook ((change-major-mode-after-body read-only-mode) . dtrt:detect-indentation)
+  :preface
+  (defvar dtrt-indent-run-after-smie)
   :config
-  ;; Disable in some modes
-  (dolist (mode '(asm-mode web-mode html-mode css-mode prolog-inferior-mode))
-    (push mode aggressive-indent-excluded-modes))
+  (defun dtrt:detect-indentation
+      (unless (or (not after-init-time)
+                  editing:inhibit-indent-detection
+                  ui-ux:large-file-p
+                  (memq major-mode editing:detect-indentation-excluded-modes)
+                  (member (substring (buffer-name) 0 1) '(" " "*")))
+        (dtrt-indent-mode +1)))
 
-  ;; Disable in some commands
-  (add-to-list 'aggressive-indent-protected-commands #'delete-trailing-whitespace t)
+  (setq dtrt-indent-run-after-t smie
+        dtrt-indent-max-lines 2000)
 
-  ;; Be slightly less aggressive in C/C++/C#/Java/Go/Swift
-  (add-to-list
-   'aggressive-indent-dont-indent-if
-   '(and (derived-mode-p 'c-mode 'c++-mode 'csharp-mode
-                         'java-mode)
-         (null (string-match "\\([;{}]\\|\\b\\(if\\|for\\|while\\)\\b\\)"
-                             (thing-at-point 'line))))))
+  (push '(t tab-width) dtrt-indent-hook-generic-mapping-list)
+
+  (defadvice! dtrt:fix-broken-smie-modes (orig-fn arg)
+    "Some smie modes throw errors when trying to guess their indentation, like
+`nim-mode'. This prevents them from leaving Emacs in a broken state."
+    :around #'dtrt-indent-mode
+    (let ((dtrt-indent-run-after-smie dtrt-indent-run-after-smie))
+      (letf! ((defun symbol-config-guess (beg end)
+                (funcall symbol-config-guess beg (min end 1000)))
+              (defun smie-config-guess ()
+                (condition-case e (funcall smie-config-guess)
+                  (error (setq dtrt-indent-run-after-smie t)
+                         (message "[Warning] Indent detection %s"
+                                  (error-message-string e))
+                         (message "")))))
+        (funcall orig-fn arg)))))
+
+;;;; Aggressive Indent
+;;;; This is a bit TOO aggressive.
+
+;; (use-package aggressive-indent
+;;   :diminish
+;;   :hook ((after-init-hook . global-aggressive-indent-mode)
+;;          ;; FIXME: Disable in big files due to the performance issues
+;;          ;; https://github.com/Malabarba/aggressive-indent-mode/issues/73
+;;          (find-file-hook . (lambda ()
+;;                              (if (> (buffer-size) (* 3000 80))
+;;                                  (aggressive-indent-mode -1)))))
+;;   :config
+;;   ;; Disable in some modes
+;;   (dolist (mode '(asm-mode web-mode html-mode css-mode prolog-inferior-mode))
+;;     (push mode aggressive-indent-excluded-modes))
+
+;;   ;; Disable in some commands
+;;   (add-to-list 'aggressive-indent-protected-commands #'delete-trailing-whitespace t)
+
+;;   ;; Be slightly less aggressive in C/C++/C#/Java/Go/Swift
+;;   (add-to-list
+;;    'aggressive-indent-dont-indent-if
+;;    '(and (derived-mode-p 'c-mode 'c++-mode 'csharp-mode
+;;                          'java-mode)
+;;          (null (string-match "\\([;{}]\\|\\b\\(if\\|for\\|while\\)\\b\\)"
+;;                              (thing-at-point 'line))))))
 
 ;;;; Adaptive-Wrap
 ;;;;

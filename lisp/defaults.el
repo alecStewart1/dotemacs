@@ -340,9 +340,9 @@
                     t))))))
 
 ;; HACK
-;;;###autoload
-(defun files:make-hashed-auto-save-file-name (orig-fn)
+(defadvice! files:make-hashed-auto-save-file-name (orig-fn)
   "Compress the auto-save file name so paths don't get too long."
+  :around #'make-auto-save-file-name
   (let ((buffer-file-name
          (if (or
               (null buffer-file-name)
@@ -352,12 +352,10 @@
            (sha1 buffer-file-name))))
     (funcall orig-fn)))
 
-(advice-add #'make-auto-save-file-name :around #'make-hashed-auto-save-file-name)
-
 ;; HACK
-;;;###autoload
-(defun files:make-hashed-backup-file-name (orig-fn file)
+(defadvice files:make-hashed-backup-file-name (orig-fn file)
   "A few places use the backup file name so paths don't get too long."
+  :around #'make-backup-file-name-1
   (let ((alist backup-directory-alist)
         backup-directory)
     (while alist
@@ -371,8 +369,6 @@
           file
         (expand-file-name (sha1 (file-name-nondirectory file))
                           (file-name-directory file))))))
-
-(advice-add #'make-backup-file-name-1 :around #'files:make-hashed-backup-file-name)
 
 ;;;;; Package itself
 ;;;;;
