@@ -260,6 +260,7 @@ Once the eshell process is killed, the previous frame layout is restored."
         (setq eshell-command-aliases-list eshell:my-aliases)))))
 
 (use-package eshell
+  :ensure nil
   :commands (eshell eshell-toggle eshell-frame)
   :defines eshell-prompt-function
   :functions eshell/alias

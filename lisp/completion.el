@@ -44,6 +44,7 @@
 ;;;;
 
 (use-package minibuffer
+  :ensure nil
   :custom
   ;; IMPORTANT!! Since we use Corfu, we need to set this
   (tab-always-indent 'complete)
@@ -181,6 +182,7 @@
 ;;;;
 
 (use-package dabbrev
+  :ensure nil
   :bind (("M-/" . dabbrev-completion)
          ("C-M-/" . dabbrev-expand)))
 
@@ -189,7 +191,7 @@
 
 ;;;###autoload
 (defvar company:backend-alist
-  '((text-mode company-dabbrev  company-ispell)
+  '((text-mode company-dabbrev company-ispell)
     (prog-mode company-capf company-dabbrev-code)
     (conf-mode company-capf company-dabbrev-code)))
 

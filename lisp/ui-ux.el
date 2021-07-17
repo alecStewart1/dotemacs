@@ -80,6 +80,7 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
 ;;;;
 
 (use-package help
+  :ensure nil
   :bind
   (("C-?" . help-command)
    (:mode-specific-map
@@ -160,6 +161,7 @@ possible."
 
 
 (use-package so-long
+  :ensure nil
   :diminish
   :hook ((first-file . global-so-long-mode)
          (org-mode . so-long-minor-mode)
@@ -204,6 +206,7 @@ possible."
 ;;;;
 
 (use-package paren
+  :ensure nil
   :hook (after-init . show-paren-mode)
   :custom
   (blink-matching-paren 'show)
@@ -226,6 +229,7 @@ possible."
   (pulse-momentary-highlight-one-line (point)))
 
 (use-package pulse
+  :ensure nil
   :demand t
   :config
   (dolist (command '(scroll-up-command scroll-down-command recenter-top-bottom other-window))
@@ -235,6 +239,7 @@ possible."
 ;;;;
 
 (use-package hl-line
+  :ensure nil
   :disabled t
   :commands hl-line-mode global-hl-line-mode)
 

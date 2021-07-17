@@ -22,6 +22,7 @@
 ;;;;
 
 (use-package dired
+  :ensure nil
   :commands dired-jump
   :hook (dired-load . (lambda ()
                             (require 'dired-x)
@@ -57,12 +58,14 @@
   (define-key dired-mode-map (kbd "C-c C-e") #'wdired-change-to-wdired-mode))
 
 (use-package image-dired
+  :ensure nil
   :commands (image-dired image-dired-display-thumb image-dired-display-thumbs image-dired-minor-mode))
 
 ;;;; IBuffer
 ;;;;
 
 (use-package ibuffer
+  :ensure nil
   :bind (("C-x C-b" . ibuffer)
          (:ibuffer-mode-map
           :package ibuffer
@@ -107,6 +110,7 @@
 ;;;;
 
 (use-package electric
+  :ensure nil
   :hook (first-file . electric-quote-mode)
   :preface
   (defvar-local electric--indent-words '()
