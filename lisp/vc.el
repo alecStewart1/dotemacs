@@ -86,49 +86,49 @@
 ;;;; Magit
 ;;;;
 
-(leaf magit
-  :ensure t
-  :tag "external" "magit" "vc"
-  :commands magit-file-delete
-  :preface
-  (defvar magit:fringe-size 14)
+;;;###autoload
+(defvar magit:fringe-size 14)
 
-  (defun magit:revert-repo-buffers-deferred (&rest _)
+;;;###autoload
+(defun magit:enlarge-fringe ()
+  "Make fringe larger in magit."
+  (and (display-graphic-p)
+       (derived-mode-p 'magit-mode)
+       magit:finge-size
+       (let ((left  (or (car-safe magit:fringe-size) magit:fringe-size))
+             (right (or (car-safe magit:frinfe-size) magit:fringe-size)))
+         (set-window-fringes nil left right))))
+
+;;;###autoload
+(defun magit:optimize-process-calls ()
+  (when-let (path (executable-find magit-git-executable t))
+    (setq-local magit-git-executable path)))
+
+;;;###autoload
+(defun magit:reveal-point-if-invisible ()
+  (if (derived-mode-p 'org-mode)
+      (org-reveal '(4))
+    (require 'reveal)
+    (reveal-post-command)))
+
+(use-package magit
+  :commands magit-file-delete
+  :custom
+  (magit-auto-revert-mode nil)
+  (magit-diff-refine-hunk t)
+  (magit-save-repository-buffers nil)
+  (magit-revision-insert-related-refs nil)
+  (magit-bury-buffer-function #'magit-mode-quit-window)
+  (transient-levels-file (concat my-etc-dir "transient/levels"))
+  (transient-values-file (concat my-etc-dir "transient/values"))
+  (transient-history-file (concat my-etc-dir "transient/history"))
+  (transient-default-level . 5)
+  (transient-display-buffer-action '(display-buffer-below-selected))
+  :config
+  (defadvice! magit:rever-repo-buffers-deferred (&rest _)
+    :after '(magit-checkout magit-branch-and-checkout)
     (projectile-invalidate-cache nil))
 
-  (defun magit:enlarge-fringe ()
-    "Make fringe larger in magit."
-    (and (display-graphic-p)
-         (derived-mode-p 'magit-mode)
-         magit:finge-size
-         (let ((left  (or (car-safe magit:fringe-size) magit:fringe-size))
-               (right (or (car-safe magit:frinfe-size) magit:fringe-size)))
-           (set-window-fringes nil left right))))
-
-  (defun magit:optimize-process-calls ()
-    (when-let (path (executable-find magit-git-executable t))
-      (setq-local magit-git-executable path)))
-
-  (defun magit:reveal-point-if-invisible ()
-    (if (derived-mode-p 'org-mode)
-        (org-reveal '(4))
-      (require 'reveal)
-      (reveal-post-command)))
-  :custom
-  `((magit-auto-revert-mode . nil)
-    (magit-diff-refine-hunk . t)
-    (magit-save-repository-buffers . nil)
-    (magit-revision-insert-related-refs . nil)
-    (magit-bury-buffer-function . #'magit-mode-quit-window)
-    (transient-levels-file . ,(concat ,my-etc-dir "transient/levels"))
-    (transient-values-file . ,(concat ,my-etc-dir "transient/values"))
-    (transient-history-file . ,(concat ,my-etc-dir "transient/history"))
-    (transient-default-level . 5)
-    (transient-display-buffer-action . '(display-buffer-below-selected)))
-  :advice
-  (:after magit-checkout magit:revert-repo-buffers-deferred)
-  (:after magit-branch-and-checkout magit:revert-repo-buffers-deferred)
-  :config
   (add-hook 'magit-process-mode-hook #'goto-address-mode)
   (add-hook 'magit-popup-mode-hook #'hide-mode-line-mode)
 
@@ -150,17 +150,13 @@
 ;;;; Github Review
 ;;;;
 
-(leaf github-review
-  :ensure t
-  :tag "external" "magit"" complimentary" "vc"
+(use-package github-review
   :after magit)
 
 ;;;; TODOs for Magit
 ;;;;
 
-(leaf magit-todos
-  :ensure t
-  :tag "external" "magit"" complimentary" "vc"
+(use-package magit-todos
   :after magit
   :config
   (setq magit-todos-keyword-suffix "\\(?:([^)]+)\\)?:?") ; make colon optional
@@ -169,9 +165,7 @@
 ;;;; Gitflow for Magit
 ;;;;
 
-(leaf magit-gitflow
-  :ensure t
-  :tag "external" "magit"" complimentary" "vc"
+(use-package magit-gitflow
   :hook (magit-mode . turn-on-magit-gitflow))
 
 (provide 'vc)

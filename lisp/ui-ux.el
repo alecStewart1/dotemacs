@@ -73,6 +73,19 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
           (read-only-mode t)
           (display-buffer-same-window splash-buffer nil)))))
 
+;;; Some Transient keys
+;;; TODO may add more in the future
+
+(eval-after-load 'transient
+  (transient-define-prefix zoom-transient ()
+    "Zoomin' in and out on text"
+    :transient-suffix 'transient--do-stay
+    :transient-non-suffix 'transient--do-stay
+    [["Zoom"
+      ("j" "In"  text-scale-increase)
+      ("k" "Out" text-scale-decrease)]])
+  (global-set-key (kbd "<f2>") #'zoom-transient))
+
 ;;; Packages
 ;;;
 
@@ -234,6 +247,41 @@ possible."
   :config
   (dolist (command '(scroll-up-command scroll-down-command recenter-top-bottom other-window))
     (advice-add command :after #'pulse:pulse-line)))
+
+;;;; Outline
+;;;;
+
+;; Some of this stolen from Oliver Taylor's config:
+;; https://github.com/olivertaylor/dotfiles/blob/master/emacs/init.el
+(use-package outline
+  :ensure nil
+  :diminsh outline-minor-mode
+  :hook (prog-mode . global-outline-minor-mode)
+  :init
+  (define-global-minor-mode global-outline-minor-mode
+    outline-minor-mode outline-minor-mode)
+  :config
+  (transient-define-prefix outline-transient ()
+    "Transient for Outline Minor Mode navigation"
+    :transient-suffix 'transient--do-stay
+    :transient-non-suffix 'transient--do-stay
+    [["Show/Hide"
+      ("<right>" "Show Subtree" outline-show-subtree)
+      ("<left>" "Hide Subtree" outline-hide-subtree)
+      ("o" "Hide to This Sublevel" outline-hide-sublevels)
+      ("a" "Show All" outline-show-all)]
+     ["Navigate"
+      ("<down>" "Next" outline-next-visible-heading)
+      ("<up>" "Previous" outline-previous-visible-heading)]
+     ["Edit"
+      ("M-<left>"  "Promote" outline-promote)
+      ("M-<right>" "Demote"  outline-demote)
+      ("M-<up>"    "Move Up" outline-move-subtree-up)
+      ("M-<down>"  "Move Down" outline-move-subtree-down)]
+     ["Other"
+      ("C-/" "Undo" undo-only)
+      ("M-/" "Redo" undo-redo)
+      ("c" "Consult" consult-outline :transient nil)]]))
 
 ;;;; Highlight Line
 ;;;;

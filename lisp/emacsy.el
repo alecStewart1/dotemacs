@@ -67,9 +67,8 @@
 (use-package ibuffer
   :ensure nil
   :bind (("C-x C-b" . ibuffer)
-         (:ibuffer-mode-map
-          :package ibuffer
-          ("q" . kill-current-buffer)))
+         :map ibuffer-mode-map
+         ("q" . kill-current-buffer))
   :custom-face
   (ibuffer-filter-group-name-face '(:inherit (success bold)))
   :custom

@@ -101,7 +101,7 @@
        (propertize title 'face face))))
   :config
   (with-eval-after-load 'avy
-    (pretty-hydra-define hydra-avy (:hint nil :color blue :quit-key "q" :title "Avy Things")
+    (pretty-hydra-define hydra:avy (:hint nil :color blue :quit-key "q" :title "Avy Things")
       ("Characters/Symbols"
        (("c" avy-goto-char-in-line "char (1)")
         ("C" avy:goto-char-2 "char (2)")
@@ -118,10 +118,10 @@
         ("e" avy-goto-end-of-line "end of line"))
        "Misc"
        (("C-c" avy:goto-lisp-cond "Lisp conditional"))))
-    (global-set-key (kbd "C-c a") #'hydra-avy/body))
+    (global-set-key (kbd "C-c a") #'hydra:avy/body))
 
   (with-eval-after-load 'smartparens
-    (pretty-hydra-define hydra-sp (:hint nil :quit-key "q" :title "Smartparens")
+    (pretty-hydra-define hydra:sp (:hint nil :quit-key "q" :title "Smartparens")
       ("Moving"
        (("a" sp-beginning-of-sexp)
         ("e" sp-end-of-sexp)
@@ -158,7 +158,7 @@
         ("k" sp-kill-sexp)
         ("K" sp-backward-kill-sexp)
         ("w" sp-copy-sexp))))
-    (define-key 'prog-mode-map (kbd "C-c (") #'hydra-sp/body)))
+    (define-key 'prog-mode-map (kbd "C-c (") #'hydra:sp/body)))
 
 ;;; For leaf.el
 ;;;

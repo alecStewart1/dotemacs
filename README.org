@@ -2,17 +2,19 @@
 
 My personal Emacs setup.
 
-* Inspirations
+* Main Inspirations
 
 - [[https://github.com/hlissner/doom-emacs][Doom Emacs]]
 - [[https://github.com/seagle0128/.emacs.d][Centaur Emacs]]
 
 * My Thought Process
 
-You'll notice a lot of things are taken from Doom, and bits from Centaur Emacs. A lot of helper
-functions and hooks I take from Doom, due to letting some better organizing and deferring of packages.
+You'll notice a lot of things are taken from Doom, bits from Centaur Emacs, and some other Emacs
+users' configs and stuff from the r/emacs subreddit (which I give links to).
+A lot of helper functions and hooks I take from Doom, due to letting some better organizing
+and deferring of packages.
 
-You'll find most of it in ~lisp/lib.el~.
+Most of my config is organized in ~lisp/lib.el~.
 
 Part of why I move away from Doom is that, while it's a /great/ setup for Emacs, I found the part of
 it being a framework made some things a bit more complicated. You're not just having to potentially
@@ -20,5 +22,46 @@ debug package errors, you're also having to debug Doom Emacs functions and macro
 And when running into issues, figuring out what is causing the issue becomes a bit more complicated
 than it already can be when it comes to Emacs.
 
-I also just wanted something of my own.
-* Interesting Packages I Use
+I also just wanted something of my own, and to use some of the preexisting functionality found in Emacs.
+
+* Some Interesting Packages I Use
+
+** Vertico
+
+This is my preferred completion interface.
+
+[[https://github.com/minad/vertico][Vertico]] offers a more simplistic and, what I feel is, more performant completion UI.
+
+** Consult
+
+For those of you who use [[https://github.com/abo-abo/swiper][Ivy]], think of [[https://github.com/minad/consult][Consult]] as ~counsel~ for other completion UIs.
+
+The package leverages the builtin ~completing-read~ function provided by Emacs' base
+completion system.
+
+It also is far more simple for [[file:lisp/term.el::132][creating completions with]].
+
+** Marginalia
+
+[[https://github.com/minad/marginalia][This]] simply adds nice annotations in the margins of the minibuffer.
+
+** Embark
+
+Now this is definitely one of the most interesting packages I use.
+
+[[https://github.com/oantolin/embark][Embark]] is a contextual actions menu.
+
+The simplest example I can think of is this:
+
+You have your cursor over a link in Org-Mode, when you press the whatever key you assigned ~embark-act~
+to, you have options as to what you want to do with the link there. You can open in ~ewws~ or in a
+browser, copy the link, or whatever else you think you can do with the link.
+
+** Skeleton
+
+This is builtin in Emacs.
+
+Think of [[https://www.emacswiki.org/emacs/SkeletonMode][Skeleton]] as an almost template or snippet language.
+It has its own language, and you can use Emacs Lisp expressions with it as well.
+
+[[file:lisp/writing.el::473][I use it]] along side [[https://www.emacswiki.org/emacs/AbbrevMode][abbreviations]] (abbrevs) and [[https://www.emacswiki.org/emacs/DynamicAbbreviations][dynamic abbreviations]] (dabbrevs).

@@ -317,7 +317,13 @@
   (org-id-locations-file-relative . t)
   :config
   (add-hook 'org-mode-local-vars-hook #'eldoc-mode)
-  (add-hook 'org-mode-hook #'orgtbl-mode))
+  (add-hook 'org-mode-hook #'orgtbl-mode)
+  ;; TODO
+  (snippets:file-snip block 'org
+                      "Block type: "
+                      ?\n "#+begin_" str
+                      ?\n _ ?\n
+                      "#+end_" str ?\n))
 
 (use-package org-crypt
   :ensure nil
@@ -404,6 +410,52 @@
   :ensure nil
   :magic ("%!TEX TS-PROGRAM: context" . ConTeXt-mode))
 
+;;;; SES: Simple Emacs Spreadsheet
+;;;;
+
+(use-package ses
+  :ensure nil
+  :mode ("\\.ses\\'" . ses-mode)
+  :config
+  ;; Pull from the Emacs Wiki:
+  ;; http://emacswiki.org/emacs/SimpleEmacsSpreadsheet
+  (defun ses:read-from-csv-file (file)
+    "Insert the contents of a CSV file named FILE into the current position."
+    (interactive "fCSV file: ")
+    (let ((buf (get-buffer-create "*ses-csv*"))
+          text)
+      (save-excursion
+        (set-buffer buf)
+        (erase-buffer)
+        ;; TODO what in God's name is this?
+        (process-file "ruby" file buf nil "-e" "require 'csv'; CSV::Reader.parse(STDIN) { |x| puts x.join(\"\\t\") }")
+        (setq text (buffer-substring (point-min) (point-max))))
+      (ses-yank-tsf text nil)))
+
+  (defun ses:write-to-csv-file (file)
+    "Write the values of the current buffer into a CSV file named FILE."
+    (interactive "FCSV file: ")
+    (push-mark (point-min) t t)
+    (goto-char (- (point-max) 1))
+    (ses-set-curcell)
+    (ses-write-to-csv-file-region file))
+
+  (defun ses:write-to-csv-file-region (file)
+    "Write the values of the region into a CSV file named FILE."
+    (interactive "FCSV file: ")
+    (ses-export-tab nil)
+    (let ((buf (get-buffer-create "*ses-csv*")))
+      (save-excursion
+        (set-buffer buf)
+        (erase-buffer)
+        (yank)
+        ;; TODO why?
+        (call-process-region
+         (point-min)
+         (point-max)
+         "ruby" t buf nil "-e" "require 'csv'; w = CSV::Writer.create(STDOUT); STDIN.each { |x| w << x.chomp.split(/\\t/) }")
+        (write-region (point-min) (point-max) file)))))
+
 ;;;; Artist
 ;;;;
 
@@ -427,7 +479,7 @@
   :config
   ;; Thank you reddit user b3n:
   ;; https://old.reddit.com/r/emacs/comments/ml4wql/weekly_tipstricketc_thread/gtkc524/
-  (defmacro skeleton:global-snip (name &rest skeleton)
+  (defmacro snippets:global-snip (name &rest skeleton)
     "Create a global \"snippet\" with NAME and SKELETON.
 NAME must be valid in the Emacs Lisp naming convention.
 
@@ -439,10 +491,10 @@ create something similar to a code/writing snippet system, like that of
 `global-abbrev-table' under the named passed to this macro. That may or
 may not be something you want, depending on your uses.
 If you're looking to only define an abbrev for a specific file/mode, see
-`skeleton:file-snip'."
+`snippets:file-snip'."
     (declare (debug t))
     (let* ((snip-name (symbol-name `,name))
-           (func-name (intern (concat "snip-" snip-name))))
+           (func-name (intern (concat snip-name "-skel"))))
       `(progn
          (define-skeleton ,func-name
            ,(concat snip-name " skeleton")
@@ -450,7 +502,7 @@ If you're looking to only define an abbrev for a specific file/mode, see
          (define-abbrev global-abbrev-table ,snip-name
            "" ',func-name))))
 
-  (defmacro skeleton:file-snip (name mode &rest skeleton)
+  (defmacro snippets:file-snip (name mode &rest skeleton)
     "Create a MODES specific \"snippet\" with NAME and SKELETON.
 NAME must be valid in the Emacs Lisp naming convention.
 
@@ -468,10 +520,10 @@ create something similar to a code/writing snippet system, like that of
 Keep in mind that all abbreviations created are put in the `local-abbrev-table'
 under the named (MODE) passed to this macro. That may or may not be something
 you want, depending on your uses. If you're looking to only define an abbrev
-globally, see `skeleton:global-snip'."
+globally, see `snippets:global-snip'."
     (declare (debug t))
     (let* ((snip-name (symbol-name `,name))
-           (func-name (intern (concat "snip-" snip-name)))
+           (func-name (intern (concat snip-name "-skel")))
            (mode-str (if (listp)
                          (mapconcat 'identity mode ", ")
                        (format "%s" mode))))

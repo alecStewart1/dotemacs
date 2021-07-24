@@ -130,6 +130,8 @@
   ;; Misc.
   ([remap apropos] #'consult-apropos)
   :init
+  (defvar consult:find-program (cl-find-if #'executable-find (list "fdfind" "fd")))
+
   (fset 'multi-occur #'consult-multi-occur)
 
   (autoload 'projectile-project-root "projectile")
@@ -141,7 +143,10 @@
   (register-preview-delay 0)
   (register-preview-function #'consult-register-preview)
   (consult-preview-key 'any)
-  (consult-project-root-function #'projectile-project-root))
+  (consult-project-root-function #'projectile-project-root)
+  (consult-find-command (concat
+                         (format "%s -0 -H --color=never --follow --exclude .git" consult:find-program)
+                         (if windows-nt-p "--path-separator=/"))))
 
 (use-package marginalia
   :bind (:minibuffer-local-map
@@ -159,12 +164,12 @@
          :map vertico-map
          ("M-e" . embark-export)
          ("M-c" . embark-collect-snapshot))
-  :preface
+  :init
   (defun embark:resize-collect-window ()
     (when (memq embark-collect--kind '(:live :completions))
       (fit-window-to-buffer (get-buffer-window)
                             (floor (frame-height) 2) 1)))
-  :init
+
   (setq prefix-help-command #'embark-prefix-help-command)
   :config
   (add-to-list 'display-buffer-alist
@@ -172,11 +177,17 @@
                  nil
                  (window-parameters (mode-line-format . none))))
   (add-hook 'embark-post-action-hook #'embark-collect--update-linked)
-  (add-hook 'embark-collect-post-revert-hook #'embark:resize-collect-window))
+  (add-hook 'embark-collect-post-revert-hook #'embark:resize-collect-window)
+
+  ;; TODO finish this
+  ;; (embark-define-keymap embark:ibuffer-main-keymap
+  ;;   "An Embark keymap for doing actions with IBuffer.")
+  )
 
 (use-package embark-consult
   :after (:all embark consult)
-  :hook (embark-collect-mode-hook . embark-consult-preview-minor-mode))
+  :demand t
+  :hook (embark-collect-mode . consult-preview-at-point-mode))
 
 ;;;; Dabbrev
 ;;;;
