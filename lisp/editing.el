@@ -440,6 +440,33 @@ an extension, try to guess one."
   :advice
   (:around editorconfig-call-editorconfig-exec editorconfig:smart-detection))
 
+;;;; Objed
+;;;;
+
+(use-package objed
+  :bind ("M-SPC" . objed-activate)
+  :preface
+  (defvar objed:extra-face-remaps nil)
+  :config
+  (pushnew! objed-keeper-commands 'undo-fu-only-undo 'undo-fu-only-redo)
+
+  (defadvice! objed:add-face-remaps-a (&rest _)
+    "Add extra face remaps when objed activates."
+    :after 'objed--init
+    (when (memq 'objed-hl (assq 'hl-line face-remapping-alist))
+      (push (face-remap-add-relative 'solaire-hl-line-face 'objed-hl)
+            objed:extra-face-remaps)))
+
+  (defadvice! objed:remove-face-remaps-a (&rest _)
+    "Remove extra face remaps when objed de-activates."
+    :after 'objed--reset
+    (unless (memq 'objed-hl (assq 'hl-line face-remapping-alist))
+      (dolist (remap objed:extra-face-remaps)
+        (face-remap-remove-relative remap))
+      (setq objed:extra-face-remaps nil)))
+
+  (objed-mode +1))
+
 ;;;; Scratch-Palette
 ;;;;
 

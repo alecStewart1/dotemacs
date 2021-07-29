@@ -349,7 +349,7 @@ And if it's a function, evaluate it."
   (c-basic-offset . tab-width)
   (c-backspace-function . #'delete-backward-char))
 
-;; (leaf ccls
+;; (use-package ccls
 ;;   :when (package-installed-p 'lsp-mode)
 ;;   :hook (lsp-lens-mode . ccls-code-lens-mode)
 ;;   :preface
@@ -439,7 +439,9 @@ And if it's a function, evaluate it."
   (defun elisp-mode:indent-function (indent-point state)
     "A replacement for `lisp-indent-function'.
 Indents plists more sensibly. Adapted from
-https://emacs.stackexchange.com/questions/10230/how-to-indent-keywords-aligned"
+https://emacs.stackexchange.com/questions/10230/how-to-indent-keywords-aligned
+
+Also took this from Doom Emacs"
     (let ((normal-indent (current-column))
           (orig-point (point))
           ;; TODO Refactor `target' usage (ew!)
@@ -556,83 +558,83 @@ https://emacs.stackexchange.com/questions/10230/how-to-indent-keywords-aligned"
 ;;;; Common Lisp
 ;;;;
 
-(defer-feature! lisp-mode)
+;; (defer-feature! lisp-mode)
 
-(add-hook 'lisp-mode-hook #'rainbow-delimiters-mode)
+;; (add-hook 'lisp-mode-hook #'rainbow-delimiters-mode)
 
-(use-package sly
-  :hook (lisp-mode-local-vars-hook . sly-editing-mode)
-  :preface
-  (defvar inferior-lisp-program "sbcl")
-  :init
-  (add-hook! 'after-init-hook
-    (with-eval-after-load 'sly
-      (sly-setup)))
-  :custom
-  (sly-mrepl-history-file-name (concat my-cache-dir "sly-mrepl-history"))
-  (sly-net-coding-system 'utf-8-unix)
-  (sly-kill-without-query-p t)
-  (sly-lisp-implementations
-   `((sbcl (,(executable-find "sbcl")))
-     (ccl (,(executable-find "ccl")))
-     (ecl (,(executable-find "ecl")))
-     (abcl (,(executable-find "abcl")))
-     (clisp (,(executable-find "clisp")))))
-  (sly-description-autofocus t)
-  (sly-inhibit-pipelining nil)
-  (sly-load-failed-fasl 'always)
-  (sly-complete-symbol-function 'sly-flex-completions)
-  :config
-  (defun sly:cleanup-maybe ()
-    "Kill processes and leftover buffers when killing the last sly buffer."
-    (let ((buf-list (delq (current-buffer) (buffer-list))))
-      (unless (cl-loop for buf in buf-list
-                       if (and (buffer-local-value 'sly-mode buf)
-                               (get-buffer-window buf))
-                       return t)
-        (dolist (conn (sly--purge-connections))
-          (sly-quit-list-internal conn 'sly-quit-sentinel t))
-        (let (kill-buffer-hook kill-buffer-query-functions)
-          (mapc #'kill-buffer
-                (cl-loop for buf in buf-list
-                         if (buffer-local-value 'sly-mode buf)
-                         collect buf))))))
+;; (use-package sly
+;;   :hook (lisp-mode-local-vars-hook . sly-editing-mode)
+;;   :preface
+;;   (defvar inferior-lisp-program "sbcl")
+;;   :init
+;;   (add-hook! 'after-init-hook
+;;     (with-eval-after-load 'sly
+;;       (sly-setup)))
+;;   :custom
+;;   (sly-mrepl-history-file-name (concat my-cache-dir "sly-mrepl-history"))
+;;   (sly-net-coding-system 'utf-8-unix)
+;;   (sly-kill-without-query-p t)
+;;   (sly-lisp-implementations
+;;    `((sbcl (,(executable-find "sbcl")))
+;;      (ccl (,(executable-find "ccl")))
+;;      (ecl (,(executable-find "ecl")))
+;;      (abcl (,(executable-find "abcl")))
+;;      (clisp (,(executable-find "clisp")))))
+;;   (sly-description-autofocus t)
+;;   (sly-inhibit-pipelining nil)
+;;   (sly-load-failed-fasl 'always)
+;;   (sly-complete-symbol-function 'sly-flex-completions)
+;;   :config
+;;   (defun sly:cleanup-maybe ()
+;;     "Kill processes and leftover buffers when killing the last sly buffer."
+;;     (let ((buf-list (delq (current-buffer) (buffer-list))))
+;;       (unless (cl-loop for buf in buf-list
+;;                        if (and (buffer-local-value 'sly-mode buf)
+;;                                (get-buffer-window buf))
+;;                        return t)
+;;         (dolist (conn (sly--purge-connections))
+;;           (sly-quit-list-internal conn 'sly-quit-sentinel t))
+;;         (let (kill-buffer-hook kill-buffer-query-functions)
+;;           (mapc #'kill-buffer
+;;                 (cl-loop for buf in buf-list
+;;                          if (buffer-local-value 'sly-mode buf)
+;;                          collect buf))))))
 
-  (defun sly:init ()
-    "Attempt to auto-start sly when opening a lisp buffer."
-    (cl-labels ((temp-buf-p (buf)
-                            (equal (substring (buffer-name buf) 0 1) " ")))
-      (cond ((or (temp-buf-p (current-buffer))
-                 (sly-connected-p)))
-            ((executable-find interfior-lisp-program)
-             (let ((sly-auto-start 'always))
-               (sly-auto-start)
-               (add-hook 'kill-buffer-hook #'sly:cleanup-maybe nil t)))
-            ((message "WARNING: Couldn't find `inferior-lisp-program' (%s)"
-                      inferior-lisp-program)))))
-  (add-hook! 'sly-mode-hook #'sly:init))
+;;   (defun sly:init ()
+;;     "Attempt to auto-start sly when opening a lisp buffer."
+;;     (cl-labels ((temp-buf-p (buf)
+;;                             (equal (substring (buffer-name buf) 0 1) " ")))
+;;       (cond ((or (temp-buf-p (current-buffer))
+;;                  (sly-connected-p)))
+;;             ((executable-find interfior-lisp-program)
+;;              (let ((sly-auto-start 'always))
+;;                (sly-auto-start)
+;;                (add-hook 'kill-buffer-hook #'sly:cleanup-maybe nil t)))
+;;             ((message "WARNING: Couldn't find `inferior-lisp-program' (%s)"
+;;                       inferior-lisp-program)))))
+;;   (add-hook! 'sly-mode-hook #'sly:init))
 
-(use-package sly-repl-ansi-color
-  :after sly
-  :init
-  (add-to-list 'sly-contribs 'sly-repl-ansi-color))
+;; (use-package sly-repl-ansi-color
+;;   :after sly
+;;   :init
+;;   (add-to-list 'sly-contribs 'sly-repl-ansi-color))
 
-(use-package sly-asdf
-  :after sly
-  :config
-  (add-to-list 'sly-contribs 'sly-asdf #'append)
-  (with-eval-after-load 'sly
-    (sly-enable-contrib 'sly-asdf)))
+;; (use-package sly-asdf
+;;   :after sly
+;;   :config
+;;   (add-to-list 'sly-contribs 'sly-asdf #'append)
+;;   (with-eval-after-load 'sly
+;;     (sly-enable-contrib 'sly-asdf)))
 
-(use-package sly-quicklisp
-  :after sly
-  :commands sly-quicklisp)
+;; (use-package sly-quicklisp
+;;   :after sly
+;;   :commands sly-quicklisp)
 
-(use-package sly-named-readtables
-  :after sly
-  :config
-  (with-eval-after-load 'sly
-    (sly-enable-contrib 'sly-named-readtables)))
+;; (use-package sly-named-readtables
+;;   :after sly
+;;   :config
+;;   (with-eval-after-load 'sly
+;;     (sly-enable-contrib 'sly-named-readtables)))
 
 ;;;; Schemes
 ;;;;
@@ -681,6 +683,7 @@ https://emacs.stackexchange.com/questions/10230/how-to-indent-keywords-aligned"
                  (funcall method state indent-point normal-indent))))))))
 
 (use-package geiser
+  :defer t
   :preface
   (defun geiser/open-repl ()
     "Open the Geiser REPL."
@@ -839,6 +842,9 @@ nimsuggest isn't installed."
                 (defun nim--suggest-get-temp-file-name (path)
                   (replace-regexp-in-string "[꞉* |<>\"?*]" "" path)))))
 
+(use-package ob-nim
+  :after ob)
+
 ;;;; Erlang
 ;;;;
 
@@ -853,47 +859,49 @@ nimsuggest isn't installed."
 ;;;; Elixir
 ;;;;
 
-;; (use-package elixir-mode
-;;   :defer t
-;;   :init
-;;   (provide 'smartparens-elixir)
-;;   :config
-;;   (sp-with-modes 'elixir-mode
-;;     (sp-local-pair "do" "end"
-;;                    :when '(("RET" "<evil-ret>"))
-;;                    :unless '(sp-in-comment-p sp-in-string-p)
-;;                    :post-handlers '("||\n[i]"))
-;;     (sp-local-pair "do " " end" :unless '(sp-in-comment-p sp-in-string-p))
-;;     (sp-local-pair "fn " " end" :unless '(sp-in-comment-p sp-in-string-p)))
+(use-package elixir-mode
+  :defer t
+  :init
+  (provide 'smartparens-elixir)
+  :config
+  (sp-with-modes 'elixir-mode
+    (sp-local-pair "do" "end"
+                   :when '(("RET" "<evil-ret>"))
+                   :unless '(sp-in-comment-p sp-in-string-p)
+                   :post-handlers '("||\n[i]"))
+    (sp-local-pair "do " " end" :unless '(sp-in-comment-p sp-in-string-p))
+    (sp-local-pair "fn " " end" :unless '(sp-in-comment-p sp-in-string-p)))
 
-;;   (when (package-installed-p 'lsp-mode)
-;;     (add-hook 'elixir-mode-local-vars-hook #'lsp-deferred)
-;;     (eval-after-load 'lsp-mode
-;;       (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]_build\\'"))
-;;     (require 'dap-elixir))
+  (when (package-installed-p 'lsp-mode)
+    (add-hook 'elixir-mode-local-vars-hook #'lsp-deferred)
+    (eval-after-load 'lsp-mode
+      (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]_build\\'"))
+    (require 'dap-elixir))
 
-;;   (eval-after-load 'highlight-numbers
-;;     (puthash 'elixir-mode
-;;              "\\_<-?[[:digit:]]+\\(?:_[[:digit:]]\\{3\\}\\)*\\_>"
-;;              highlight-numbers-modelist)))
+  (eval-after-load 'highlight-numbers
+    (puthash 'elixir-mode
+             "\\_<-?[[:digit:]]+\\(?:_[[:digit:]]\\{3\\}\\)*\\_>"
+             highlight-numbers-modelist)))
 
-;; (use-package mix
-;;   :after elixir-mode
-;;   :hook (elixir-mode . mix-minor-mode))
+(use-package mix
+  :after elixir-mode
+  :hook (elixir-mode . mix-minor-mode))
 
-;; (use-package exunit
-;;   :hook (elixir-mode . exunit-mode))
+(use-package exunit
+  :hook (elixir-mode . exunit-mode))
 
-;; (use-package inf-elixir
-;;   :general
-;;   (:keymaps 'elixir-mode-map
-;;    :prefix "C-c i"
-;;    "i" #'inf-elixir
-;;    "p" #'inf-elixir-project
-;;    "l" #'inf-elixir-send-line
-;;    "r" #'inf-elixir-send-region
-;;    "b" #'inf-elixir-send-buffer))
+(use-package inf-elixir
+  :general
+  (:keymaps 'elixir-mode-map
+   :prefix "C-c i"
+   "i" #'inf-elixir
+   "p" #'inf-elixir-project
+   "l" #'inf-elixir-send-line
+   "r" #'inf-elixir-send-region
+   "b" #'inf-elixir-send-buffer))
 
+(use-package ob-elixir
+  :after ob)
 
 ;;;; Ruby
 ;;;;

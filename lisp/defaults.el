@@ -14,9 +14,6 @@
 ;;  A lot of these are things we need to fix/hack before we
 ;;  add in anything else.
 ;;
-;;  Here you'll see I make use of `leaf', and it's
-;;  `:custom' key to customize variables, as well as to defer certain packages.
-;;
 ;;; Code:
 
 (require 'subr-x)
@@ -166,6 +163,7 @@
 ;;;; Compiling things
 ;;;;
 
+
 (use-package bytecomp
   :ensure nil
   :custom
@@ -177,6 +175,25 @@
   :ensure nil
   :custom
   (pcache-directory (concat my-cache-dir "pcache/")))
+
+;;;;; Native compilation support stuff
+;;;;;
+
+;; From Doom Emacs:
+;; Disable native-compilation for troublesome packages
+(eval-after-load 'comp
+  (mapc (apply-partially #'add-to-list 'native-comp-deferred-compilation-deny-list)
+        (let ((local-dir-re (concat "\\`" (regexp-quote doom-local-dir))))
+          (list (concat "\\`" (regexp-quote doom-autoloads-file) "\\'")
+                (concat local-dir-re ".*/evil-collection-vterm\\.el\\'")
+                (concat local-dir-re ".*/with-editor\\.el\\'")
+                ;; https://github.com/nnicandro/emacs-jupyter/issues/297
+                (concat local-dir-re ".*/jupyter-channel\\.el\\'")))))
+
+;; Don't store eln files in ~/.emacs.d/eln-cache
+;;
+(when (boundp 'native-comp-eln-load-path)
+  (add-to-list 'native-comp-eln-load-path (concat my-cache-dir "eln/")))
 
 ;;;; Startup
 ;;;;

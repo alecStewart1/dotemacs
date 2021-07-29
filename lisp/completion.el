@@ -64,8 +64,7 @@
   (minibuffer-electric-default-mode 1))
 
 (use-package vertico
-  :bind (:vertico-map
-         :package vertico
+  :bind (:map vertico-map
          ("?" . minibuffer-completion-help)
          ("M-RET" . minibuffer-force-complete-and-exit)
          ("M-TAB" . minibuffer-complete))
@@ -125,8 +124,8 @@
   ;; Isearch
   ("M-s e"                      #'consult-isearch)
   (:keymaps 'isearch-mode-map
-   ([remap isearch-edit-string] #'consult-isearch)
-   ("M-s l"                     #'consult-line))
+   [remap isearch-edit-string] #'consult-isearch
+   "M-s l"                     #'consult-line)
   ;; Misc.
   ([remap apropos] #'consult-apropos)
   :init
@@ -171,11 +170,18 @@
                             (floor (frame-height) 2) 1)))
 
   (setq prefix-help-command #'embark-prefix-help-command)
+
+  (set-face-attribute 'embark-verbose-indicator-title nil :height 1.0)
+  :custom
+  (embark-indicator #'embark-verbose-indicator)
+  (embark-verbose-indicator-display-action
+   '(display-buffer-at-bottom (window-height . fit-window-to-buffer)))
   :config
   (add-to-list 'display-buffer-alist
                '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
                  nil
                  (window-parameters (mode-line-format . none))))
+
   (add-hook 'embark-post-action-hook #'embark-collect--update-linked)
   (add-hook 'embark-collect-post-revert-hook #'embark:resize-collect-window)
 

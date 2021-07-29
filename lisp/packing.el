@@ -1,4 +1,4 @@
-;;; packing.el --- Managing package.el and leaf.el -*- lexical-binding: t; -*-
+;;; packing.el --- Managing package.el and use-package.el -*- lexical-binding: t; -*-
 ;;
 ;; Copyright (C) 2021 Alec
 ;;
@@ -9,8 +9,6 @@
 ;;
 ;;; Commentary:
 ;;
-;;  I use `straight' instead of `package', in order to
-;;  more easily use different branches if needed.
 
 ;;; Code:
 
@@ -165,6 +163,10 @@
 ;;; I've found this configuration packge to be a pain in the ass to configure.
 ;;; It expands simply, however, that leads to a lot of problems if you don't
 ;;; know exactly how things expand and how they are loaded.
+;;; I'm lazy. I don't want to do think about that.
+;;;
+;;; I keep this commented out here for posterity reasons. I might switch back
+;;; over in the future.
 
 ;; (eval-and-compile 
 ;;   (unless (package-installed-p 'leaf)
