@@ -226,6 +226,7 @@
   (line-number-mode                    t)
   (kill-do-not-save-duplicates         t)
   (save-interprogram-paste-before-kill t)
+  (shift-select-mode                   t)
   (delete-trailing-lines               nil)
   (set-mark-command-repeat-pop         t)
   (kill-ring-max                       30000))
@@ -431,18 +432,34 @@
   :ensure nil
   :bind
   (("M-%" . query-replace-regexp)
-   ("C-M-%" . query-replace)))
+   ("C-M-%" . query-replace))
+  :config
+  (when (require 'dash nil t)
+    (defun unpackaged/query-replace-rx (&rest _)
+      "Call `query-replace-regexp', reading regexp in `rx' syntax.
+Automatically wraps in parens and adds `seq' to the beginning of
+the form."
+      (interactive)
+      (cl-letf (((symbol-function #'query-replace-read-from) (lambda (&rest _)
+                                                               (--> (read-string "rx form: ")
+                                                                    (concat "'(seq " it ")")
+                                                                    (read it)
+                                                                    (cadr it)
+                                                                    (rx-to-string it)))))
+        (call-interactively #'query-replace-regexp)))))
 
 ;;;; Security things
 ;;;;
 
 (use-package nsm
   :ensure nil
+  :demand t
   :custom
   (network-security-level 'high))
 
 (use-package gnutls
   :ensure nil
+  :demand t
   :init
   (setq gnutls-verify-error (not (getenv "INSECURE"))
         gnutls-min-prime-bits 3072
@@ -456,13 +473,15 @@
                   ":+VERS-TLS1.2")))
   :custom
   (tls-checktrust gnutls-verify-error)
-    (tls-program '("openssl s_client -connect %h:%p -CAfile %t -nbio -no_ssl3 -no_tls1 -no_tls1_1 -ign_eof"
-                    "gnutls-cli -p %p --dh-bits=3072 --ocsp --x509cafile=%t \
+  (tls-program '("openssl s_client -connect %h:%p -CAfile %t -nbio -no_ssl3 -no_tls1 -no_tls1_1 -ign_eof"
+                 "gnutls-cli -p %p --dh-bits=3072 --ocsp --x509cafile=%t \
       --strict-tofu --priority='SECURE192:+SECURE128:-VERS-ALL:+VERS-TLS1.2:+VERS-TLS1.3' %h"
-                    ;; compatibility fallbacks
-                    "gnutls-cli -p %p %h")))
+                 ;; compatibility fallbacks
+                 "gnutls-cli -p %p %h")))
+
 (use-package auth-source
   :ensure nil
+  :demand t
   :init
   (setq auth-sources
         (list (concat my-etc-dir "authinfo.gpg") "~/.authinfo.gpg")))

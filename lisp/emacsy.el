@@ -183,6 +183,12 @@ current line.")
                  " ")
        "Project: ")))
 
+;;;; Burly
+;;;;
+
+(use-package burly
+  :defer t)
+
 ;;;; Bufler
 ;;;;
 

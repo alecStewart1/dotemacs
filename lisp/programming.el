@@ -115,6 +115,19 @@ format text in a specific region."
 ;;         (shell-command-on-region
 ;;          (region-beginning) (region-end) cmd nil t nil t nil))))
 
+(defun format:cheap-indent-sexp ()
+  "Indent the current s-expression, or next s-expression as `sp-mark-sexp'
+will use `sp-forward-sexp' if there's a currently marked region.
+
+This is \"cheap\" because it just uses `smartparens'.
+
+Uses whatever the indent function is for the current mode, as this uses
+`indent-region'."
+  (interactive)
+  (save-excursion
+    (sp-mark-sexp)
+    (indent-region (region-beginning) (region-end))))
+
 ;;; Packages
 ;;;
 
@@ -902,6 +915,34 @@ nimsuggest isn't installed."
 
 (use-package ob-elixir
   :after ob)
+
+;;;; Perl
+;;;;
+
+(use-package cperl-mode
+  :mode ("\\.\\([pP][Llm]\\|al\\)\\'" . cperl-mode)
+  :interpreter (("perl" .     cperl-mode)
+                ("perl5" .    cperl-mode)
+                ("miniperl" . cperl-mode))
+  :hook (cperl-mode . (lambda ()
+                         (set (make-local-variable 'eldoc-documentation-function)
+                              'cperl:eldoc-doc-function)))
+  :config
+  (defun cperl:eldoc-doc-function ()
+    "Return meaningful doc string for `eldoc-mode'."
+    (car
+     (let ((cperl-message-on-help-error nil))
+       (cperl-get-help))))
+
+  (add-hook 'cperl-mode-local-vars-hook #'lsp-deferred)
+  :custom
+  (cperl-invalid-face nil)
+  (cperl-font-lock t)
+  (cperl-electric-keywords t)
+  (cperl-electric-parens t)
+  (cperl-info-on-command-no-prompt t)
+  (cperl-clobber-lisp-bindings t)
+  (cperl-lazy-help-time t))
 
 ;;;; Ruby
 ;;;;

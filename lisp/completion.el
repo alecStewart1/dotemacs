@@ -33,12 +33,14 @@
   :init
   (setq orderless-matching-styles
         '(orderless-literal orderless-strict-leading-initialism orderless-prefixes)
-        completion-styles '(substring flex orderless)
+        orderless-component-separator "[ &]"
+        completion-styles '(orderless)
         completion-category-defaults nil
         completion-category-overrides
-        '((file (styles . (partial-completion)))
-          (buffer (styles (partial-completion)))
-          (info-menu (styles . (partial-completion))))))
+        '((file (styles . (orderless partial-completion)))
+          (buffer (styles (orderless partial-completion)))
+          (info-menu (styles . (orderless partial-completion)))))
+  (set-face-attribute 'completions-first-difference nil :inherit nil))
 
 ;;;; Minibuffer Completion
 ;;;;
@@ -79,7 +81,11 @@
                 (setq-local completion-auto-help nil
                             completion-show-inline-help nil)))
   :custom
-  (vertico-cycle t))
+  (vertico-resize nil)
+  (vertico-count 16)
+  (vertico-cycle t)
+  :config
+  (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy))
 
 (use-package consult
   :general
@@ -122,7 +128,7 @@
   ("M-SPC m m"   #'consult-minor-mode-menu)
   ("M-SPC m M-m" #'consult-mode-command)
   ;; Isearch
-  ("M-s e"                      #'consult-isearch)
+  ("M-s e"                     #'consult-isearch)
   (:keymaps 'isearch-mode-map
    [remap isearch-edit-string] #'consult-isearch
    "M-s l"                     #'consult-line)
@@ -141,15 +147,35 @@
   :custom
   (register-preview-delay 0)
   (register-preview-function #'consult-register-preview)
-  (consult-preview-key 'any)
+  (consult-preview-key '(:debounce 0.3 any))
+  (consult-line-numbers-widen t)
+  (consult-async-min-input 2)
+  (consult-async-refresh-delay 0.15)
+  (consult-async-input-throttle 0.2)
+  (consult-async-input-debounce 0.1)
   (consult-project-root-function #'projectile-project-root)
   (consult-find-command (concat
-                         (format "%s -0 -H --color=never --follow --exclude .git" consult:find-program)
-                         (if windows-nt-p "--path-separator=/"))))
+                         (format "%s -0 -i -H --color=never --follow --exclude .git --regex" consult:find-program)
+                         (if windows-nt-p "--path-separator=/")))
+  :config
+  (consult-customize
+   consult-ripgrep consult-git-grep consult-grep
+   consult-bookmark consult-recent-file consult-xref
+   consult--source-file consult--source-project-file consult--source-bookmark
+   :preview-key (list (kbd "C-SPC") (kbd "M-.")))
+
+  (consult-customize
+   consult-buffer consult--source-buffer consult--source-project-buffer consult--source-hidden-buffer
+   :preview-key (list :debounce 0.3 (kbd "<up>") (kbd "<down>") (kbd "C-p") (kbd "C-n")
+                      :debounce 0.5 'any))
+
+  (consult-customize
+   consult-theme
+   :preview-key (list (kbd "C-SPC") (kbd "M-.")
+                      :debounce 1 'any)))
 
 (use-package marginalia
-  :bind (:minibuffer-local-map
-         :package minibuffer
+  :bind (:map minibuffer-local-map
          ("M-A" . marginalia-cycle))
   :init
   (marginalia-mode)
@@ -157,10 +183,15 @@
   (marginalia-annotators '(marginalia-annotators-light marginalia-annotators-heavy nil)))
 
 (use-package embark
-  :bind (("M-." . embark-act)
-         ("C-;" . embark-dwim)
-         ("C-h B" . embark-bindings)
+  :bind (("C-;" . embark-act)
+         ("C-." . embark-dwim)
+         ([remap describe-bindings] . embark-bindings)
+         :map minibuffer-local-map
+         ("C-;" . embark-act)
+         ("M-e" . embark-export)
+         ("M-c" . embark-collect-snapshot)
          :map vertico-map
+         ("C-;" . embark-act)
          ("M-e" . embark-export)
          ("M-c" . embark-collect-snapshot))
   :init
