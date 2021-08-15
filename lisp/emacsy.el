@@ -68,7 +68,28 @@
   :ensure nil
   :bind (("C-x C-b" . ibuffer)
          :map ibuffer-mode-map
+         ("M-SPC" . ibuffer-hydra/pretty-body)
          ("q" . kill-current-buffer))
+  :pretty-hydra
+  ((:title "IBuffer" :color amaranth :quit-key "q")
+   ("Navigation"
+    (("j" ibuffer-forward-line   "forward")
+     ("RET" ibuffer-visit-buffer "visit" :color blue)
+     ("k" ibuffer-backward-line  "backward"))
+    "Mark"
+    (("m" ibuffer-mark-forward   "mark")
+     ("u" ibuffer-unmark-forward "unmark")
+     ("*" embark:ibuffer-mark    "embark: mark" :color blue))
+    "Actions"
+    (("D" ibuffer-do-delete     "delete")
+     ("S" ibuffer-do-save       "save")
+     ("a" embark:ibuffer-action "embark: action"))
+    "Other"
+    (("g" ibuffer-update        "update")
+     ("s" embark:ibuffer-sort   "embark: sort"   :color blue)
+     ("/" embark:ibuffer-filter "embark: filter" :color blue))
+    "Misc."
+    (("o" ibuffer-visit-buffer-other-window "other window"))))
   :custom-face
   (ibuffer-filter-group-name-face '(:inherit (success bold)))
   :custom
@@ -103,7 +124,55 @@
     (:name "Size"
      :inline t
      :header-mouse-map ibuffer-size-header-map)
-    (file-size-human-readable (buffer-size))))
+    (file-size-human-readable (buffer-size)))
+
+  (embark-define-keymap embark:ibuffer-mark
+    "Marking buffers in IBuffer."
+    ("*" ibuffer-unmark-all)
+    ("M" ibuffer-mark-by-mode)
+    ("m" ibuffer-mark-modified-buffers)
+    ("u" ibuffer-mark-unsaved-buffers)
+    ("s" ibuffer-mark-special-buffers)
+    ("r" ibuffer-mark-read-only-buffers)
+    ("d" ibuffer-mark-dired-buffers)
+    ("b" ibuffer-hydra/pretty-body "back" :color blue))
+
+  (embark-define-keymap embark:ibuffer-action
+    "Doing actions in IBuffer."
+    ("A" ibuffer-do-view)
+    ("H" ibuffer-do-view-other-frame)
+    ("E" ibuffer-do-eval)
+    ("W" ibuffer-do-view-and-eval)
+    ("F" ibuffer-do-shell-command-file)
+    ("X" ibuffer-do-shell-command-pipe)
+    ("N" ibuffer-do-shell-command-pipe-replace)
+    ("Q" ibuffer-do-query-replace-regexp)
+    ("U" ibuffer-do-replace-regexp)
+    ("V" ibuffer-do-revert)
+    ("b" ibuffer-hydra/pretty-body "back" :color blue))
+
+  (embark-define-keymap embark:ibuffer-sort
+    "Sorting buffers in IBuffer."
+    ("i" ibuffer-invert-sorting)
+    ("a" ibuffer-do-sort-by-alphabetic)
+    ("v" ibuffer-do-sort-by-recency)
+    ("s" ibuffer-do-sort-by-size)
+    ("f" ibuffer-do-sort-by-filename/process)
+    ("m" ibuffer-do-sort-by-major-mode)
+    ("b" ibuffer-hydra/pretty-body "back" :color blue))
+
+  (embark-define-keymap embark:ibuffer-filter
+    "Filtering buffers in IBuffer."
+    ("m" ibuffer-filter-by-used-mode "mode")
+    ("M" ibuffer-filter-by-derived-mode "derived mode")
+    ("n" ibuffer-filter-by-name "name")
+    ("c" ibuffer-filter-by-content "content")
+    ("e" ibuffer-filter-by-predicate "predicate")
+    ("f" ibuffer-filter-by-filename "filename")
+    (">" ibuffer-filter-by-size-gt "size")
+    ("<" ibuffer-filter-by-size-lt "size")
+    ("/" ibuffer-filter-disable "disable")
+    ("b" ibuffer-hydra/pretty-body "back" :color blue)))
 
 ;;;; Electric
 ;;;;

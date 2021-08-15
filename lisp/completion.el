@@ -147,7 +147,8 @@
   :custom
   (register-preview-delay 0)
   (register-preview-function #'consult-register-preview)
-  (consult-preview-key '(:debounce 0.3 any))
+  (consult-preview-key '(:debounce 0.2 any))
+  (consult-narrow-key "<")
   (consult-line-numbers-widen t)
   (consult-async-min-input 2)
   (consult-async-refresh-delay 0.15)
@@ -165,7 +166,8 @@
    :preview-key (list (kbd "C-SPC") (kbd "M-.")))
 
   (consult-customize
-   consult-buffer consult--source-buffer consult--source-project-buffer consult--source-hidden-buffer
+   consult-buffer consult-buffer-other-window consult-buffer-other-frame
+   consult--source-buffer consult--source-project-buffer consult--source-hidden-buffer
    :preview-key (list :debounce 0.3 (kbd "<up>") (kbd "<down>") (kbd "C-p") (kbd "C-n")
                       :debounce 0.5 'any))
 

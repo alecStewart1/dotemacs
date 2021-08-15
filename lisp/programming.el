@@ -21,6 +21,7 @@
 (require 'cl-seq)
 (require 'subr-x)
 (require 'mode-local)
+(require 'ht)
 
 ;;; Personal Code
 ;;;
@@ -29,31 +30,35 @@
 ;;;; TODO - format region
 
 ;;;###autoload
-(defvar format:formatter-command-alist '((cs   . "clang-format")
-                                         (py   . "black")
-                                         (nim  . "nimpretty")
-                                         (sh   . "shfmt")
-                                         (fish . "fish_indent")
-                                         (md   . "prettier")
-                                         (html . "prettier")
-                                         (js   . "prettier")
-                                         (css  . "prettier")
-                                         (scss . "prettier")
-                                         (json . "prettier")
-                                         (yaml . "prettier")))
+(defvar format:formatter-command-hash (ht ('cs   "clang-format")
+                                          ('py   "black")
+                                          ('nim  "nimpretty")
+                                          ('perl "perltidy")
+                                          ('sh   "shfmt")
+                                          ('fish "fish_indent")
+                                          ('md   "prettier")
+                                          ('html "prettier")
+                                          ('js   "prettier")
+                                          ('css  "prettier")
+                                          ('scss "prettier")
+                                          ('json "prettier")
+                                          ('yaml "prettier")))
 
+;; TODO
+;; Need to figure out how to account for formatters that can format entire directories
 ;;;###autoload
-(defvar format:formatter-args-alist '((cs . " --sort-includes")
-                                      (fish . " -w")
-                                      (md   . " -w --prose-wrap --parser markdown")
-                                      (html . " -w --parser html")
-                                      (css  . " -w --parser css")
-                                      (scss . " -w --parser scss")
-                                      (json . " -w --parser json")
-                                      (yaml . " -w --parser yaml")))
+(defvar format:formatter-args-hash (ht ('cs   " --sort-includes")
+                                       ('perl " -npro -gnu -nst -nt -dws -b")
+                                       ('fish " -w")
+                                       ('md   " -w --prose-wrap --parser markdown")
+                                       ('html " -w --parser html")
+                                       ('css  " -w --parser css")
+                                       ('scss " -w --parser scss")
+                                       ('json " -w --parser json")
+                                       ('yaml " -w --parser yaml")))
 ;; TODO
 ;;;###autoload
-(defvar format:formatter-region-args-alist '((py   . " -c")))
+(defvar format:formatter-region-args-hash (ht (py   . " -c")))
 
 (defun format::shfmt-lang-args ()
   (let ((lang " -ln "))
@@ -69,15 +74,16 @@
 ON-REGION-P (not yet implemented) when non-nil is for when we want to only
 format text in a specific region."
   (let ((get-cmd (lambda (k)
-                   (alist-get k 'format:formatter-command-alist)))
+                   (ht-get format:formatter-command-hash k)))
         (get-args (lambda (k)
                     (if on-region-p
-                        (alist-get k 'format:formatter-region-args-alist)
-                      (alist-get k 'format:formatter-args-alist)))))
+                        (ht-get format:formatter-region-args-hash k)
+                      (ht-get format:formatter-args-hash k)))))
     (pcase mode
       ((or c-mode c++-mode objc-mode)  (concat (get-cmd 'cs) (get-args 'cs)))
       (python-mode                     (get-cmd 'py))
-      (nim-mode                        (concat (get-cmd 'nim) (get-args 'nim)))
+      (nim-mode                        (get-cmd 'nim))
+      (cperl-mode                      (concat (get-cmd 'perl) (get-args 'perl)))
       (sh-mode                         (concat (get-cmd 'sh) (format::shfmt-lang-args)))
       (fish-mode                       (concat (get-cmd 'fish) (get-args 'fish)))
       (markdown-mode                   (concat (get-cmd 'md) (get-args 'md)))
@@ -652,90 +658,90 @@ Also took this from Doom Emacs"
 ;;;; Schemes
 ;;;;
 
-(use-package scheme
-  :hook (scheme-mode . rainbow-delimiters-mode)
-  :preface
-  (defvar calculate-lisp-indent-last-sexp)
-  :config
-  (defadvice! scheme:indent-function (indent-point state)
-    "A better indenting function for `scheme-mode'."
-    :override #'scheme-indent-function
-    (let ((normal-indent (current-column)))
-      (goto-char (1+ (elt state 1)))
-      (parse-partial-sexp (point) calculate-lisp-indnet-last-sexp 0 t)
-      (if (and (elt state 2)
-               (not (looking-at-p "\\sw\\|\\s_")))
-          (progn
-            (unless (> (save-excursion (forward-line 1) (point))
-                       calculate-lisp-indent-last-sexp)
-              (goto-char calculate-lisp-indent-last-sexp)
-              (beginning-of-line)
-              (parse-partial-sexp (point) calculate-lisp-indent-last-sexp 0 t))
-            (backward-prefix-chars)
-            (current-column))
-        (let* ((function (buffer-substring
-                          (point)
-                          (progn
-                            (forward-sexp 1)
-                            (point))))
-               (method (or (get (intern-soft function) 'scheme-indent-function)
-                           (get (intern-soft function) 'scheme-indent-hook))))
-          (cond ((or (eq method 'defun)
-                     (and (null method)
-                          (> (length function) 3)
-                          (string-match-p "\\`def" function)))
-                 (lisp-indent-defform state indent-point))
-                ((and (null method)
-                      (> (length function) 1)
-                      (string-match-p "\\`:" function))
-                 (let ((lisp-body-indent 1))
-                   (lisp-indent-defform state indent-point)))
-                ((integerp method)
-                 (lisp-indent-specform method state indent-point normal-indent))
-                (method
-                 (funcall method state indent-point normal-indent))))))))
+;; (use-package scheme
+;;   :hook (scheme-mode . rainbow-delimiters-mode)
+;;   :preface
+;;   (defvar calculate-lisp-indent-last-sexp)
+;;   :config
+;;   (defadvice! scheme:indent-function (indent-point state)
+;;     "A better indenting function for `scheme-mode'."
+;;     :override #'scheme-indent-function
+;;     (let ((normal-indent (current-column)))
+;;       (goto-char (1+ (elt state 1)))
+;;       (parse-partial-sexp (point) calculate-lisp-indnet-last-sexp 0 t)
+;;       (if (and (elt state 2)
+;;                (not (looking-at-p "\\sw\\|\\s_")))
+;;           (progn
+;;             (unless (> (save-excursion (forward-line 1) (point))
+;;                        calculate-lisp-indent-last-sexp)
+;;               (goto-char calculate-lisp-indent-last-sexp)
+;;               (beginning-of-line)
+;;               (parse-partial-sexp (point) calculate-lisp-indent-last-sexp 0 t))
+;;             (backward-prefix-chars)
+;;             (current-column))
+;;         (let* ((function (buffer-substring
+;;                           (point)
+;;                           (progn
+;;                             (forward-sexp 1)
+;;                             (point))))
+;;                (method (or (get (intern-soft function) 'scheme-indent-function)
+;;                            (get (intern-soft function) 'scheme-indent-hook))))
+;;           (cond ((or (eq method 'defun)
+;;                      (and (null method)
+;;                           (> (length function) 3)
+;;                           (string-match-p "\\`def" function)))
+;;                  (lisp-indent-defform state indent-point))
+;;                 ((and (null method)
+;;                       (> (length function) 1)
+;;                       (string-match-p "\\`:" function))
+;;                  (let ((lisp-body-indent 1))
+;;                    (lisp-indent-defform state indent-point)))
+;;                 ((integerp method)
+;;                  (lisp-indent-specform method state indent-point normal-indent))
+;;                 (method
+;;                  (funcall method state indent-point normal-indent))))))))
 
-(use-package geiser
-  :defer t
-  :preface
-  (defun geiser/open-repl ()
-    "Open the Geiser REPL."
-    (interactive)
-    (call-interactively #'switch-to-geiser)
-    (current-buffer))
-  :init
-  ;; To work with Guile + Geiser
-  ;; We need this first in order to set our `geiser-activate-implementation' variable
-  (use-package geiser-guile :ensure t)
-  :custom
-  ;; May work with Gambit/Gerbil, I dunno.
-  ;; Guile, Chez, and Chicken are the better documented at the moment.
-  (geiser-active-implementations . '(guile chez chicken))
-  (geiser-autodoc-identifier-format . "%s => %s")
-  (geiser-repl-current-project-function . 'projectile-project-root))
+;; (use-package geiser
+;;   :defer t
+;;   :preface
+;;   (defun geiser/open-repl ()
+;;     "Open the Geiser REPL."
+;;     (interactive)
+;;     (call-interactively #'switch-to-geiser)
+;;     (current-buffer))
+;;   :init
+;;   ;; To work with Guile + Geiser
+;;   ;; We need this first in order to set our `geiser-activate-implementation' variable
+;;   (use-package geiser-guile :ensure t)
+;;   :custom
+;;   ;; May work with Gambit/Gerbil, I dunno.
+;;   ;; Guile, Chez, and Chicken are the better documented at the moment.
+;;   (geiser-active-implementations . '(guile chez chicken))
+;;   (geiser-autodoc-identifier-format . "%s => %s")
+;;   (geiser-repl-current-project-function . 'projectile-project-root))
 
-(use-package racket-mode
-  :mode "\\.rkt\\'"
-  :hook (racket-mode-local-vars . (racket-xp-mode lsp-deferred))
-  :preface
-  (defun racket:open-repl ()
-    "Open the Racket REPL."
-    (interactive)
-    (pop-to-buffer
-     (or (get-buffer "*Racket REPL*")
-         (progn (racket-run-and-switch-to-repl)
-                (let ((buf (get-buffer "*Racket REPL*")))
-                  (bury-buffer buf)
-                  buf)))))
-  :config
-  (require 'smartparens-racket)
-  (add-hook! 'racket-mode-hook
-             #'rainbow-delimiters-mode
-             #'highlight-quoted-mode)
+;; (use-package racket-mode
+;;   :mode "\\.rkt\\'"
+;;   :hook (racket-mode-local-vars . (racket-xp-mode lsp-deferred))
+;;   :preface
+;;   (defun racket:open-repl ()
+;;     "Open the Racket REPL."
+;;     (interactive)
+;;     (pop-to-buffer
+;;      (or (get-buffer "*Racket REPL*")
+;;          (progn (racket-run-and-switch-to-repl)
+;;                 (let ((buf (get-buffer "*Racket REPL*")))
+;;                   (bury-buffer buf)
+;;                   buf)))))
+;;   :config
+;;   (require 'smartparens-racket)
+;;   (add-hook! 'racket-mode-hook
+;;              #'rainbow-delimiters-mode
+;;              #'highlight-quoted-mode)
 
-  (add-hook! 'racket-xp-mode-hook
-    (defun racket-xp-disable-flycheck ()
-      (cl-pushnew 'racket flyheck-disabled-checkers))))
+;;   (add-hook! 'racket-xp-mode-hook
+;;     (defun racket-xp-disable-flycheck ()
+;;       (cl-pushnew 'racket flyheck-disabled-checkers))))
 
 ;;;; .NET Core
 ;;;;
