@@ -127,6 +127,7 @@
   ;; TODO might change in future
   (mode-line-format  nil)
   :config
+  (mouse-avoidance-mode 'exile)
   (setq abbrev-file-name (concat my-local-dir "abbrev.el")
         server-auth-dir  (concat my-cache-dir "server/"))
   (setq-default
@@ -426,7 +427,20 @@
   (("C-s" . isearch-forward-regexp)
    ("C-M-s" . isearch-forward)
    ("C-r" . isearch-backward-regexp)
-   ("C-M-r" . isearch-backward)))
+   ("C-M-r" . isearch-backward))
+  :hook
+  (isearch-update-post . isearch:aim-beginning)
+  :preface
+  ;; From: https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org#navigation-search
+  (defun isearch:aim-beginning ()
+    "Move cursor back to the beginning of the current match."
+    (when (and isearch-forward (number-or-marker-p isearch-other-end))
+      (goto-char isearch-other-end)))
+  :custom
+  (isearch-allow-scroll t)
+  (lazy-highlight-buffer t)
+  (lazy-highlight-cleanup nil)
+  (lazy-highlight-initial-delay 0))
 
 (use-package replace
   :ensure nil
@@ -435,7 +449,8 @@
    ("C-M-%" . query-replace))
   :config
   (when (require 'dash nil t)
-    (defun unpackaged/query-replace-rx (&rest _)
+    ;; From: https://github.com/alphapapa/unpackaged.el/blob/master/unpackaged.el#L1484
+    (defun replace:query-replace-rx (&rest _)
       "Call `query-replace-regexp', reading regexp in `rx' syntax.
 Automatically wraps in parens and adds `seq' to the beginning of
 the form."

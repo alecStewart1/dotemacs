@@ -93,6 +93,8 @@
             (?B . warning)
             (?C . success))
           org-startup-indented t
+          org-startup-truncated nil
+          org-startup-folded 'content
           org-tags-column 0
           org-use-sub-superscripts '{}
           org-log-into-drawer t
@@ -153,9 +155,11 @@
     (setq org-src-preserve-indentation t
           org-src-fontify-natively t
           org-src-tab-acts-natively t
+          org-src-window-setup 'current-window
+          org-edit-src-content-indentation 0
+          org-edit-src-persistent-message nil
           org-confirm-babel-evaluate nil
-          org-link-elisp-confirm-function nil
-          org-src-window-setup 'other-window)
+          org-link-elisp-confirm-function nil)
 
     (define-key org-src-mode-map (kbd "C-c C-c") #'org-edit-src-exit))
 

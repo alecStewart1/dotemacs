@@ -30,19 +30,20 @@
 ;;;; TODO - format region
 
 ;;;###autoload
-(defvar format:formatter-command-hash (ht ('cs   "clang-format")
-                                          ('py   "black")
-                                          ('nim  "nimpretty")
-                                          ('perl "perltidy")
-                                          ('sh   "shfmt")
-                                          ('fish "fish_indent")
-                                          ('md   "prettier")
-                                          ('html "prettier")
-                                          ('js   "prettier")
-                                          ('css  "prettier")
-                                          ('scss "prettier")
-                                          ('json "prettier")
-                                          ('yaml "prettier")))
+(defvar format:formatter-command-hash (ht ('cs     "clang-format")
+                                          ('py     "black")
+                                          ('nim    "nimpretty")
+                                          ('elixir "mix format")
+                                          ('perl   "perltidy")
+                                          ('sh     "shfmt")
+                                          ('fish   "fish_indent")
+                                          ('md     "prettier")
+                                          ('html   "prettier")
+                                          ('js     "prettier")
+                                          ('css    "prettier")
+                                          ('scss   "prettier")
+                                          ('json   "prettier")
+                                          ('yaml   "prettier")))
 
 ;; TODO
 ;; Need to figure out how to account for formatters that can format entire directories
@@ -83,6 +84,7 @@ format text in a specific region."
       ((or c-mode c++-mode objc-mode)  (concat (get-cmd 'cs) (get-args 'cs)))
       (python-mode                     (get-cmd 'py))
       (nim-mode                        (get-cmd 'nim))
+      (elixir-mode                     (get-cmd 'elixir))
       (cperl-mode                      (concat (get-cmd 'perl) (get-args 'perl)))
       (sh-mode                         (concat (get-cmd 'sh) (format::shfmt-lang-args)))
       (fish-mode                       (concat (get-cmd 'fish) (get-args 'fish)))
@@ -141,6 +143,7 @@ Uses whatever the indent function is for the current mode, as this uses
 ;;;;
 
 (use-package compile
+  :ensure nil
   :hook (compilation-filter . compile:colorize-compilation-buffer)
   :preface
   (defun compile:colorize-compilation-buffer ()
@@ -153,6 +156,7 @@ Uses whatever the indent function is for the current mode, as this uses
   (compilation-scroll-output . 'first-error))
 
 (use-package flymake
+  :ensure nil
   :hook (prog-mode . flymake-mode)
   :config
   (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake))
@@ -161,7 +165,14 @@ Uses whatever the indent function is for the current mode, as this uses
   :hook (prog-mode . goto-address-mode))
 
 (use-package eldoc
-  :diminish)
+  :ensure nil
+  :diminish
+  :init
+  (unless emacs28-p
+    (setq-default eldoc-documentation-format-function #'eldoc-documentation-format-concat-hr))
+  :custom
+  (eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
+  (eldoc-idle-delay .1))
 
 (use-package rmsbolt
   :after (:any c-mode c++-mode objc-mode emacs-lisp-mode common-lisp-mode))
@@ -718,7 +729,7 @@ Also took this from Doom Emacs"
 ;;   ;; Guile, Chez, and Chicken are the better documented at the moment.
 ;;   (geiser-active-implementations . '(guile chez chicken))
 ;;   (geiser-autodoc-identifier-format . "%s => %s")
-;;   (geiser-repl-current-project-function . 'projectile-project-root))
+;;   (geiser-repl-current-project-function . 'projectile:project-root))
 
 ;; (use-package racket-mode
 ;;   :mode "\\.rkt\\'"

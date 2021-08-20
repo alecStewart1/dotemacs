@@ -139,11 +139,12 @@
 
   (fset 'multi-occur #'consult-multi-occur)
 
-  (autoload 'projectile-project-root "projectile")
-  (setq consult-project-root-function #'projectile-project-root)
+  ;;(autoload 'projectile-project-root "projectile")
+  (setq consult-project-root-function #'projectile:get-project-root)
 
   (advice-add #'register-preview :override #'consult-register-window)
   (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
+  (setq prefix-help-command #'embark-prefix-help-command)
   :custom
   (register-preview-delay 0)
   (register-preview-function #'consult-register-preview)
@@ -154,7 +155,7 @@
   (consult-async-refresh-delay 0.15)
   (consult-async-input-throttle 0.2)
   (consult-async-input-debounce 0.1)
-  (consult-project-root-function #'projectile-project-root)
+  (consult-project-root-function #'projectile:get-project-root)
   (consult-find-command (concat
                          (format "%s -0 -i -H --color=never --follow --exclude .git --regex" consult:find-program)
                          (if windows-nt-p "--path-separator=/")))
@@ -168,8 +169,8 @@
   (consult-customize
    consult-buffer consult-buffer-other-window consult-buffer-other-frame
    consult--source-buffer consult--source-project-buffer consult--source-hidden-buffer
-   :preview-key (list :debounce 0.3 (kbd "<up>") (kbd "<down>") (kbd "C-p") (kbd "C-n")
-                      :debounce 0.5 'any))
+   :preview-key (list :debounce 0.25 (kbd "<up>") (kbd "<down>") (kbd "C-p") (kbd "C-n")
+                      :debounce 0.3 'any))
 
   (consult-customize
    consult-theme
@@ -182,7 +183,9 @@
   :init
   (marginalia-mode)
   :custom
-  (marginalia-annotators '(marginalia-annotators-light marginalia-annotators-heavy nil)))
+  (marginalia-annotators '(marginalia-annotators-light marginalia-annotators-heavy nil))
+  :config
+  (advice-add #'marginalia--project-root :override #'projectile:get-project-root))
 
 (use-package embark
   :bind (("C-;" . embark-act)
@@ -202,8 +205,6 @@
       (fit-window-to-buffer (get-buffer-window)
                             (floor (frame-height) 2) 1)))
 
-  (setq prefix-help-command #'embark-prefix-help-command)
-
   (set-face-attribute 'embark-verbose-indicator-title nil :height 1.0)
   :custom
   (embark-indicator #'embark-verbose-indicator)
@@ -216,12 +217,7 @@
                  (window-parameters (mode-line-format . none))))
 
   (add-hook 'embark-post-action-hook #'embark-collect--update-linked)
-  (add-hook 'embark-collect-post-revert-hook #'embark:resize-collect-window)
-
-  ;; TODO finish this
-  ;; (embark-define-keymap embark:ibuffer-main-keymap
-  ;;   "An Embark keymap for doing actions with IBuffer.")
-  )
+  (add-hook 'embark-collect-post-revert-hook #'embark:resize-collect-window))
 
 (use-package embark-consult
   :after (:all embark consult)

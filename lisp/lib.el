@@ -273,13 +273,14 @@ TRIGGER-HOOK is a list of quoted hooks and/or sharp-quoted functions."
 ;;;; After certin functions have loaded
 ;;;;
 
-(with-eval-after-load 'projectile
-  (defun projectile:get-project-root (&optional dir)
-    "Return the project root of DIR (defaults to `default-directory').
+;;;###autoload
+(defun projectile:get-project-root (&optional dir)
+  "Return the project root of DIR (defaults to `default-directory').
 Returns nil if not in a project."
-    (let ((projectile-project-root (unless dir projectile-project-root))
-          projectile-require-project-root)
-      (projectile-project-root dir))))
+  (let ((projectile-project-root (unless dir projectile-project-root))
+        projectile-require-project-root)
+    (projectile-project-root dir)))
+
 
 ;;; Macros
 ;;;
