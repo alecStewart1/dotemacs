@@ -47,6 +47,7 @@
 
 ;;; Useful functions
 
+;; From: https://github.com/alphapapa/unpackaged.el/blob/master/unpackaged.el#L1305
 ;;;###autoload
 (defun package-menu:upgrade-package ()
   "Mark current package for upgrading (i.e. also mark obsolete version for deletion.)"
@@ -102,8 +103,7 @@
   (setq lv-use-separator t))
 (use-package major-mode-hydra
   :after hydra
-  :functions (major-mode-hydra-define major-mode-hydra-define+)
-  :bind (("M-SPC" . major-mode-hydra)))
+  :functions (major-mode-hydra-define major-mode-hydra-define+))
 (use-package pretty-hydra
   :after hydra
   :functions (pretty-hydra-define pretty-hydra-define+)
@@ -185,7 +185,7 @@
 
 ;;; For leaf.el
 ;;;
-;;; I've found this configuration packge to be a pain in the ass to configure.
+;;; I've found this configuration packge to be a pain to configure.
 ;;; It expands simply, however, that leads to a lot of problems if you don't
 ;;; know exactly how things expand and how they are loaded.
 ;;; I'm lazy. I don't want to do think about that.

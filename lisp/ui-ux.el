@@ -96,8 +96,7 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
   :ensure nil
   :bind
   (("C-?" . help-command)
-   (:mode-specific-map
-    :package help
+   (:map mode-specific-map
     ("h" . help-command))))
 
 (use-package helpful
@@ -257,7 +256,7 @@ possible."
   :ensure nil
   :diminsh outline-minor-mode
   :hook (prog-mode . global-outline-minor-mode)
-  :init
+  :preface
   (define-global-minor-mode global-outline-minor-mode
     outline-minor-mode outline-minor-mode)
   :config
@@ -304,8 +303,16 @@ possible."
 ;;;; Better moving across windows
 ;;;;
 
+(use-package windmove
+  :ensure nil
+  :bind
+  (("s-h" . windmove-left)
+   ("s-l" . windmove-right)
+   ("s-j" . windmove-down)
+   ("s-k" . windmove-up)))
+
 (use-package ace-window
-  :bind (([remap other-window]. ace-window))
+  :bind (("s-w" . ace-window))
   :custom
   (aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
   (aw-scope 'frame)
@@ -333,8 +340,7 @@ possible."
   (setq highlight-numbers-generic-regexp "\\_<[[:digit:]]+\\(?:\\.[0-9]*\\)?\\_>"))
 
 (use-package hl-todo
-  :bind ((:hl-todo-mode-map
-          :package hl-todo
+  :bind ((:map hl-todo-mode-map
           ([C-f3] . hl-todo-occur)
           ("C-x M-t p" . hl-todo-previous)
           ("C-x M-t n" . hl-todo-next)
@@ -353,8 +359,7 @@ possible."
   (diff-hl-change ((t (:inherit 'highlight))))
   (diff-hl-delete ((t (:inherit 'error :inverse-video t))))
   (diff-hl-insert ((t (:inherit 'success :inverse-video t))))
-  :bind (:diff-hl-command-map
-         :package diff-hl
+  :bind (:map diff-hl-command-map
          ("SPC" . diff-hl-mark-hunk))
   :hook ((after-init . global-diff-hl-mode)
          (dired-mode. diff-hl-dired-mode))
@@ -394,6 +399,7 @@ possible."
   :config
   (advice-add 'rainbow-turn-off #'rainbow:clear-overlays))
 
+;; TODO might replace this
 (use-package rainbow-delimiters
   :demand t
   :hook (prog-mode . rainbow-delimiters-mode)

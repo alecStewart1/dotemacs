@@ -25,7 +25,7 @@
 (use-package epg-config
   :demand t
   :init
-  (setq epa-pinentry-mode 'loopback))
+  (setq epg-pinentry-mode 'loopback))
 
 ;;;; External Packages
 ;;;;
@@ -34,9 +34,8 @@
 ;;;;;
 
 (use-package pinentry
-  :demand t
-  :config
-  (pinentry-start))
+  :hook
+  (after-init . pinentry-start))
 
 ;;;;; Emacs Multimedia System
 ;;;;;
@@ -106,7 +105,6 @@
 
 (use-package elfeed
   :commands elfeed
-  :init
   :custom
   (elfeed-db-directory (concat my-local-dir "elfeed/db/"))
   (elfeed-enclosure-default-dir (concat my-local-dir "elfeed/enclosures/"))

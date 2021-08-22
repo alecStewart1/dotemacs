@@ -785,18 +785,26 @@ Also took this from Doom Emacs"
 ;; TODO make some kinda REPL.
 ;; TODO doc comment snippet
 
-;; (use-package powershell
-;;   :if (or windows-nt-p
-;;           cygwin-p
-;;           (executable-find "powershell")
-;;           (executable-find "pwsh"))
-;;   :mode ("\\.ps[dm]?1\\'" . powershell-mode)
-;;   :interpreter (("pwsh" . powershell-mode)
-;;                 ("powershell" . powershell-mode))
-;;   :config
-;;   (add-hook 'powershell-mode-hook #'lsp-deferred)
-;;   (if (package-installed-p 'dap-mode)
-;;       (require 'dap-pwsh)))
+(use-package powershell
+  :if (or windows-nt-p
+          cygwin-p
+          (executable-find "powershell")
+          (executable-find "pwsh"))
+  :mode ("\\.ps[dm]?1\\'" . powershell-mode)
+  :interpreter (("pwsh" . powershell-mode)
+                ("powershell" . powershell-mode))
+  :config
+  ;; TODO uhh...how do I do this?
+  ;; (defun projectile:powershell-project-p ()
+  ;;   (or (projectile-verify-file-wildcard (rx ".ps1xml" eos))
+  ;;       (projectile-verify-file-wildcard (rx ".psd1" eos))
+  ;;       (projectile-verify-file-wildcard (rx ".psm1" eos))))
+
+  ;; (projectile-register-project-type 'powershell #'projectile:powershell-project-p
+  ;;                                   :test "pwsh -NoLogo -NoProfile -Command 'Invoke-Pester'")
+  (add-hook 'powershell-mode-hook #'lsp-deferred)
+  (if (package-installed-p 'dap-mode)
+      (require 'dap-pwsh)))
 
 ;; (use-package sharper
 ;;   :when (executable-find "dotnet")
@@ -936,30 +944,30 @@ nimsuggest isn't installed."
 ;;;; Perl
 ;;;;
 
-(use-package cperl-mode
-  :mode ("\\.\\([pP][Llm]\\|al\\)\\'" . cperl-mode)
-  :interpreter (("perl" .     cperl-mode)
-                ("perl5" .    cperl-mode)
-                ("miniperl" . cperl-mode))
-  :hook (cperl-mode . (lambda ()
-                         (set (make-local-variable 'eldoc-documentation-function)
-                              'cperl:eldoc-doc-function)))
-  :config
-  (defun cperl:eldoc-doc-function ()
-    "Return meaningful doc string for `eldoc-mode'."
-    (car
-     (let ((cperl-message-on-help-error nil))
-       (cperl-get-help))))
+;; (use-package cperl-mode
+;;   :mode ("\\.\\([pP][Llm]\\|al\\)\\'" . cperl-mode)
+;;   :interpreter (("perl" .     cperl-mode)
+;;                 ("perl5" .    cperl-mode)
+;;                 ("miniperl" . cperl-mode))
+;;   :hook (cperl-mode . (lambda ()
+;;                          (set (make-local-variable 'eldoc-documentation-function)
+;;                               'cperl:eldoc-doc-function)))
+;;   :custom
+;;   (cperl-invalid-face nil)
+;;   (cperl-font-lock t)
+;;   (cperl-electric-keywords t)
+;;   (cperl-electric-parens t)
+;;   (cperl-info-on-command-no-prompt t)
+;;   (cperl-clobber-lisp-bindings t)
+;;   (cperl-lazy-help-time t)
+;;   :config
+;;   (defun cperl:eldoc-doc-function ()
+;;     "Return meaningful doc string for `eldoc-mode'."
+;;     (car
+;;      (let ((cperl-message-on-help-error nil))
+;;        (cperl-get-help))))
 
-  (add-hook 'cperl-mode-local-vars-hook #'lsp-deferred)
-  :custom
-  (cperl-invalid-face nil)
-  (cperl-font-lock t)
-  (cperl-electric-keywords t)
-  (cperl-electric-parens t)
-  (cperl-info-on-command-no-prompt t)
-  (cperl-clobber-lisp-bindings t)
-  (cperl-lazy-help-time t))
+;;   (add-hook 'cperl-mode-local-vars-hook #'lsp-deferred))
 
 ;;;; Ruby
 ;;;;
@@ -1001,52 +1009,65 @@ nimsuggest isn't installed."
 ;;;; Python
 ;;;;
 
-;; (use-package python
-;;   :ensure nil
-;;   :mode ("[./]flake8\\'" . conf-mode)
-;;   :mode ("/Pipfile\\'" . conf-mode)
-;;   :hook (python-mode . lsp-deferred)
-;;   :custom
-;;   (python-environment-directory my-cache-dir)
-;;   (python-indent-guess-indent-offset-verbose nil)
-;;   :config
-;;   (setq python-indent-guess-indent-offset-verbose nil)
-;;   ;; Default to Python 3. Prefer the versioned Python binaries since some
-;;   ;; systems stupidly make the unversioned one point at Python 2.
-;;   (when (and (executable-find "python3")
-;;              (string= python-shell-interpreter "python"))
-;;     (setq python-shell-interpreter "python3"))
+(use-package python
+  :ensure nil
+  :mode ("[./]flake8\\'" . conf-mode)
+  :mode ("/Pipfile\\'" . conf-mode)
+  :init
+  (add-hook 'python-mode-local-vars-hook #'lsp-deferred)
+  :custom
+  (python-environment-directory my-cache-dir)
+  (python-indent-guess-indent-offset-verbose nil)
+  :config
+  (setq python-indent-guess-indent-offset-verbose nil)
+  ;; Default to Python 3. Prefer the versioned Python binaries since some
+  ;; systems stupidly make the unversioned one point at Python 2.
+  (when (and (executable-find "python3")
+             (string= python-shell-interpreter "python"))
+    (setq python-shell-interpreter "python3"))
 
-;;   (define-key python-mode-map (kbd "DEL") nil) ; interferes with smartparens
-;;   (sp-local-pair 'python-mode "'" nil
-;;                  :unless '(sp-point-before-word-p
-;;                            sp-point-after-word-p
-;;                            sp-point-before-same-p)))
+  (define-key python-mode-map (kbd "DEL") nil) ; interferes with smartparens
+  (sp-local-pair 'python-mode "'" nil
+                 :unless '(sp-point-before-word-p
+                           sp-point-after-word-p
+                           sp-point-before-same-p)))
 
-;; (use-package poetry
-;;   :after python
-;;   :init
-;;   (add-hook 'python-mode-hook #'poetry-tracking-mode))
+(use-package poetry
+  :after python
+  :init
+  (add-hook 'python-mode-hook #'poetry-tracking-mode))
 
-;; (use-package py-isort
-;;   :after python
-;;   :commands py-isort-buffer py-isort-region)
+(use-package py-isort
+  :after python
+  :commands py-isort-buffer py-isort-region)
 
-;; (use-package python-pytest
-;;   :after python
-;;   :commands python-pytest-dispatch)
+(use-package python-pytest
+  :after python
+  :commands python-pytest-dispatch)
 
-;; (use-package live-py-mode
-;;   :after python
-;;   :commands live-py-mode)
+(use-package live-py-mode
+  :after python
+  :commands live-py-mode)
 
-;; (use-package lsp-pyright
-;;   :after (:all lsp-mode python))
+(use-package lsp-pyright
+  :after (:all lsp-mode python))
 
 ;;;; Webdev
 ;;;;
 
+(use-package sgml-mode
+  :ensure nil
+  :hook (html-mode . (sgml-electric-tag-pair-mode
+                      sgml-name-8bit-mode))
+  :custom
+  (sgml-basic-offset 2))
+
+(use-package mhtml-mode
+  :ensure nil
+  :hook (html-mode . mhtml-mode))
+
 (use-package nxml-mode
+  :ensure nil
   :mode "\\.p\\(?:list\\|om\\)\\'" ; plist, pom
   :mode "\\.xs\\(?:d\\|lt\\)\\'"   ; xslt, xsd
   :mode "\\.xaml\\'"
@@ -1057,9 +1078,6 @@ nimsuggest isn't installed."
   (nxml-auto-insert-xml-declaration-flag t)
   :config
   (company:set-backend 'nxml-mode '(company-nxml)))
-
-(use-package mhtml-mode
-  :mode "\\.html?\\'")
 
 (use-package web-mode
   :mode "\\.[px]?html?\\'"

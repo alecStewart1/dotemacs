@@ -71,7 +71,7 @@
          ("M-RET" . minibuffer-force-complete-and-exit)
          ("M-TAB" . minibuffer-complete))
   :functions vertico--exhibit
-  :init
+ :init
   ;; we have to have this here to start Vertico
   (vertico-mode)
 
@@ -125,25 +125,43 @@
   ;; Histories
   ("C-c h" #'consult-history)
   ;; Modes
-  ("M-SPC m m"   #'consult-minor-mode-menu)
-  ("M-SPC m M-m" #'consult-mode-command)
+  ;;("M-SPC m m"   #'consult-minor-mode-menu)
+  ;;("M-SPC m M-m" #'consult-mode-command)
   ;; Isearch
+  (:keymaps 'consult-crm-map
+   "TAB"                       #'vertico:crm-select
+   "RET"                       #'vertico:crm-exit)
   ("M-s e"                     #'consult-isearch)
   (:keymaps 'isearch-mode-map
    [remap isearch-edit-string] #'consult-isearch
    "M-s l"                     #'consult-line)
   ;; Misc.
   ([remap apropos] #'consult-apropos)
+  :preface
+  (defun vertico:crm-select ()
+    "Enter candidate in `consult-completing-read-multiple'"
+    (interactive)
+    (let ((idx vertico--index))
+      (unless (get-text-property 0 'consult--crm-selected (nth vertico--index vertico--candidates))
+        (setq idx (1+ idx)))
+      (run-at-time 0 nil (cmd! (vertico--goto idx) (vertico--exhibit))))
+    (vertico-exit))
+
+  (defun vertico:crm-exit ()
+    "Enter candidate in `consult-completing-read-multiple'"
+    (interactive)
+    (run-at-time 0 nil #'vertico-exit)
+    (vertico-exit))
   :init
   (defvar consult:find-program (cl-find-if #'executable-find (list "fdfind" "fd")))
 
-  (fset 'multi-occur #'consult-multi-occur)
-
-  ;;(autoload 'projectile-project-root "projectile")
+  (autoload 'projectile-project-root "projectile")
   (setq consult-project-root-function #'projectile:get-project-root)
 
-  (advice-add #'register-preview :override #'consult-register-window)
   (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
+  (advice-add #'register-preview :override #'consult-register-window)
+  (advice-add #'multi-occur :override #'consult-multi-occur)
+
   (setq prefix-help-command #'embark-prefix-help-command)
   :custom
   (register-preview-delay 0)
@@ -185,7 +203,12 @@
   :custom
   (marginalia-annotators '(marginalia-annotators-light marginalia-annotators-heavy nil))
   :config
-  (advice-add #'marginalia--project-root :override #'projectile:get-project-root))
+  (advice-add #'marginalia--project-root :override #'projectile:get-project-root)
+  (pushnew! marginalia-command-categories
+            '(projectile-find-file . project-file)
+            '(projectile-recentf . project-file)
+            '(projectile-switch-to-buffer . buffer)
+            '(projectile-switch-project . project-file)))
 
 (use-package embark
   :bind (("C-;" . embark-act)

@@ -29,12 +29,12 @@
                             (require 'dired-aux)
                             (require 'dired-guess)))
   :init
-  (setq image-dired-dir (concat my-cache-dir "image-dired/")
-        image-dired-db-file (concat image-dired-dir "db.el")
-        image-dired-gallery-dir (concat image-dired-dir "gallery/")
-        image-dired-temp-image-file (concat image-dired-dir "temp-image")
+  (setq image-dired-dir                    (concat my-cache-dir "image-dired/")
+        image-dired-db-file                (concat image-dired-dir "db.el")
+        image-dired-gallery-dir            (concat image-dired-dir "gallery/")
+        image-dired-temp-image-file        (concat image-dired-dir "temp-image")
         image-dired-temp-rotate-image-file (concat image-dired-dir "temp-rotate-image")
-        image-dired-thumb-size 150)
+        image-dired-thumb-size             150)
   :custom
   ; don't prompt to revert; just do it
   (dired-auto-revert-buffer t)
@@ -68,7 +68,7 @@
   :ensure nil
   :bind (("C-x C-b" . ibuffer)
          :map ibuffer-mode-map
-         ("M-SPC" . ibuffer-hydra/pretty-body)
+         ("M-h" . ibuffer-hydra/pretty-body)
          ("q" . kill-current-buffer))
   :pretty-hydra
   ((:title "IBuffer" :color amaranth :quit-key "q")
@@ -126,7 +126,8 @@
      :header-mouse-map ibuffer-size-header-map)
     (file-size-human-readable (buffer-size)))
 
-  (embark-define-keymap embark:ibuffer-mark
+  ;; Embark Keymaps
+  (embark-define-keymap embark:ibuffer-mark-map
     "Marking buffers in IBuffer."
     ("*" ibuffer-unmark-all)
     ("M" ibuffer-mark-by-mode)
@@ -135,9 +136,9 @@
     ("s" ibuffer-mark-special-buffers)
     ("r" ibuffer-mark-read-only-buffers)
     ("d" ibuffer-mark-dired-buffers)
-    ("b" ibuffer-hydra/pretty-body "back" :color blue))
+    ("b" ibuffer-hydra/pretty-body))
 
-  (embark-define-keymap embark:ibuffer-action
+  (embark-define-keymap embark:ibuffer-action-map
     "Doing actions in IBuffer."
     ("A" ibuffer-do-view)
     ("H" ibuffer-do-view-other-frame)
@@ -149,9 +150,9 @@
     ("Q" ibuffer-do-query-replace-regexp)
     ("U" ibuffer-do-replace-regexp)
     ("V" ibuffer-do-revert)
-    ("b" ibuffer-hydra/pretty-body "back" :color blue))
+    ("b" ibuffer-hydra/pretty-body))
 
-  (embark-define-keymap embark:ibuffer-sort
+  (embark-define-keymap embark:ibuffer-sort-map
     "Sorting buffers in IBuffer."
     ("i" ibuffer-invert-sorting)
     ("a" ibuffer-do-sort-by-alphabetic)
@@ -159,20 +160,20 @@
     ("s" ibuffer-do-sort-by-size)
     ("f" ibuffer-do-sort-by-filename/process)
     ("m" ibuffer-do-sort-by-major-mode)
-    ("b" ibuffer-hydra/pretty-body "back" :color blue))
+    ("b" ibuffer-hydra/pretty-body))
 
-  (embark-define-keymap embark:ibuffer-filter
+  (embark-define-keymap embark:ibuffer-filter-map
     "Filtering buffers in IBuffer."
-    ("m" ibuffer-filter-by-used-mode "mode")
-    ("M" ibuffer-filter-by-derived-mode "derived mode")
-    ("n" ibuffer-filter-by-name "name")
-    ("c" ibuffer-filter-by-content "content")
-    ("e" ibuffer-filter-by-predicate "predicate")
-    ("f" ibuffer-filter-by-filename "filename")
-    (">" ibuffer-filter-by-size-gt "size")
-    ("<" ibuffer-filter-by-size-lt "size")
-    ("/" ibuffer-filter-disable "disable")
-    ("b" ibuffer-hydra/pretty-body "back" :color blue)))
+    ("m" ibuffer-filter-by-used-mode)
+    ("M" ibuffer-filter-by-derived-mode)
+    ("n" ibuffer-filter-by-name)
+    ("c" ibuffer-filter-by-content)
+    ("e" ibuffer-filter-by-predicate)
+    ("f" ibuffer-filter-by-filename)
+    (">" ibuffer-filter-by-size-gt)
+    ("<" ibuffer-filter-by-size-lt)
+    ("/" ibuffer-filter-disable)
+    ("b" ibuffer-hydra/pretty-body)))
 
 ;;;; Electric
 ;;;;
@@ -211,8 +212,8 @@ current line.")
   (define-minor-mode undo-fu-mode
     "Enables `undo-fu' for the current session."
     :keymap (let ((map (make-sparse-keymap)))
-              (define-key map [remap undo] #'undo-fu-only-undo)
-              (define-key map [remap redo] #'undo-fu-only-redo)
+              (define-key map [remap undo]    #'undo-fu-only-undo)
+              (define-key map [remap redo]    #'undo-fu-only-redo)
               (define-key map (kbd "C-_")     #'undo-fu-only-undo)
               (define-key map (kbd "M-_")     #'undo-fu-only-redo)
               (define-key map (kbd "C-M-_")   #'undo-fu-only-redo-all)
@@ -226,15 +227,16 @@ current line.")
   :demnad t
   :hook (undo-fu-mode . global-undo-fu-session-mode)
   :init
-  (setq undo-fu-session-directory (concat my-cache-dir "undo-fu-session/")
+  (setq undo-fu-session-directory          (concat my-cache-dir "undo-fu-session/")
         undo-fu-session-incompatible-files '("\\.gpg$" "/COMMIT_EDITMSG\\'" "/git-rebase-todo\\'"))
   :config
   (when (executable-find "zstd")
-    (advice-add #'undo-fu-session--make-file-name :filter-return
-                (defun undo-fu-session-use-zstd (filename)
-                  (if undo-fun-session-compression
-                      (concat (file-name-sans-extension filename) ".zst")
-                    filname)))))
+    (defadvice! undo-fu-session:use-zstd (filename)
+      "Have `undo-fu-session--make-file-name' use zstd's .zst file extension for compression on FILENAME."
+      :filter-return #'undo-fu-session--make-file-name
+      (if undo-fun-session-compression
+          (concat (file-name-sans-extension filename) ".zst")
+        filname))))
 
 ;;;; Group projects in IBuffer
 ;;;;
@@ -253,7 +255,7 @@ current line.")
        "Project: ")))
 
 ;;;; Burly
-;;;;
+;;;; TODO maybe use eyebrowse as well along with this?
 
 (use-package burly
   :defer t)
