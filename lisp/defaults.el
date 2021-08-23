@@ -124,12 +124,11 @@
   (create-lockfiles  nil)
   (autoload-compute-prefixes  nil)
   (load-prefer-newer  t)
+  (custom-unlispify-menu-entries nil)
+  (custom-unlispify-tag-names nil)
   ;; TODO might change in future
   (mode-line-format  nil)
   :config
-  (mouse-avoidance-mode 'exile)
-  (setq abbrev-file-name (concat my-local-dir "abbrev.el")
-        server-auth-dir  (concat my-cache-dir "server/"))
   (setq-default
    ediff-window-setup-function 'ediff-setup-windows-plain
    ; silence compression messages
@@ -138,6 +137,13 @@
    ffap-machine-p-known        'reject
    vc-follow-symlinks           t
    tabify-regexp                "^\t* [ \t]+")
+
+  (setq abbrev-file-name (concat my-local-dir "abbrev.el")
+
+        server-auth-dir  (concat my-cache-dir "server/"))
+
+  (mouse-avoidance-mode 'exile)
+
   ;; Unicode, pls
   (when (fboundp 'set-charset-priority)
     (set-charset-priority 'unicode))
@@ -275,7 +281,12 @@
   :custom
   (window-divider-default-places       t)
   (window-divider-default-bottom-width 1)
-  (window-divider-default-right-width  1))
+  (window-divider-default-right-width  1)
+  :config
+  ;; for fullscreen
+  (cond
+   (windows-nt-p (set-frame-parameter nil 'fullscreen 'fullboth))
+   (t            (set-frame-parameter nil 'fullscreen 'maximized))))
 
 (use-package wid-edit
   :ensure nil

@@ -20,6 +20,7 @@
 (require 'cl-lib)
 (require 'cl-seq)
 (require 'subr-x)
+(require 'pcase)
 (require 'mode-local)
 (require 'ht)
 
@@ -519,6 +520,10 @@ Also took this from Doom Emacs"
   (outline-regexp . "[ \t];;;; [^ \t\n]")
   (lisp-indent-function . #'elisp-mode:indent-function)
   :config
+  (put 'add-function 'lisp-indent-function 2)
+  (put 'advice-add   'lisp-indent-function 2)
+  (put 'plist-put    'lisp-indent-function 2)
+
   (defadvice! elisp-mode:append-val-to-eldoc (orig-fn sym)
     "Display variable value next to documentation in eldoc."
     :around #'elisp-get-var-docstring
