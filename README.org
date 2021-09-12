@@ -6,6 +6,7 @@ My personal Emacs setup.
 
 - [[https://github.com/hlissner/doom-emacs][Doom Emacs]]
 - [[https://github.com/seagle0128/.emacs.d][Centaur Emacs]]
+- [[https://github.com/angrybacon/dotemacs][AngryBacon's Emacs Configuration]]
 
 * My Thought Process
 

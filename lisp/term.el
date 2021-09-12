@@ -153,19 +153,19 @@ Once the eshell process is killed, the previous frame layout is restored."
     :action ,#'consult--eshell-hist-action
     :items
     ,(lambda ()
-       ((let ((hist (if (not (ring-empty-p eshell-history-ring))
+       (let ((hist (if (not (ring-empty-p eshell-history-ring))
                         (delete-dups (ring-elements eshell-history-ring))
                       (message "No history"))))
-          hist)))))
+          hist))))
 
 ;;;###autoload
 (defun consult:eshell-history ()
   (interactive)
-  (let ((hist (consult--multi consult:eshell-hist-source
-                              :prompt "Command: "
-                              :history 'consult--eshell-hist
-                              :require-match t
-                              :sort nil)))
+  (let ((hist (consult--read consult:eshell-hist-source
+                             :prompt "Command: "
+                             :history 'consult--eshell-hist
+                             :require-match t
+                             :sort nil)))
     (unless (cdr hist)
       (eshell-list-history))))
 

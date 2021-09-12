@@ -161,6 +161,21 @@
           org-confirm-babel-evaluate nil
           org-link-elisp-confirm-function nil)
 
+    (eval-after-load 'ob
+      (add-to-list 'org-babel-default-lob-header-args '(:sync)))
+
+
+    (defadvice! org-babel:fix-newline-and-indent-in-src-blocks (&optional indent _arg _interactive)
+      "Mimic `newline-and-indent' in src blocks w/ lang-appropriate indentation."
+      :after #'org-return
+      (when (and indent
+                 org-src-tab-acts-natively
+                 (org-in-src-block-p t))
+        (org-babel-do-in-edit-buffer
+         (call-interactively #'indent-for-tab-command))))
+
+    (add-hook 'org-babel-after-execute-hook #'org-redisplay-inline-images)
+
     (define-key org-src-mode-map (kbd "C-c C-c") #'org-edit-src-exit))
 
   (defun org:setup-capture ()
@@ -249,7 +264,8 @@
 
   (defun org:setup-export ()
     (setq org-export-with-smart-quotes t
-          org-html-validation-link nil)
+          org-html-validation-link nil
+          org-latex-prefer-user-labels t)
     (add-to-list 'org-export-backends '(md odt))
 
     (defadvice! org-export:dont-trigger-save-hooks-on-export (orig-fn &rest args)
@@ -269,16 +285,40 @@
 
   (defun org:setup-hacks ()
     (setf (alist-get 'file org-link-frame-setup) #'find-file)
+
     (add-to-list 'org-file-apps '(directory . emacs))
+    (add-to-list 'org-file-apps '(remote . emacs))
+
     (with-eval-after-load 'org-eldoc
       (puthash "org" #'ignore org-eldoc-local-functions-cache)
       (puthash "python" #'python-eldoc-function org-eldoc-local-functions-cache))
+
+    (defadvice! org:strip-properties-from-outline (fn &rest args)
+      "Fix variable height faces in eldoc breadcrumbs."
+      :around #'org-format-outline-path
+      (let ((org-level-faces
+             (cl-loop for face in org-level-faces
+                      collect `(:foreground ,(face-foreground face nil t)
+                                :weight bold))))
+        (apply fn args)))
 
     (defadvice! org:export-agenda-from-recentf (orig-fn file)
       "TODO"
       :around #'org-get-agenda-file-buffer
       (let ((recentf-exclude (list (lambda (_file) t))))
         (funcall orig-fn file)))
+
+    (defvar recentf-exclude)
+    (defadvice! org:optimize-backgrounded-agenda-buffers (fn file)
+      "Prevent temporarily opened agenda buffers from polluting recentf."
+      :around #'org-get-agenda-file-buffer
+      (let ((recentf-exclude (list (lambda (_file) t)))
+            org-startup-indented
+            org-startup-folded
+            vc-handled-backends
+            org-mode-hook
+            find-file-hook)
+        (funcall fn file)))
 
     (defadvice! org:fix-inline-images-imagemagick (orig-fn &rest args)
       "TODO"
@@ -298,98 +338,139 @@
   (defun org:setup-smartparens ()
     (provide 'smartparens-org))
 
-(defun org:return-dwim (&optional default)
-  "A helpful replacement for `org-return'.  With prefix, call `org-return'.
+  (defun org:return-dwim (&optional default)
+    "A helpful replacement for `org-return'.  With prefix, call `org-return'.
 On headings, move point to position after entry content.  In
 lists, insert a new item or end the list, with checkbox if
 appropriate.  In tables, insert a new row or end the table.
 
 Taken from: https://github.com/alphapapa/unpackaged.el/blob/master/unpackaged.el"
 
-  (interactive "P")
-  (if default
-      (org-return)
-    (cond
-     ;; Act depending on context around point.
+    (interactive "P")
+    (if default
+        (org-return)
+      (cond
+       ;; Act depending on context around point.
 
-     ;; NOTE: I prefer RET to not follow links, but by uncommenting this block, links will be
-     ;; followed.
+       ;; NOTE: I prefer RET to not follow links, but by uncommenting this block, links will be
+       ;; followed.
 
-     ;; ((eq 'link (car (org-element-context)))
-     ;;  ;; Link: Open it.
-     ;;  (org-open-at-point-global))
+       ;; ((eq 'link (car (org-element-context)))
+       ;;  ;; Link: Open it.
+       ;;  (org-open-at-point-global))
 
-     ((org-at-heading-p)
-      ;; Heading: Move to position after entry content.
-      ;; NOTE: This is probably the most interesting feature of this function.
-      (let ((heading-start (org-entry-beginning-position)))
-        (goto-char (org-entry-end-position))
-        (cond ((and (org-at-heading-p)
-                    (= heading-start (org-entry-beginning-position)))
-               ;; Entry ends on its heading; add newline after
-               (end-of-line)
-               (insert "\n\n"))
+       ((org-at-heading-p)
+        ;; Heading: Move to position after entry content.
+        ;; NOTE: This is probably the most interesting feature of this function.
+        (let ((heading-start (org-entry-beginning-position)))
+          (goto-char (org-entry-end-position))
+          (cond ((and (org-at-heading-p)
+                      (= heading-start (org-entry-beginning-position)))
+                 ;; Entry ends on its heading; add newline after
+                 (end-of-line)
+                 (insert "\n\n"))
+                (t
+                 ;; Entry ends after its heading; back up
+                 (forward-line -1)
+                 (end-of-line)
+                 (when (org-at-heading-p)
+                   ;; At the same heading
+                   (forward-line)
+                   (insert "\n")
+                   (forward-line -1))
+                 ;; FIXME: looking-back is supposed to be called with more arguments.
+                 (while (not (looking-back (rx (repeat 3 (seq (optional blank) "\n")))))
+                   (insert "\n"))
+                 (forward-line -1)))))
+
+       ((org-at-item-checkbox-p)
+        ;; Checkbox: Insert new item with checkbox.
+        (org-insert-todo-heading nil))
+
+       ((org-in-item-p)
+        ;; Plain list.  Yes, this gets a little complicated...
+        (let ((context (org-element-context)))
+          (if (or (eq 'plain-list (car context))  ; First item in list
+                  (and (eq 'item (car context))
+                       (not (eq (org-element-property :contents-begin context)
+                                (org-element-property :contents-end context))))
+                  (unpackaged/org-element-descendant-of 'item context))  ; Element in list item, e.g. a link
+              ;; Non-empty item: Add new item.
+              (org-insert-item)
+            ;; Empty item: Close the list.
+            ;; TODO: Do this with org functions rather than operating on the text. Can't seem to find the right function.
+            (delete-region (line-beginning-position) (line-end-position))
+            (insert "\n"))))
+
+       ((when (fboundp 'org-inlinetask-in-task-p)
+          (org-inlinetask-in-task-p))
+        ;; Inline task: Don't insert a new heading.
+        (org-return))
+
+       ((org-at-table-p)
+        (cond ((save-excursion
+                 (beginning-of-line)
+                 ;; See `org-table-next-field'.
+                 (cl-loop with end = (line-end-position)
+                          for cell = (org-element-table-cell-parser)
+                          always (equal (org-element-property :contents-begin cell)
+                                        (org-element-property :contents-end cell))
+                          while (re-search-forward "|" end t)))
+               ;; Empty row: end the table.
+               (delete-region (line-beginning-position) (line-end-position))
+               (org-return))
               (t
-               ;; Entry ends after its heading; back up
-               (forward-line -1)
-               (end-of-line)
-               (when (org-at-heading-p)
-                 ;; At the same heading
-                 (forward-line)
-                 (insert "\n")
-                 (forward-line -1))
-               ;; FIXME: looking-back is supposed to be called with more arguments.
-               (while (not (looking-back (rx (repeat 3 (seq (optional blank) "\n")))))
-                 (insert "\n"))
-               (forward-line -1)))))
+               ;; Non-empty row: call `org-return'.
+               (org-return))))
+       (t
+        ;; All other cases: call `org-return'.
+        (org-return)))))
 
-     ((org-at-item-checkbox-p)
-      ;; Checkbox: Insert new item with checkbox.
-      (org-insert-todo-heading nil))
 
-     ((org-in-item-p)
-      ;; Plain list.  Yes, this gets a little complicated...
-      (let ((context (org-element-context)))
-        (if (or (eq 'plain-list (car context))  ; First item in list
-                (and (eq 'item (car context))
-                     (not (eq (org-element-property :contents-begin context)
-                              (org-element-property :contents-end context))))
-                (unpackaged/org-element-descendant-of 'item context))  ; Element in list item, e.g. a link
-            ;; Non-empty item: Add new item.
-            (org-insert-item)
-          ;; Empty item: Close the list.
-          ;; TODO: Do this with org functions rather than operating on the text. Can't seem to find the right function.
-          (delete-region (line-beginning-position) (line-end-position))
-          (insert "\n"))))
+  (defun org:indent-maybe-h ()
+    "Indent the current item (header or item), if possible.
+Made for `org-tab-first-hook' in evil-mode."
+    (interactive)
+    (cond ((not (and (bound-and-true-p evil-local-mode)
+                     (evil-insert-state-p)))
+           nil)
+          ((org-at-item-p)
+           (if (eq this-command 'org-shifttab)
+               (org-outdent-item-tree)
+             (org-indent-item-tree))
+           t)
+          ((org-at-heading-p)
+           (ignore-errors
+             (if (eq this-command 'org-shifttab)
+                 (org-promote)
+               (org-demote)))
+           t)
+          ((org-in-src-block-p t)
+           (org-babel-do-in-edit-buffer
+            (call-interactively #'indent-for-tab-command))
+           t)
+          ((and (save-excursion
+                  (skip-chars-backward " \t")
+                  (bolp))
+                (org-in-subtree-not-table-p))
+           (call-interactively #'tab-to-tab-stop)
+           t)))
 
-     ((when (fboundp 'org-inlinetask-in-task-p)
-        (org-inlinetask-in-task-p))
-      ;; Inline task: Don't insert a new heading.
-      (org-return))
-
-     ((org-at-table-p)
-      (cond ((save-excursion
-               (beginning-of-line)
-               ;; See `org-table-next-field'.
-               (cl-loop with end = (line-end-position)
-                        for cell = (org-element-table-cell-parser)
-                        always (equal (org-element-property :contents-begin cell)
-                                      (org-element-property :contents-end cell))
-                        while (re-search-forward "|" end t)))
-             ;; Empty row: end the table.
-             (delete-region (line-beginning-position) (line-end-position))
-             (org-return))
-            (t
-             ;; Non-empty row: call `org-return'.
-             (org-return))))
-     (t
-      ;; All other cases: call `org-return'.
-      (org-return)))))
-
-  ;; TODO
+  ;; TODO figure out some local prefix/leader key.
   (defun org:setup-keys ()
+    (setq org-special-ctrl-a/e t
+          org-M-RET-may-split-line nil
+          ;; insert new headings after current subtree rather than inside it
+          org-insert-heading-respect-content t)
+
+    (add-hook 'org-tab-first-hook #'org:indent-maybe)
+
+    (define-key 'org-mode-map (kbd "TAB") #'org-cycle)
+    (define-key 'org-mode-map (knd "<tab>") #'org-cycle)
     (define-key 'org-mode-map (kbd "RET") #'org:return-dwim)
-    (define-key 'org-mode-map (kbd "<return>") #'org:return-dwim))
+    (define-key 'org-mode-map (kbd "<return>") #'org:return-dwim)
+    (define-key 'org-mode-map (kbd "C-S-RET") #'org-insert-subheading)
+    (define-key 'org-mode-map (kbd "<C-S-return>") #'org-insert-subheading))
 
   :init
   (add-hook! 'org-load-hook

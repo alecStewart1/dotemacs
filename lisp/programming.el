@@ -593,83 +593,127 @@ Also took this from Doom Emacs"
 ;;;; Common Lisp
 ;;;;
 
-;; (defer-feature! lisp-mode)
+;;;###autoload (defvar sly-contribs '(sly-fancy))
 
-;; (add-hook 'lisp-mode-hook #'rainbow-delimiters-mode)
+(defer-feature! lisp-mode)
 
-;; (use-package sly
-;;   :hook (lisp-mode-local-vars-hook . sly-editing-mode)
-;;   :preface
-;;   (defvar inferior-lisp-program "sbcl")
-;;   :init
-;;   (add-hook! 'after-init-hook
-;;     (with-eval-after-load 'sly
-;;       (sly-setup)))
-;;   :custom
-;;   (sly-mrepl-history-file-name (concat my-cache-dir "sly-mrepl-history"))
-;;   (sly-net-coding-system 'utf-8-unix)
-;;   (sly-kill-without-query-p t)
-;;   (sly-lisp-implementations
-;;    `((sbcl (,(executable-find "sbcl")))
-;;      (ccl (,(executable-find "ccl")))
-;;      (ecl (,(executable-find "ecl")))
-;;      (abcl (,(executable-find "abcl")))
-;;      (clisp (,(executable-find "clisp")))))
-;;   (sly-description-autofocus t)
-;;   (sly-inhibit-pipelining nil)
-;;   (sly-load-failed-fasl 'always)
-;;   (sly-complete-symbol-function 'sly-flex-completions)
-;;   :config
-;;   (defun sly:cleanup-maybe ()
-;;     "Kill processes and leftover buffers when killing the last sly buffer."
-;;     (let ((buf-list (delq (current-buffer) (buffer-list))))
-;;       (unless (cl-loop for buf in buf-list
-;;                        if (and (buffer-local-value 'sly-mode buf)
-;;                                (get-buffer-window buf))
-;;                        return t)
-;;         (dolist (conn (sly--purge-connections))
-;;           (sly-quit-list-internal conn 'sly-quit-sentinel t))
-;;         (let (kill-buffer-hook kill-buffer-query-functions)
-;;           (mapc #'kill-buffer
-;;                 (cl-loop for buf in buf-list
-;;                          if (buffer-local-value 'sly-mode buf)
-;;                          collect buf))))))
+(add-hook 'lisp-mode-hook #'rainbow-delimiters-mode)
 
-;;   (defun sly:init ()
-;;     "Attempt to auto-start sly when opening a lisp buffer."
-;;     (cl-labels ((temp-buf-p (buf)
-;;                             (equal (substring (buffer-name buf) 0 1) " ")))
-;;       (cond ((or (temp-buf-p (current-buffer))
-;;                  (sly-connected-p)))
-;;             ((executable-find interfior-lisp-program)
-;;              (let ((sly-auto-start 'always))
-;;                (sly-auto-start)
-;;                (add-hook 'kill-buffer-hook #'sly:cleanup-maybe nil t)))
-;;             ((message "WARNING: Couldn't find `inferior-lisp-program' (%s)"
-;;                       inferior-lisp-program)))))
-;;   (add-hook! 'sly-mode-hook #'sly:init))
+(use-package sly
+  :hook (lisp-mode-local-vars . sly-editing-mode)
+  :preface
+  (defvar inferior-lisp-program "sbcl")
+  :init
+  (add-hook! 'after-init-hook
+    (with-eval-after-load 'sly
+      (sly-setup)))
+  (eval-after-load 'emacs
+    (remove-hook 'lisp-mode-hook #'sly-editing-mode))
+  (eval-after-load 'lisp
+    (remove-hook 'lisp-mode-hook #'sly-editing-mode))
+  :custom
+  (sly-mrepl-history-file-name (concat my-cache-dir "sly-mrepl-history"))
+  (sly-net-coding-system 'utf-8-unix)
+  (sly-kill-without-query-p t)
+  (sly-lisp-implementations
+   `((sbcl (,(executable-find "sbcl")))
+     (ccl (,(executable-find "ccl")))
+     (ecl (,(executable-find "ecl")))
+     (abcl (,(executable-find "abcl")))
+     (clisp (,(executable-find "clisp")))))
+  (sly-description-autofocus t)
+  (sly-inhibit-pipelining nil)
+  (sly-load-failed-fasl 'always)
+  (sly-complete-symbol-function 'sly-flex-completions)
+  :config
+  (defun sly:cleanup-maybe ()
+    "Kill processes and leftover buffers when killing the last sly buffer."
+    (let ((buf-list (delq (current-buffer) (buffer-list))))
+      (unless (cl-loop for buf in buf-list
+                       if (and (buffer-local-value 'sly-mode buf)
+                               (get-buffer-window buf))
+                       return t)
+        (dolist (conn (sly--purge-connections))
+          (sly-quit-list-internal conn 'sly-quit-sentinel t))
+        (let (kill-buffer-hook kill-buffer-query-functions)
+          (mapc #'kill-buffer
+                (cl-loop for buf in buf-list
+                         if (buffer-local-value 'sly-mode buf)
+                         collect buf))))))
 
-;; (use-package sly-repl-ansi-color
-;;   :after sly
-;;   :init
-;;   (add-to-list 'sly-contribs 'sly-repl-ansi-color))
+  (defun sly:init ()
+    "Attempt to auto-start sly when opening a lisp buffer."
+    (cl-labels ((temp-buf-p (buf)
+                            (equal (substring (buffer-name buf) 0 1) " ")))
+      (cond ((or (temp-buf-p (current-buffer))
+                 (sly-connected-p)))
+            ((executable-find interfior-lisp-program)
+             (let ((sly-auto-start 'always))
+               (sly-auto-start)
+               (add-hook 'kill-buffer-hook #'sly:cleanup-maybe nil t)))
+            ((message "WARNING: Couldn't find `inferior-lisp-program' (%s)"
+                      inferior-lisp-program)))))
 
-;; (use-package sly-asdf
-;;   :after sly
-;;   :config
-;;   (add-to-list 'sly-contribs 'sly-asdf #'append)
-;;   (with-eval-after-load 'sly
-;;     (sly-enable-contrib 'sly-asdf)))
+  (add-hook! 'sly-mode-hook #'sly:init)
 
-;; (use-package sly-quicklisp
-;;   :after sly
-;;   :commands sly-quicklisp)
+  (defvar consult::sly-mrepl-hist-source
+    `(:name "Sly History"
+      :narrow ?<
+      :face 'font-lock-keyword-face
+      :history 'comint-input-ring
+      :action (lambda (e)
+                (insert e))
+      :items ,#'sly-mrepl--read-input-ring))
 
-;; (use-package sly-named-readtables
-;;   :after sly
-;;   :config
-;;   (with-eval-after-load 'sly
-;;     (sly-enable-contrib 'sly-named-readtables)))
+  (defun conult:sly-mrepl-history ()
+    "Select from `sly''s REPL histroy with `consult'."
+    (interactive)
+    (consult--read consult::sly-mrepl-hist-source
+                   :prompt "Item: "
+                   :history 'comint-input-ring
+                   :require-match t
+                   :sort nil
+                   :keymap sly-mrepl-mode-map))
+
+  (defvar consult::sly-mrepl-shortcut-source
+    `(:name "Shortcut"
+      :narrow ?s
+      :action
+      ,(lambda (string)
+               (let ((command (and string
+                                   (cdr (assoc string sly-mrepl-shortcut-alist)))))
+                 (call-interactively command)))
+      :items (mapcar #'car sly-mrepl-shortcut-alist)))
+
+  (defun consult:sly-mrepl-shortcut ()
+    "Select a shortcut candidate for `sly''s REPL with `consult'."
+    (interactive)
+    (consult--read consult::sly-mrepl-shortcut-source
+                   :prompt "Action: "
+                   :require-match t
+                   :sort nil)))
+
+(use-package sly-repl-ansi-color
+  :after sly
+  :init
+  (add-to-list 'sly-contribs 'sly-repl-ansi-color))
+
+(use-package sly-asdf
+  :after sly
+  :config
+  (add-to-list 'sly-contribs 'sly-asdf #'append)
+  (with-eval-after-load 'sly
+    (sly-enable-contrib 'sly-asdf)))
+
+(use-package sly-quicklisp
+  :after sly
+  :commands sly-quicklisp)
+
+(use-package sly-named-readtables
+  :after sly
+  :config
+  (with-eval-after-load 'sly
+    (sly-enable-contrib 'sly-named-readtables)))
 
 ;;;; Schemes
 ;;;;
@@ -727,14 +771,22 @@ Also took this from Doom Emacs"
 ;;     (current-buffer))
 ;;   :init
 ;;   ;; To work with Guile + Geiser
-;;   ;; We need this first in order to set our `geiser-activate-implementation' variable
-;;   (use-package geiser-guile :ensure t)
+;;   ;; We need these first in order to set our `geiser-activate-implementation' variable
+;;   (use-package geiser-guile   :after geiser)
+;;   (use-package geiser-sktlos  :after geiser)
+;;   ;;(use-package geiser-chez  :after geiser)
+;;   (use-package geiser-chicken :after geiser)
 ;;   :custom
-;;   ;; May work with Gambit/Gerbil, I dunno.
-;;   ;; Guile, Chez, and Chicken are the better documented at the moment.
-;;   (geiser-active-implementations . '(guile chez chicken))
+;;   (geiser-guile-binary . (executable-find "guile3"))
+;;   (geiser-active-implementations . '(guile stklos chicken))
 ;;   (geiser-autodoc-identifier-format . "%s => %s")
-;;   (geiser-repl-current-project-function . 'projectile:project-root))
+;;   (geiser-repl-current-project-function . #'projectile:get-project-root))
+
+;; (use-package macrostep-geiser
+;;   :after (:or geiser-mode geiser-repl)
+;;   :config
+;;   (add-hook 'geiser-mode-hook      #'macrostep-geiser-setup)
+;;   (add-hook 'geiser-repl-mode-hook #'macrostep-geiser-setup))
 
 ;; (use-package racket-mode
 ;;   :mode "\\.rkt\\'"
