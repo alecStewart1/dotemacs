@@ -35,8 +35,15 @@
   (add-to-list 'default-frame-alist '(menu-bar-lines . 0))
   (add-to-list 'default-frame-alist '(vertical-scroll-bars))
   (add-to-list 'default-frame-alist '(inhibit-double-buffering . t))
+
+  ;;; Things Emacs disables for some reason
+  ;;;
   (put 'narrow-to-region 'disabled nil)
-  (put 'downcase-region 'disabled nil)
+  (put 'narrow-to-page   'disabled nil)
+  (put 'upcase-region    'disabled nil)
+  (put 'downcase-region  'disabled nil)
+  (put 'list-threads     'disabled nil)
+
   (fset 'x-popup-menu #'ignore)
   (if emacs27-p
       (progn
@@ -147,9 +154,9 @@
   ;; Unicode, pls
   (when (fboundp 'set-charset-priority)
     (set-charset-priority 'unicode))
+  (prefer-coding-system 'utf-8)
   (set-buffer-file-coding-system 'utf-8)
   (set-file-name-coding-system 'utf-8)
-  (prefer-coding-system 'utf-8)
   (set-default-coding-systems 'utf-8)
   (set-language-environment 'utf-8)
   (set-keyboard-coding-system 'utf-8)
@@ -190,12 +197,15 @@
 ;; Disable native-compilation for troublesome packages
 (eval-after-load 'comp
   (mapc (apply-partially #'add-to-list 'native-comp-deferred-compilation-deny-list)
-        (let ((local-dir-re (concat "\\`" (regexp-quote doom-local-dir))))
-          (list (concat "\\`" (regexp-quote doom-autoloads-file) "\\'")
-                (concat local-dir-re ".*/evil-collection-vterm\\.el\\'")
-                (concat local-dir-re ".*/with-editor\\.el\\'")
-                ;; https://github.com/nnicandro/emacs-jupyter/issues/297
-                (concat local-dir-re ".*/jupyter-channel\\.el\\'")))))
+        (let ((local-dir-re (concat "\\`" (regexp-quote my-local-dir))))
+          ;; NOTE: I only use `with-editor', lol
+          (list
+           ;;(concat "\\`" (regexp-quote doom-autoloads-file) "\\'")
+           ;;(concat local-dir-re ".*/evil-collection-vterm\\.el\\'")
+           (concat local-dir-re ".*/with-editor\\.el\\'")
+           ;; https://github.com/nnicandro/emacs-jupyter/issues/297
+           ;;(concat local-dir-re ".*/jupyter-channel\\.el\\'")
+           ))))
 
 ;; Don't store eln files in ~/.emacs.d/eln-cache
 ;;
@@ -415,7 +425,7 @@
   (make-backup-files                     nil)
   (auto-save-default                     t)
   ; resolve symlinks when opening files
-  (find-file-visit-truename              t) 
+  (find-file-visit-truename              t)
   (find-file-suppress-same-file-warnings t)
   (delete-old-versions                   t)
   (backup-by-copying                     t)

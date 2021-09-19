@@ -265,7 +265,8 @@
   (defun org:setup-export ()
     (setq org-export-with-smart-quotes t
           org-html-validation-link nil
-          org-latex-prefer-user-labels t)
+          org-latex-prefer-user-labels t
+          org-export-with-toc nil)
     (add-to-list 'org-export-backends '(md odt))
 
     (defadvice! org-export:dont-trigger-save-hooks-on-export (orig-fn &rest args)

@@ -17,6 +17,7 @@
 ;;; Code:
 
 (require 'lib)
+(require 'cl-macs)
 (require 'cl-lib)
 (require 'cl-seq)
 (require 'subr-x)
@@ -75,12 +76,13 @@
   "Get the commandline command for formatting for the current MODE.
 ON-REGION-P (not yet implemented) when non-nil is for when we want to only
 format text in a specific region."
-  (let ((get-cmd (lambda (k)
-                   (ht-get format:formatter-command-hash k)))
-        (get-args (lambda (k)
-                    (if on-region-p
-                        (ht-get format:formatter-region-args-hash k)
-                      (ht-get format:formatter-args-hash k)))))
+  ;; I know, Common Lispers, flet is a stinky
+  (cl-flet ((get-cmd  (k)
+                      (ht-get format:formatter-command-hash k))
+            (get-args (k)
+                      (if on-region-p
+                          (ht-get format:formatter-region-args-hash k)
+                        (ht-get format:formatter-args-hash k))))
     (pcase mode
       ((or c-mode c++-mode objc-mode)  (concat (get-cmd 'cs) (get-args 'cs)))
       (python-mode                     (get-cmd 'py))
@@ -116,6 +118,9 @@ format text in a specific region."
         (funcall-interactively cmd (point-min) (point-max))))))
 
 ;; TODO
+;; The issue with formatting regions is that:
+;; 1. Most formatters don't support just passing code from STDIN.
+;; 2. In the case of the previous, things begin to get a bit more complex.
 ;; (defun format:format-region ()
 ;;   (interactive)
 ;;   (let* ((mode (with-current-buffer (current-buffer) major-mode))
@@ -352,18 +357,18 @@ And if it's a function, evaluate it."
 ;;;; Assembler
 ;;;;
 
-(use-package asm-mode
-  :mode "\\.inc$")
+;; (use-package asm-mode
+;;   :mode "\\.inc$")
 
-(use-package nasm-mode
-  :mode "\\.nasm$")
+;; (use-package nasm-mode
+;;   :mode "\\.nasm$")
 
-(use-package mips-mode
-  :mode "\\.mips$")
+;; (use-package mips-mode
+;;   :mode "\\.mips$")
 
-(use-package masm-mode
-  :if (or windows-nt-p cygwin-p)
-  :mode "\\.masm$")
+;; (use-package masm-mode
+;;   :if (or windows-nt-p cygwin-p)
+;;   :mode "\\.masm$")
 
 ;;;; C/C++, Objective-C
 ;;;;
@@ -920,25 +925,25 @@ Also took this from Doom Emacs"
 ;;;; Nim
 ;;;;
 
-(use-package nim-mode
-  :hook (nim-mode . lsp-deferred)
-  :init
-  (add-hook! 'nim-mode-hook
-    (defun nim:init-nimsuggest-mode ()
-      "Conditionally load `nimsuggest-mode', instead of clumsily erroring out if
-nimsuggest isn't installed."
-      (unless (stringp nimsuggest-path)
-        (setq nimsuggest-path (executable-find "nimsuggest")))
-      (when (and nimsuggest-path (file-executable-p nimsuggest-path))
-        (nimsuggest-mode))))
+;; (use-package nim-mode
+;;   :hook (nim-mode . lsp-deferred)
+;;   :init
+;;   (add-hook! 'nim-mode-hook
+;;     (defun nim:init-nimsuggest-mode ()
+;;       "Conditionally load `nimsuggest-mode', instead of clumsily erroring out if
+;; nimsuggest isn't installed."
+;;       (unless (stringp nimsuggest-path)
+;;         (setq nimsuggest-path (executable-find "nimsuggest")))
+;;       (when (and nimsuggest-path (file-executable-p nimsuggest-path))
+;;         (nimsuggest-mode))))
 
-  (when windows-nt-p
-    (advice-add #'nimsuggest--get-temp-file-name :filter-return
-                (defun nim--suggest-get-temp-file-name (path)
-                  (replace-regexp-in-string "[꞉* |<>\"?*]" "" path)))))
+;;   (when windows-nt-p
+;;     (advice-add #'nimsuggest--get-temp-file-name :filter-return
+;;                 (defun nim--suggest-get-temp-file-name (path)
+;;                   (replace-regexp-in-string "[꞉* |<>\"?*]" "" path)))))
 
-(use-package ob-nim
-  :after ob)
+;; (use-package ob-nim
+;;   :after ob)
 
 ;;;; Erlang
 ;;;;
@@ -1029,39 +1034,39 @@ nimsuggest isn't installed."
 ;;;; Ruby
 ;;;;
 
-(use-package enh-ruby-mode
-  :mode "\\(?:\\.rb\\|ru\\|rake\\|thor\\|jbuilder\\|gemspec\\|podspec\\|/\\(?:Gem\\|Rake\\|Cap\\|Thor\\|Vagrant\\|Guard\\|Pod\\)file\\)\\'"
-  :mode "\\.\\(?:a?rb\\|aslsx\\)\\'"
-  :mode "/\\(?:Brew\\|Fast\\)file\\'"
-  :interpreter "j?ruby\\(?:[0-9.]+\\)"
-  :config
-  (add-hook 'enh-ruby-mode-local-vars-hook #'lsp-deferred)
-  (setq-mode-local enh-ruby-mode sp-max-pair-length 6))
+;; (use-package enh-ruby-mode
+;;   :mode "\\(?:\\.rb\\|ru\\|rake\\|thor\\|jbuilder\\|gemspec\\|podspec\\|/\\(?:Gem\\|Rake\\|Cap\\|Thor\\|Vagrant\\|Guard\\|Pod\\)file\\)\\'"
+;;   :mode "\\.\\(?:a?rb\\|aslsx\\)\\'"
+;;   :mode "/\\(?:Brew\\|Fast\\)file\\'"
+;;   :interpreter "j?ruby\\(?:[0-9.]+\\)"
+;;   :config
+;;   (add-hook 'enh-ruby-mode-local-vars-hook #'lsp-deferred)
+;;   (setq-mode-local enh-ruby-mode sp-max-pair-length 6))
 
-(use-package inf-ruby
-  :after enh-ruby-mode
-  :config
-  (add-hook 'compilation-filter-hook #'inf-ruby-auto-enter))
+;; (use-package inf-ruby
+;;   :after enh-ruby-mode
+;;   :config
+;;   (add-hook 'compilation-filter-hook #'inf-ruby-auto-enter))
 
-(use-package yard-mode
-  :after enh-ruby-mode)
+;; (use-package yard-mode
+;;   :after enh-ruby-mode)
 
-(use-package rake
-  :after enh-ruby-mode
-  :commands (rake rake-rerun rake-regenerate-cache rake-find-task)
-  :custom
-  (rake-cache-file (concat my-cache-dir "rake.cache"))
-  (rake-completion-system 'default))
+;; (use-package rake
+;;   :after enh-ruby-mode
+;;   :commands (rake rake-rerun rake-regenerate-cache rake-find-task)
+;;   :custom
+;;   (rake-cache-file (concat my-cache-dir "rake.cache"))
+;;   (rake-completion-system 'default))
 
-(use-package ruby-test-mode
-  :after enh-ruby-mode)
+;; (use-package ruby-test-mode
+;;   :after enh-ruby-mode)
 
-(use-package projectile-rails
-  :hook ((enh-ruby-mode inf-ruby-mode projectile-rails-server-mode) . projectile-rails-mode)
-  :hook (projectile-rails-mode-hook . auto-insert-mode)
-  :init
-  (setq auto-insert-query nil)
-  (setq inf-ruby-console-environment "development"))
+;; (use-package projectile-rails
+;;   :hook ((enh-ruby-mode inf-ruby-mode projectile-rails-server-mode) . projectile-rails-mode)
+;;   :hook (projectile-rails-mode-hook . auto-insert-mode)
+;;   :init
+;;   (setq auto-insert-query nil)
+;;   (setq inf-ruby-console-environment "development"))
 
 ;;;; Python
 ;;;;
@@ -1213,7 +1218,7 @@ nimsuggest isn't installed."
   (lsp-headerline-breadcrumb-enable nil)
   (lsp-keymap-prefix nil)
   :config
-  (defadvice! lsp:respect-user-defuned-checkers (orig-fn &rest args)
+  (defadvice! lsp:respect-user-defined-checkers (orig-fn &rest args)
     :around #'lsp-diagnostics-flycheck-enable
     (if flycheck-checker
         (let ((old-checker flycheck-checker))
@@ -1276,6 +1281,7 @@ nimsuggest isn't installed."
 
 (use-package dap-mode
   :when (package-installed-p 'lsp-mode)
+  :after lsp-mode
   :hook (dap-mode . dap-tooltip-mode)
   :init
   (with-eval-after-load 'lsp

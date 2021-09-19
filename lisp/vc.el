@@ -15,8 +15,9 @@
 
 (require 'lib)
 
-;;; External Packages
-;;;
+;;; VC
+
+(remove-hook 'find-file-hooks 'vc-find-file-hook)
 
 ;;;; Git
 ;;;;
