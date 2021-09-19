@@ -1,4 +1,4 @@
-#+TITLE: My Emacs Config
+#+TITLE: My Emacs Configuration
 
 My personal Emacs setup.
 
@@ -8,11 +8,12 @@ My personal Emacs setup.
 - [[https://github.com/seagle0128/.emacs.d][Centaur Emacs]]
 - [[https://github.com/angrybacon/dotemacs][AngryBacon's Emacs Configuration]]
 - [[https://svn.red-bean.com/repos/kfogel/trunk/.emacs][kfogel's .emacs]]
+- [[https://github.com/alphapapa/unpackaged.el][alphapapa's unpackaged.el]]
 
 * My Thought Process
 
 You'll notice a lot of things are taken from Doom, bits from Centaur Emacs, and some other Emacs
-users' configurations and stuff from the r/emacs subreddit (which I try to give links to).
+users' configurations and stuff from the [[https://old.reddit.com/r/emacs][r/emacs subreddit]] (which I try to give links to).
 A lot of helper functions and hooks I take from Doom, due to letting some better organizing
 and deferring of packages.
 
@@ -25,50 +26,9 @@ than it already can be when it comes to Emacs.
 I also just wanted something that felt like my own, and to use /some/ of the preexisting functionality
 found in Emacs.
 
-* Some Interesting Packages I Use
-
-** Vertico
-
-This is my preferred completion interface.
-
-[[https://github.com/minad/vertico][Vertico]] offers a more simplistic and, what I feel is, better performing completion UI.
-
-** Consult
-
-For those of you who use [[https://github.com/abo-abo/swiper][Ivy]], think of [[https://github.com/minad/consult][Consult]] as ~counsel~ for other completion UIs.
-
-The package leverages the builtin ~completing-read~ function provided by Emacs' base
-completion system.
-
-It also is far more simple for [[file:lisp/term.el::132][creating completions with]].
-
-** Marginalia
-
-[[https://github.com/minad/marginalia][This]] simply adds nice annotations in the margins of the minibuffer.
-
-** Embark
-
-Now this is definitely one of the most interesting packages I use.
-
-[[https://github.com/oantolin/embark][Embark]] is a contextual actions menu.
-
-The simplest example I can think of is this:
-
-You have your cursor over a link in Org-Mode, when you press the whatever key you assigned ~embark-act~
-to, you have options as to what you want to do with the link there. You can open in ~ewws~ or in a
-browser, copy the link, or whatever else you think you can do with the link.
-
-** Skeleton
-
-This is builtin in Emacs.
-
-Think of [[https://www.emacswiki.org/emacs/SkeletonMode][Skeleton]] as an almost template or snippet language.
-It has its own language, and you can use Emacs Lisp expressions with it as well.
-
-[[file:lisp/writing.el::473][I use it]] along side [[https://www.emacswiki.org/emacs/AbbrevMode][abbreviations]] (abbrevs) and [[https://www.emacswiki.org/emacs/DynamicAbbreviations][dynamic abbreviations]] (dabbrevs).
-
-* TODO Things I'd like
+* TODO Things I'd like to do
 
 - [ ] My own code formatter
 - [ ] Actually implement the splash screen
 - [ ] Add in more sources for consult
+- [ ] Refactor some of the Doom functions/helpers using builtin functionality
