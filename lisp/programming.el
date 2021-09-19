@@ -463,7 +463,13 @@ And if it's a function, evaluate it."
   (company:set-backend 'sh-mode '(company-shell company-files))
   (setq company-shell-delete-duplicates t))
 
-(use-package fish-mode)
+(use-package fish-mode
+  :config
+  (snippets:file-snip fn 'fish-mode
+                      "Function Name: "
+                      ?\n "function " str " " @ (skeleton-read "Args: ")
+                      ?\n > @ _ ?\n
+                      "end" ?\n))
 
 ;;;; Emacs-Lisp
 ;;;;

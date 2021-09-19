@@ -581,9 +581,57 @@ Made for `org-tab-first-hook' in evil-mode."
   (tex-command . "xelatex")
   (LaTeX-command . "xelatex"))
 
+(use-package latex
+  :custom
+  (LaTeX-section-hook '(LaTeX-section-heading
+                        LaTeX-section-title
+                        LaTeX-section-toc
+                        LaTeX-section-section
+                        LaTeX-section-label))
+  (LaTeX-fill-break-at-separators nil)
+  (LaTeX-item-indent 0)
+  :config
+  ;; Fix #1849: allow fill-paragraph in itemize/enumerate
+  (defadvice latex:re-indent-itemize-and-enumerate
+      (around LaTeX-fill-region-as-para-do (fn &rest args) activate)
+    "TODO"
+    (let ((LaTeX-indent-environment-list
+           (append LaTeX-indent-environment-list
+                   '(("itemize"   +latex-indent-item-fn)
+                     ("enumerate" +latex-indent-item-fn)))))
+      (apply fn args)))
+
+  (defadvice latex:dont-indent-itemize-and-enumerate
+      (around LaTeX-fill-region-as-paragraph (fn &rest args) activate)
+    "TODO"
+    (let ((LaTeX-indent-environment-list LaTeX-indent-environment-list))
+      (delq! "itemize" LaTeX-indent-environment-list 'assoc)
+      (delq! "enumerate" LaTeX-indent-environment-list 'assoc)
+      (apply fn args))))
+
 (use-package context
   :ensure nil
   :magic ("%!TEX TS-PROGRAM: context" . ConTeXt-mode))
+
+(use-package auctex
+  :config
+  (company:set-backend 'latex-mode #'company-auctex-environments #'company-auctex-macros))
+
+(use-package cdlatex
+  :hook (LaTeX-mode . cdlatex-mode)
+  :hook (org-mode   . org-cdlatex-mode)
+  :config
+  (define-key 'cdlatex-mode-map (kbd "(") nil)
+  (define-key 'cdlatex-mode-map (kbd "{") nil)
+  (define-key 'cdlatex-mode-map (kbd "[") nil)
+  (define-key 'cdlatex-mode-map (kbd "|") nil)
+  (define-key 'cdlatex-mode-map (kbd "TAB" nil))
+  (define-key 'cdlatex-mode-map (kbd "<tab>") nil)
+  (define-key 'cdlatex-mode-map (kbd "^") nil)
+  (define-key 'cdlatex-mode-map (kbd "_") nil)
+  (define-key 'cdlatex-mode-map [(control return)] nil)
+  (define-key 'cdlatex-mode-map (kbd "C-RET") nil)
+  (define-key 'cdlatex-mode-map (kbd "<C-return>") nil))
 
 ;;;; SES: Simple Emacs Spreadsheet
 ;;;;
@@ -646,7 +694,7 @@ Made for `org-tab-first-hook' in evil-mode."
     (artist-mode)))
 
 ;;;; Skeleton
-;;;; TODO make snippets
+;;;;
 
 (use-package skeleton
   :ensure nil
@@ -716,7 +764,15 @@ globally, see `snippets:global-snip'."
               (dolist (m mode)
                 (eval-after-load ',m
                   (define-abbrev local-abbrev-table ,snip-name
-                    "" ',func-name))))))))
+                    "" ',func-name)))))))
+
+  ;;;; TODO make more snippets
+
+  (snippets:file-snip if '(elixir-mode enh-ruby-mode fish-mode)
+                      "Condition: "
+                      ?\n "if " @ str
+                      ?\n > @ _ ?\n
+                      "end" ?\n))
 
 ;;;; Markdown
 ;;;;

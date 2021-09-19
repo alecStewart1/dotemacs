@@ -323,6 +323,8 @@
 ;;;;
 
 (use-package adaptive-wrap
+  :init
+  (setq-default adaptive-wrap-extra-indent 0)
   :config
   (when (memq 'visual-line-mode text-mode-hook)
     (remove-hook 'text-mode-hook #'visual-line-mode)
