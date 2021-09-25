@@ -768,7 +768,7 @@ globally, see `snippets:global-snip'."
 
   ;;;; TODO make more snippets
 
-  (snippets:file-snip if '(elixir-mode enh-ruby-mode fish-mode)
+  (snippets:file-snip if '(enh-ruby-mode fish-mode)
                       "Condition: "
                       ?\n "if " @ str
                       ?\n > @ _ ?\n

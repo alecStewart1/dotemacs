@@ -799,28 +799,28 @@ Also took this from Doom Emacs"
 ;;   (add-hook 'geiser-mode-hook      #'macrostep-geiser-setup)
 ;;   (add-hook 'geiser-repl-mode-hook #'macrostep-geiser-setup))
 
-;; (use-package racket-mode
-;;   :mode "\\.rkt\\'"
-;;   :hook (racket-mode-local-vars . (racket-xp-mode lsp-deferred))
-;;   :preface
-;;   (defun racket:open-repl ()
-;;     "Open the Racket REPL."
-;;     (interactive)
-;;     (pop-to-buffer
-;;      (or (get-buffer "*Racket REPL*")
-;;          (progn (racket-run-and-switch-to-repl)
-;;                 (let ((buf (get-buffer "*Racket REPL*")))
-;;                   (bury-buffer buf)
-;;                   buf)))))
-;;   :config
-;;   (require 'smartparens-racket)
-;;   (add-hook! 'racket-mode-hook
-;;              #'rainbow-delimiters-mode
-;;              #'highlight-quoted-mode)
+(use-package racket-mode
+  :mode "\\.rkt\\'"
+  :hook (racket-mode-local-vars . (racket-xp-mode lsp-deferred))
+  :preface
+  (defun racket:open-repl ()
+    "Open the Racket REPL."
+    (interactive)
+    (pop-to-buffer
+     (or (get-buffer "*Racket REPL*")
+         (progn (racket-run-and-switch-to-repl)
+                (let ((buf (get-buffer "*Racket REPL*")))
+                  (bury-buffer buf)
+                  buf)))))
+  :config
+  (require 'smartparens-racket)
+  (add-hook! 'racket-mode-hook
+             #'rainbow-delimiters-mode
+             #'highlight-quoted-mode)
 
-;;   (add-hook! 'racket-xp-mode-hook
-;;     (defun racket-xp-disable-flycheck ()
-;;       (cl-pushnew 'racket flyheck-disabled-checkers))))
+  (add-hook! 'racket-xp-mode-hook
+    (defun racket-xp-disable-flycheck ()
+      (cl-pushnew 'racket flyheck-disabled-checkers))))
 
 ;;;; .NET Core
 ;;;;
@@ -853,26 +853,26 @@ Also took this from Doom Emacs"
 ;; TODO make some kinda REPL.
 ;; TODO doc comment snippet
 
-(use-package powershell
-  :if (or windows-nt-p
-          cygwin-p
-          (executable-find "powershell")
-          (executable-find "pwsh"))
-  :mode ("\\.ps[dm]?1\\'" . powershell-mode)
-  :interpreter (("pwsh" . powershell-mode)
-                ("powershell" . powershell-mode))
-  :config
-  ;; TODO uhh...how do I do this?
-  ;; (defun projectile:powershell-project-p ()
-  ;;   (or (projectile-verify-file-wildcard (rx ".ps1xml" eos))
-  ;;       (projectile-verify-file-wildcard (rx ".psd1" eos))
-  ;;       (projectile-verify-file-wildcard (rx ".psm1" eos))))
+;; (use-package powershell
+;;   :if (or windows-nt-p
+;;           cygwin-p
+;;           (executable-find "powershell")
+;;           (executable-find "pwsh"))
+;;   :mode ("\\.ps[dm]?1\\'" . powershell-mode)
+;;   :interpreter (("pwsh" . powershell-mode)
+;;                 ("powershell" . powershell-mode))
+;;   :config
+;;   ;; TODO uhh...how do I do this?
+;;   ;; (defun projectile:powershell-project-p ()
+;;   ;;   (or (projectile-verify-file-wildcard (rx ".ps1xml" eos))
+;;   ;;       (projectile-verify-file-wildcard (rx ".psd1" eos))
+;;   ;;       (projectile-verify-file-wildcard (rx ".psm1" eos))))
 
-  ;; (projectile-register-project-type 'powershell #'projectile:powershell-project-p
-  ;;                                   :test "pwsh -NoLogo -NoProfile -Command 'Invoke-Pester'")
-  (add-hook 'powershell-mode-hook #'lsp-deferred)
-  (if (package-installed-p 'dap-mode)
-      (require 'dap-pwsh)))
+;;   ;; (projectile-register-project-type 'powershell #'projectile:powershell-project-p
+;;   ;;                                   :test "pwsh -NoLogo -NoProfile -Command 'Invoke-Pester'")
+;;   (add-hook 'powershell-mode-hook #'lsp-deferred)
+;;   (if (package-installed-p 'dap-mode)
+;;       (require 'dap-pwsh)))
 
 ;; (use-package sharper
 ;;   :when (executable-find "dotnet")
@@ -987,7 +987,25 @@ Also took this from Doom Emacs"
   (eval-after-load 'highlight-numbers
     (puthash 'elixir-mode
              "\\_<-?[[:digit:]]+\\(?:_[[:digit:]]\\{3\\}\\)*\\_>"
-             highlight-numbers-modelist)))
+             highlight-numbers-modelist))
+
+  (snippet:file-snip mod 'elixir-mode
+                     "Name: "
+                     ?\n "defmodule " str " do"
+                     ?\n > @ _ ?\n
+                     "end" ?\n)
+
+  (snippet:file-snip fn 'elixir-mode
+                     "Name: "
+                     ?\n "def " @ str " (" @ ") do"
+                     ?\n > @ _ ?\n
+                     "end" ?\n)
+
+  (snippet:file-snip if 'elixir-mode
+                     "Condition: "
+                     ?\n "if " @ str "do"
+                     ?\n > @ _ ?\n
+                     "end" ?\n))
 
 (use-package mix
   :after elixir-mode
