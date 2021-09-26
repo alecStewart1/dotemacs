@@ -613,7 +613,7 @@ Also took this from Doom Emacs"
 (use-package sly
   :hook (lisp-mode-local-vars . sly-editing-mode)
   :preface
-  (defvar inferior-lisp-program "sbcl")
+  (defvar inferior-lisp-program (concat (executable-find "ros") " -L sbcl-bin -l ~/.sbclrc -Q run"))
   :init
   (add-hook! 'after-init-hook
     (with-eval-after-load 'sly
@@ -627,11 +627,9 @@ Also took this from Doom Emacs"
   (sly-net-coding-system 'utf-8-unix)
   (sly-kill-without-query-p t)
   (sly-lisp-implementations
-   `((sbcl (,(executable-find "sbcl")))
-     (ccl (,(executable-find "ccl")))
-     (ecl (,(executable-find "ecl")))
-     (abcl (,(executable-find "abcl")))
-     (clisp (,(executable-find "clisp")))))
+   `((sbcl ("sbcl" "--dynamic-space-size" "2000"))
+     (roswell (,(executable-find "ros") " -Q run"))))
+  (sly-default-lisp 'roswell)
   (sly-description-autofocus t)
   (sly-inhibit-pipelining nil)
   (sly-load-failed-fasl 'always)
@@ -704,16 +702,19 @@ Also took this from Doom Emacs"
                    :require-match t
                    :sort nil)))
 
+(use-package sly-macrostep
+  :after sly)
+
 (use-package sly-repl-ansi-color
   :after sly
   :init
-  (add-to-list 'sly-contribs 'sly-repl-ansi-color))
+  (add-to-list 'sly-contribs 'sly-repl-ansi-color #'append))
 
 (use-package sly-asdf
   :after sly
   :config
   (add-to-list 'sly-contribs 'sly-asdf #'append)
-  (with-eval-after-load 'sly
+  (eval-after-load 'sly
     (sly-enable-contrib 'sly-asdf)))
 
 (use-package sly-quicklisp
@@ -723,81 +724,81 @@ Also took this from Doom Emacs"
 (use-package sly-named-readtables
   :after sly
   :config
-  (with-eval-after-load 'sly
+  (eval-after-load 'sly
     (sly-enable-contrib 'sly-named-readtables)))
 
 ;;;; Schemes
 ;;;;
 
-;; (use-package scheme
-;;   :hook (scheme-mode . rainbow-delimiters-mode)
-;;   :preface
-;;   (defvar calculate-lisp-indent-last-sexp)
-;;   :config
-;;   (defadvice! scheme:indent-function (indent-point state)
-;;     "A better indenting function for `scheme-mode'."
-;;     :override #'scheme-indent-function
-;;     (let ((normal-indent (current-column)))
-;;       (goto-char (1+ (elt state 1)))
-;;       (parse-partial-sexp (point) calculate-lisp-indnet-last-sexp 0 t)
-;;       (if (and (elt state 2)
-;;                (not (looking-at-p "\\sw\\|\\s_")))
-;;           (progn
-;;             (unless (> (save-excursion (forward-line 1) (point))
-;;                        calculate-lisp-indent-last-sexp)
-;;               (goto-char calculate-lisp-indent-last-sexp)
-;;               (beginning-of-line)
-;;               (parse-partial-sexp (point) calculate-lisp-indent-last-sexp 0 t))
-;;             (backward-prefix-chars)
-;;             (current-column))
-;;         (let* ((function (buffer-substring
-;;                           (point)
-;;                           (progn
-;;                             (forward-sexp 1)
-;;                             (point))))
-;;                (method (or (get (intern-soft function) 'scheme-indent-function)
-;;                            (get (intern-soft function) 'scheme-indent-hook))))
-;;           (cond ((or (eq method 'defun)
-;;                      (and (null method)
-;;                           (> (length function) 3)
-;;                           (string-match-p "\\`def" function)))
-;;                  (lisp-indent-defform state indent-point))
-;;                 ((and (null method)
-;;                       (> (length function) 1)
-;;                       (string-match-p "\\`:" function))
-;;                  (let ((lisp-body-indent 1))
-;;                    (lisp-indent-defform state indent-point)))
-;;                 ((integerp method)
-;;                  (lisp-indent-specform method state indent-point normal-indent))
-;;                 (method
-;;                  (funcall method state indent-point normal-indent))))))))
+(use-package scheme
+  :hook (scheme-mode . rainbow-delimiters-mode)
+  :preface
+  (defvar calculate-lisp-indent-last-sexp)
+  :config
+  (defadvice! scheme:indent-function (indent-point state)
+    "A better indenting function for `scheme-mode'."
+    :override #'scheme-indent-function
+    (let ((normal-indent (current-column)))
+      (goto-char (1+ (elt state 1)))
+      (parse-partial-sexp (point) calculate-lisp-indnet-last-sexp 0 t)
+      (if (and (elt state 2)
+               (not (looking-at-p "\\sw\\|\\s_")))
+          (progn
+            (unless (> (save-excursion (forward-line 1) (point))
+                       calculate-lisp-indent-last-sexp)
+              (goto-char calculate-lisp-indent-last-sexp)
+              (beginning-of-line)
+              (parse-partial-sexp (point) calculate-lisp-indent-last-sexp 0 t))
+            (backward-prefix-chars)
+            (current-column))
+        (let* ((function (buffer-substring
+                          (point)
+                          (progn
+                            (forward-sexp 1)
+                            (point))))
+               (method (or (get (intern-soft function) 'scheme-indent-function)
+                           (get (intern-soft function) 'scheme-indent-hook))))
+          (cond ((or (eq method 'defun)
+                     (and (null method)
+                          (> (length function) 3)
+                          (string-match-p "\\`def" function)))
+                 (lisp-indent-defform state indent-point))
+                ((and (null method)
+                      (> (length function) 1)
+                      (string-match-p "\\`:" function))
+                 (let ((lisp-body-indent 1))
+                   (lisp-indent-defform state indent-point)))
+                ((integerp method)
+                 (lisp-indent-specform method state indent-point normal-indent))
+                (method
+                 (funcall method state indent-point normal-indent))))))))
 
-;; (use-package geiser
-;;   :defer t
-;;   :preface
-;;   (defun geiser/open-repl ()
-;;     "Open the Geiser REPL."
-;;     (interactive)
-;;     (call-interactively #'switch-to-geiser)
-;;     (current-buffer))
-;;   :init
-;;   ;; To work with Guile + Geiser
-;;   ;; We need these first in order to set our `geiser-activate-implementation' variable
-;;   (use-package geiser-guile   :after geiser)
-;;   (use-package geiser-sktlos  :after geiser)
-;;   ;;(use-package geiser-chez  :after geiser)
-;;   (use-package geiser-chicken :after geiser)
-;;   :custom
-;;   (geiser-guile-binary . (executable-find "guile3"))
-;;   (geiser-active-implementations . '(guile stklos chicken))
-;;   (geiser-autodoc-identifier-format . "%s => %s")
-;;   (geiser-repl-current-project-function . #'projectile:get-project-root))
+(use-package geiser
+  :defer t
+  :preface
+  (defun geiser/open-repl ()
+    "Open the Geiser REPL."
+    (interactive)
+    (call-interactively #'switch-to-geiser)
+    (current-buffer))
+  :init
+  ;; To work with Guile + Geiser
+  ;; We need these first in order to set our `geiser-activate-implementation' variable
+  (use-package geiser-chicken :after geiser)
+  (use-package geiser-chez    :after geiser)
+  (use-package geiser-guile   :after geiser)
+  :custom
+  (geiser-chicken-binary (expand-file-name (executable-find "chicken-csi")))
+  (geiser-guile-binary (expand-file-name (executable-find "guile3")))
+  (geiser-active-implementations '(chicken chez guile))
+  (geiser-autodoc-identifier-format "%s => %s")
+  (geiser-repl-current-project-function #'projectile:get-project-root))
 
-;; (use-package macrostep-geiser
-;;   :after (:or geiser-mode geiser-repl)
-;;   :config
-;;   (add-hook 'geiser-mode-hook      #'macrostep-geiser-setup)
-;;   (add-hook 'geiser-repl-mode-hook #'macrostep-geiser-setup))
+(use-package macrostep-geiser
+  :after (:or geiser-mode geiser-repl)
+  :config
+  (add-hook 'geiser-mode-hook      #'macrostep-geiser-setup)
+  (add-hook 'geiser-repl-mode-hook #'macrostep-geiser-setup))
 
 (use-package racket-mode
   :mode "\\.rkt\\'"
@@ -820,7 +821,12 @@ Also took this from Doom Emacs"
 
   (add-hook! 'racket-xp-mode-hook
     (defun racket-xp-disable-flycheck ()
-      (cl-pushnew 'racket flyheck-disabled-checkers))))
+      (cl-pushnew 'racket flyheck-disabled-checkers)))
+
+  (define-key 'racket-xp-mode-map [remap racket-doc]              #'racket-xp-documentation)
+  (define-key 'racket-xp-mode-map [remap racket-visit-definition] #'racket-xp-visit-definition)
+  (define-key 'racket-xp-mode-map [remap next-error]              #'racket-xp-next-error)
+  (define-key 'racket-xp-mode-map [remap previous-error]          #'racket-xp-previous-error))
 
 ;;;; .NET Core
 ;;;;
@@ -995,7 +1001,7 @@ Also took this from Doom Emacs"
                      ?\n > @ _ ?\n
                      "end" ?\n)
 
-  (snippet:file-snip fn 'elixir-mode
+  (snippet:file-snip def 'elixir-mode
                      "Name: "
                      ?\n "def " @ str " (" @ ") do"
                      ?\n > @ _ ?\n
@@ -1095,48 +1101,48 @@ Also took this from Doom Emacs"
 ;;;; Python
 ;;;;
 
-(use-package python
-  :ensure nil
-  :mode ("[./]flake8\\'" . conf-mode)
-  :mode ("/Pipfile\\'" . conf-mode)
-  :init
-  (add-hook 'python-mode-local-vars-hook #'lsp-deferred)
-  :custom
-  (python-environment-directory my-cache-dir)
-  (python-indent-guess-indent-offset-verbose nil)
-  :config
-  (setq python-indent-guess-indent-offset-verbose nil)
-  ;; Default to Python 3. Prefer the versioned Python binaries since some
-  ;; systems stupidly make the unversioned one point at Python 2.
-  (when (and (executable-find "python3")
-             (string= python-shell-interpreter "python"))
-    (setq python-shell-interpreter "python3"))
+;; (use-package python
+;;   :ensure nil
+;;   :mode ("[./]flake8\\'" . conf-mode)
+;;   :mode ("/Pipfile\\'" . conf-mode)
+;;   :init
+;;   (add-hook 'python-mode-local-vars-hook #'lsp-deferred)
+;;   :custom
+;;   (python-environment-directory my-cache-dir)
+;;   (python-indent-guess-indent-offset-verbose nil)
+;;   :config
+;;   (setq python-indent-guess-indent-offset-verbose nil)
+;;   ;; Default to Python 3. Prefer the versioned Python binaries since some
+;;   ;; systems stupidly make the unversioned one point at Python 2.
+;;   (when (and (executable-find "python3")
+;;              (string= python-shell-interpreter "python"))
+;;     (setq python-shell-interpreter "python3"))
 
-  (define-key python-mode-map (kbd "DEL") nil) ; interferes with smartparens
-  (sp-local-pair 'python-mode "'" nil
-                 :unless '(sp-point-before-word-p
-                           sp-point-after-word-p
-                           sp-point-before-same-p)))
+;;   (define-key python-mode-map (kbd "DEL") nil) ; interferes with smartparens
+;;   (sp-local-pair 'python-mode "'" nil
+;;                  :unless '(sp-point-before-word-p
+;;                            sp-point-after-word-p
+;;                            sp-point-before-same-p)))
 
-(use-package poetry
-  :after python
-  :init
-  (add-hook 'python-mode-hook #'poetry-tracking-mode))
+;; (use-package poetry
+;;   :after python
+;;   :init
+;;   (add-hook 'python-mode-hook #'poetry-tracking-mode))
 
-(use-package py-isort
-  :after python
-  :commands py-isort-buffer py-isort-region)
+;; (use-package py-isort
+;;   :after python
+;;   :commands py-isort-buffer py-isort-region)
 
-(use-package python-pytest
-  :after python
-  :commands python-pytest-dispatch)
+;; (use-package python-pytest
+;;   :after python
+;;   :commands python-pytest-dispatch)
 
-(use-package live-py-mode
-  :after python
-  :commands live-py-mode)
+;; (use-package live-py-mode
+;;   :after python
+;;   :commands live-py-mode)
 
-(use-package lsp-pyright
-  :after (:all lsp-mode python))
+;; (use-package lsp-pyright
+;;   :after (:all lsp-mode python))
 
 ;;;; Webdev
 ;;;;
