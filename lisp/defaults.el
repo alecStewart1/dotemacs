@@ -133,8 +133,6 @@
   (load-prefer-newer  t)
   (custom-unlispify-menu-entries nil)
   (custom-unlispify-tag-names nil)
-  ;; TODO might change in future
-  (mode-line-format  nil)
   :config
   (setq-default
    ediff-window-setup-function 'ediff-setup-windows-plain
@@ -207,9 +205,10 @@
            ;;(concat local-dir-re ".*/jupyter-channel\\.el\\'")
            ))))
 
-;; Don't store eln files in ~/.emacs.d/eln-cache
-;;
-(when (boundp 'native-comp-eln-load-path)
+(when (featurep 'native-compile)
+  ;; We're going for distance, we're going for speed
+  (setq native-comp-compiler-options '("-O2" "-mtune=native" "-march=native"))
+  ;; Don't store eln files in ~/.emacs.d/eln-cache
   (add-to-list 'native-comp-eln-load-path (concat my-cache-dir "eln/")))
 
 ;;;; Startup

@@ -290,8 +290,13 @@ possible."
   :disabled t
   :commands hl-line-mode global-hl-line-mode)
 
-;;;; TODO Modeline
-;;;; ATM it's disabled
+;;;; Modeline
+
+(use-package nano-modeline
+  :diminish nano-modeline-mode
+  :hook (after-init . nano-modeline-mode)
+  :custom
+  (nano-modeline-position 'bottom))
 
 (use-package hide-mode-line
   :hook (((completion-list-mode completion-in-region-mode) . hide-mode-line-mode)))
@@ -439,7 +444,7 @@ possible."
                    ("^\\*Org Agenda"                  :ignore t)
                    (("^CAPTURE-.*\\.org$" "EXPORT*")  :regexp t :popup t :align 'below :select t :size 0.25)
                    (("*shell*" "*eshell*" "*ielm*")   :popup t :size 0.3 :align 'below)
-                   (" *Install vterm* "               :size 0.35 :same t :align 'below)
+                   ("*Install vterm*"                 :size 0.35 :same t :align 'below)
                    ("vterm"                           :same t)
                    ("*scheme*"                        :align 'right :size 0.45)
                    ("^\\*sly-mrepl"                   :regexp t :align 'right 0.45)

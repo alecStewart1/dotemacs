@@ -54,8 +54,7 @@
 
 ;;;###autoload
 (defun elfeed:wrap ()
-  "Enhances an elfeed entry's readability by wrapping it to a width of
-    `fill-column'."
+  "Enhances an elfeed entry's readability by wrapping it to a width of `fill-column'."
   (let ((inhibit-read-only t)
         (inhibit-modification-hooks t))
     (setq-local truncate-lines nil)
@@ -65,7 +64,7 @@
 
 ;;;###autoload
 (defun elfeed:cleanup ()
-  "Clean up after an elfeed session. Kills all elfeed and elfeed-org files."
+  "Clean up after an elfeed session. Kill all elfeed and elfeed-org files."
   (interactive)
   ;; `delete-file-projectile-remove-from-cache' slows down `elfeed-db-compact'
   ;; tremendously, so we disable the projectile cache:

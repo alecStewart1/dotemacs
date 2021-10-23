@@ -784,13 +784,14 @@ Also took this from Doom Emacs"
   :init
   ;; To work with Guile + Geiser
   ;; We need these first in order to set our `geiser-activate-implementation' variable
+  (use-package geiser-gauche  :after geiser)
   (use-package geiser-chicken :after geiser)
-  (use-package geiser-chez    :after geiser)
   (use-package geiser-guile   :after geiser)
   :custom
   (geiser-chicken-binary (expand-file-name (executable-find "chicken-csi")))
   (geiser-guile-binary (expand-file-name (executable-find "guile3")))
-  (geiser-active-implementations '(chicken chez guile))
+  (geiser-active-implementations '(gauche guile chicken))
+  (geiser-default-implementation 'gauche)
   (geiser-autodoc-identifier-format "%s => %s")
   (geiser-repl-current-project-function #'projectile:get-project-root))
 
@@ -1212,7 +1213,7 @@ Also took this from Doom Emacs"
                                                       "\\(?:>\\|]\\|}\\)+\\'"))))))
 
 (use-package emmet-mode
-  :hook (css-mode-hook web-mode-hook html-mode-hook haml-mode-hook nxml-mode-hook)
+  :hook (css-mode web-mode html-mode haml-mode nxml-mode)
   :config
   (when (package-installed-p 'yasnippet)
     (add-hook 'emmet-mode-hook #'yas-minor-mode-on))
