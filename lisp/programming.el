@@ -611,10 +611,12 @@ Also took this from Doom Emacs"
 (add-hook 'lisp-mode-hook #'rainbow-delimiters-mode)
 
 (use-package sly
-  :hook (lisp-mode-local-vars . sly-editing-mode)
+  :hook ((lisp-mode-local-vars . sly-editing-mode)
+         (sly-mrepl-mode . electric-pair-local-mode))
   :preface
   (defvar inferior-lisp-program (concat (executable-find "ros") " -L sbcl-bin -l ~/.sbclrc -Q run"))
   :init
+  (setq sly-contribs '(sly-fancy))
   (add-hook! 'after-init-hook
     (with-eval-after-load 'sly
       (sly-setup)))
@@ -633,6 +635,7 @@ Also took this from Doom Emacs"
   (sly-description-autofocus t)
   (sly-inhibit-pipelining nil)
   (sly-load-failed-fasl 'always)
+  (sly-ignore-protocol-mismatches t)
   (sly-complete-symbol-function 'sly-flex-completions)
   :config
   (defun sly:cleanup-maybe ()
@@ -705,27 +708,21 @@ Also took this from Doom Emacs"
 (use-package sly-macrostep
   :after sly)
 
-(use-package sly-repl-ansi-color
-  :after sly
-  :init
-  (add-to-list 'sly-contribs 'sly-repl-ansi-color #'append))
-
-(use-package sly-asdf
-  :after sly
-  :config
-  (add-to-list 'sly-contribs 'sly-asdf #'append)
-  (eval-after-load 'sly
-    (sly-enable-contrib 'sly-asdf)))
-
 (use-package sly-quicklisp
   :after sly
   :commands sly-quicklisp)
 
+(use-package sly-repl-ansi-color
+  :init
+  (add-to-list 'sly-contribs 'sly-repl-ansi-color))
+
+(use-package sly-asdf
+  :init
+  (add-to-list 'sly-contribs 'sly-asdf))
+
 (use-package sly-named-readtables
-  :after sly
-  :config
-  (eval-after-load 'sly
-    (sly-enable-contrib 'sly-named-readtables)))
+  :init
+  (add-to-list 'sly-contribs 'sly-named-readtables))
 
 ;;;; Schemes
 ;;;;
