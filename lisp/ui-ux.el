@@ -134,7 +134,7 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
   "If non-nil, inhibit large/long file detection when opening files.")
 
 (defvar ui-ux:large-file-p nil)
-(put 'large-file-p 'permanent-local t)
+(put 'ui-ux:large-file-p 'permanent-local t)
 
 (defvar ui-ux:large-file-size-alist '(("." . 1.0)))
 
@@ -170,7 +170,6 @@ possible."
         (when (fboundp 'so-long-minor-mode)
           (so-long-minor-mode +1))
         (message "Large file detected! Cutting a few corners to improve performance...")))))
-
 
 (use-package so-long
   :ensure nil

@@ -181,7 +181,7 @@ Uses whatever the indent function is for the current mode, as this uses
   (eldoc-idle-delay .1))
 
 (use-package rmsbolt
-  :after (:any c-mode c++-mode objc-mode emacs-lisp-mode common-lisp-mode))
+  :after (:any c-mode c++-mode objc-mode emacs-lisp-mode common-lisp-mode python-mode java-mode))
 
 (use-package tree-sitter
   :if (functionp 'module-load)
@@ -357,18 +357,21 @@ And if it's a function, evaluate it."
 ;;;; Assembler
 ;;;;
 
-;; (use-package asm-mode
-;;   :mode "\\.inc$")
+(use-package asm-mode
+  :mode "\\.inc$")
 
-;; (use-package nasm-mode
-;;   :mode "\\.nasm$")
+(use-package nasm-mode
+  :mode "\\.nasm$")
+
+(use-package flymake-nasm
+  :hook (nasm-mode . flymake-nasm-setup))
 
 ;; (use-package mips-mode
 ;;   :mode "\\.mips$")
 
-;; (use-package masm-mode
-;;   :if (or windows-nt-p cygwin-p)
-;;   :mode "\\.masm$")
+(use-package masm-mode
+  :if (or windows-nt-p cygwin-p)
+  :mode "\\.masm$")
 
 ;;;; C/C++, Objective-C
 ;;;;

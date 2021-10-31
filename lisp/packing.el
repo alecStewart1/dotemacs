@@ -50,7 +50,7 @@
 ;; From: https://github.com/alphapapa/unpackaged.el/blob/master/unpackaged.el#L1305
 ;;;###autoload
 (defun package-menu:upgrade-package ()
-  "Mark current package for upgrading (i.e. also mark obsolete version for deletion.)"
+  "Mark current package for upgrading (i.e. also mark obsolete version for deletion)."
   (interactive)
   (when-let ((upgrades (package-menu--find-upgrades))
              (description (tabulated-list-get-id))
@@ -101,9 +101,11 @@
              hydra-move-splitter-left)
   :init
   (setq lv-use-separator t))
+
 (use-package major-mode-hydra
   :after hydra
   :functions (major-mode-hydra-define major-mode-hydra-define+))
+
 (use-package pretty-hydra
   :after hydra
   :functions (pretty-hydra-define pretty-hydra-define+)

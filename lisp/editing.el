@@ -438,9 +438,9 @@ an extension, try to guess one."
                       js-mode js2-mode rjsx-mode typescript-mode json-mode)
          . editorconfig-mode)
   :custom
-  (editorconfig-trim-whitespace-mode 'ws-butler-mode)
-  :advice
-  (:around editorconfig-call-editorconfig-exec editorconfig:smart-detection))
+  (editorconfig-trim-whitespace-mode #'ws-butler-mode)
+  :config
+  (advice-add 'editorconfig-call-editorconfig-exec :around #'editorconfig:smart-detection))
 
 ;;;; Objed
 ;;;;

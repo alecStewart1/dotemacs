@@ -102,11 +102,13 @@
 
 ;;;###autoload
 (defun magit:optimize-process-calls ()
+  "TODO"
   (when-let (path (executable-find magit-git-executable t))
     (setq-local magit-git-executable path)))
 
 ;;;###autoload
 (defun magit:reveal-point-if-invisible ()
+  "TODO"
   (if (derived-mode-p 'org-mode)
       (org-reveal '(4))
     (require 'reveal)
