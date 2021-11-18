@@ -117,7 +117,7 @@
   (add-hook! 'elfeed-search-mode-hook
     (add-hook 'kill-buffer-hook #'elfeed:cleanup nil 'local))
 
-  (setq-mode-local 'elfeed-show-mode
+  (setq-mode-local elfeed-show-mode
                    shr-put-image-function #'elfeed:put-sliced-image
                    shr-external-rendering-functions '((img . elfeed:render-image-tag-without-underline))))
 

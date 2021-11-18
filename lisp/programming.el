@@ -358,6 +358,7 @@ And if it's a function, evaluate it."
 ;;;;
 
 (use-package asm-mode
+  :ensure nil
   :mode "\\.inc$")
 
 (use-package nasm-mode
@@ -377,6 +378,7 @@ And if it's a function, evaluate it."
 ;;;;
 
 (use-package cc-mode
+  :ensure nil
   :mode ("\\.mm\\'" . objc-mode)
   :hook ((c-mode-local-vars
           c++-mode-local-vars
@@ -412,6 +414,7 @@ And if it's a function, evaluate it."
 ;;;;
 
 (use-package sh-script
+  :ensure nil
   :mode ("\\.\\(?:zunit\\|env\\)\\'" . sh-mode)
   :mode ("/bspwmrc\\'" . sh-mode)
   :preface
@@ -474,10 +477,19 @@ And if it's a function, evaluate it."
                       ?\n > @ _ ?\n
                       "end" ?\n))
 
+;;;; Sieve scripts
+;;;;
+;;;; TODO can we enhance this somehow?
+
+(use-package sieve-mode
+  :ensure nil
+  :mode "\\.s\\(v\\|iv\\|ieve\\)\\'")
+
 ;;;; Emacs-Lisp
 ;;;;
 
 (use-package elisp-mode
+  :ensure nil
   :mode ("\\.Cask\\'" . emacs-lisp-mode)
   :hook (before-save . format:format-current-file)
   :init
@@ -564,6 +576,7 @@ Also took this from Doom Emacs"
   (add-hook 'help-mode-hook 'cursor-sensor-mode))
 
 (use-package ielm
+  :ensure nil
   ;; Adapted from http://www.modernemacs.com/post/comint-highlighting/ to add
   ;; syntax highlighting to ielm REPLs.
   :config
@@ -730,104 +743,165 @@ Also took this from Doom Emacs"
 ;;;; Schemes
 ;;;;
 
-(use-package scheme
-  :hook (scheme-mode . rainbow-delimiters-mode)
-  :preface
-  (defvar calculate-lisp-indent-last-sexp)
-  :config
-  (defadvice! scheme:indent-function (indent-point state)
-    "A better indenting function for `scheme-mode'."
-    :override #'scheme-indent-function
-    (let ((normal-indent (current-column)))
-      (goto-char (1+ (elt state 1)))
-      (parse-partial-sexp (point) calculate-lisp-indnet-last-sexp 0 t)
-      (if (and (elt state 2)
-               (not (looking-at-p "\\sw\\|\\s_")))
-          (progn
-            (unless (> (save-excursion (forward-line 1) (point))
-                       calculate-lisp-indent-last-sexp)
-              (goto-char calculate-lisp-indent-last-sexp)
-              (beginning-of-line)
-              (parse-partial-sexp (point) calculate-lisp-indent-last-sexp 0 t))
-            (backward-prefix-chars)
-            (current-column))
-        (let* ((function (buffer-substring
-                          (point)
-                          (progn
-                            (forward-sexp 1)
-                            (point))))
-               (method (or (get (intern-soft function) 'scheme-indent-function)
-                           (get (intern-soft function) 'scheme-indent-hook))))
-          (cond ((or (eq method 'defun)
-                     (and (null method)
-                          (> (length function) 3)
-                          (string-match-p "\\`def" function)))
-                 (lisp-indent-defform state indent-point))
-                ((and (null method)
-                      (> (length function) 1)
-                      (string-match-p "\\`:" function))
-                 (let ((lisp-body-indent 1))
-                   (lisp-indent-defform state indent-point)))
-                ((integerp method)
-                 (lisp-indent-specform method state indent-point normal-indent))
-                (method
-                 (funcall method state indent-point normal-indent))))))))
+;; (use-package scheme
+;;   :ensure nil
+;;   :hook (scheme-mode . rainbow-delimiters-mode)
+;;   :preface
+;;   (defvar calculate-lisp-indent-last-sexp)
+;;   :config
+;;   (defadvice! scheme:indent-function (indent-point state)
+;;     "A better indenting function for `scheme-mode'."
+;;     :override #'scheme-indent-function
+;;     (let ((normal-indent (current-column)))
+;;       (goto-char (1+ (elt state 1)))
+;;       (parse-partial-sexp (point) calculate-lisp-indnet-last-sexp 0 t)
+;;       (if (and (elt state 2)
+;;                (not (looking-at-p "\\sw\\|\\s_")))
+;;           (progn
+;;             (unless (> (save-excursion (forward-line 1) (point))
+;;                        calculate-lisp-indent-last-sexp)
+;;               (goto-char calculate-lisp-indent-last-sexp)
+;;               (beginning-of-line)
+;;               (parse-partial-sexp (point) calculate-lisp-indent-last-sexp 0 t))
+;;             (backward-prefix-chars)
+;;             (current-column))
+;;         (let* ((function (buffer-substring
+;;                           (point)
+;;                           (progn
+;;                             (forward-sexp 1)
+;;                             (point))))
+;;                (method (or (get (intern-soft function) 'scheme-indent-function)
+;;                            (get (intern-soft function) 'scheme-indent-hook))))
+;;           (cond ((or (eq method 'defun)
+;;                      (and (null method)
+;;                           (> (length function) 3)
+;;                           (string-match-p "\\`def" function)))
+;;                  (lisp-indent-defform state indent-point))
+;;                 ((and (null method)
+;;                       (> (length function) 1)
+;;                       (string-match-p "\\`:" function))
+;;                  (let ((lisp-body-indent 1))
+;;                    (lisp-indent-defform state indent-point)))
+;;                 ((integerp method)
+;;                  (lisp-indent-specform method state indent-point normal-indent))
+;;                 (method
+;;                  (funcall method state indent-point normal-indent))))))))
 
-(use-package geiser
-  :defer t
+;; (use-package geiser
+;;   :defer t
+;;   :preface
+;;   (defun geiser/open-repl ()
+;;     "Open the Geiser REPL."
+;;     (interactive)
+;;     (call-interactively #'switch-to-geiser)
+;;     (current-buffer))
+;;   :init
+;;   ;; To work with Guile + Geiser
+;;   ;; We need these first in order to set our `geiser-activate-implementation' variable
+;;   (use-package geiser-gauche  :after geiser)
+;;   (use-package geiser-chez    :after geiser)
+;;   (use-package geiser-chicken :after geiser)
+;;   (use-package geiser-guile   :after geiser)
+;;   :custom
+;;   (geiser-chicken-binary (expand-file-name (executable-find "chicken-csi")))
+;;   (geiser-guile-binary (expand-file-name (executable-find "guile3")))
+;;   (geiser-active-implementations '(gauche guile chez chicken))
+;;   (geiser-default-implementation 'gauche)
+;;   (geiser-autodoc-identifier-format "%s => %s")
+;;   (geiser-repl-current-project-function #'projectile:get-project-root))
+
+;; (use-package macrostep-geiser
+;;   :after (:or geiser-mode geiser-repl)
+;;   :config
+;;   (add-hook 'geiser-mode-hook      #'macrostep-geiser-setup)
+;;   (add-hook 'geiser-repl-mode-hook #'macrostep-geiser-setup))
+
+;; (use-package racket-mode
+;;   :mode "\\.rkt\\'"
+;;   :hook (racket-mode-local-vars . (racket-xp-mode lsp-deferred))
+;;   :preface
+;;   (defun racket:open-repl ()
+;;     "Open the Racket REPL."
+;;     (interactive)
+;;     (pop-to-buffer
+;;      (or (get-buffer "*Racket REPL*")
+;;          (progn (racket-run-and-switch-to-repl)
+;;                 (let ((buf (get-buffer "*Racket REPL*")))
+;;                   (bury-buffer buf)
+;;                   buf)))))
+;;   :config
+;;   (require 'smartparens-racket)
+;;   (add-hook! 'racket-mode-hook
+;;              #'rainbow-delimiters-mode
+;;              #'highlight-quoted-mode)
+
+;;   (add-hook! 'racket-xp-mode-hook
+;;     (defun racket-xp-disable-flycheck ()
+;;       (cl-pushnew 'racket flyheck-disabled-checkers)))
+
+;;   (define-key 'racket-xp-mode-map [remap racket-doc]              #'racket-xp-documentation)
+;;   (define-key 'racket-xp-mode-map [remap racket-visit-definition] #'racket-xp-visit-definition)
+;;   (define-key 'racket-xp-mode-map [remap next-error]              #'racket-xp-next-error)
+;;   (define-key 'racket-xp-mode-map [remap previous-error]          #'racket-xp-previous-error))
+
+;;;; Java
+;;;;
+
+(use-package lsp-java
+  :after lsp-mode
+  :hook (java-mode-local-vars . java-lsp)
   :preface
-  (defun geiser/open-repl ()
-    "Open the Geiser REPL."
-    (interactive)
-    (call-interactively #'switch-to-geiser)
-    (current-buffer))
-  :init
-  ;; To work with Guile + Geiser
-  ;; We need these first in order to set our `geiser-activate-implementation' variable
-  (use-package geiser-gauche  :after geiser)
-  (use-package geiser-chicken :after geiser)
-  (use-package geiser-guile   :after geiser)
+  (setq lsp-java-workspace-dir (concat my-etc-dir "java-workspace"))
+  ;; Stolen from: https://github.com/dakra/dmacs/blob/master/init.org#java
+  (defun java-lsp ()
+    (setq electric-indent-inhibit nil)
+    (setq company-lsp-cache-candidates nil)
+    (lsp-deferred))
   :custom
-  (geiser-chicken-binary (expand-file-name (executable-find "chicken-csi")))
-  (geiser-guile-binary (expand-file-name (executable-find "guile3")))
-  (geiser-active-implementations '(gauche guile chicken))
-  (geiser-default-implementation 'gauche)
-  (geiser-autodoc-identifier-format "%s => %s")
-  (geiser-repl-current-project-function #'projectile:get-project-root))
+  (lsp-jt-root (concat lsp-java-server-install-dir "java-test/server/"))
+  (dap-java-test-runner (concat lsp-java-server-install-dir "test-runner/junit-platform-console-standalone.jar"))
+  ;; Also stolen from: https://github.com/dakra/dmacs/blob/master/init.org#java
+  ;; Use Google style formatting by default
+  (lsp-java-format-settings-url
+   "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml")
+  (lsp-java-format-settings-profile "GoogleStyle")
+  (lsp-java-vmargs
+   `("-XX:+UseParallelGC"
+     "-XX:GCTimeRatio=4"
+     "-Dsun.zip.disableMemoryMapping=true"
+     "-noverify"
+     "-Xmx1G"
+     "-XX:+UseG1GC"
+     "-XX:+UseStringDeduplication"
+     ,(concat "-javaagent:" (expand-file-name "~/.m2/repository/org/projectlombok/lombok/1.18.22/lombok-1.18.22.jar"))
+     ,(concat "-Xbootclasspath/a:" (expand-file-name "~/.m2/repository/org/projectlombok/lombok/1.18.22/lombok-1.18.22.jar")))))
 
-(use-package macrostep-geiser
-  :after (:or geiser-mode geiser-repl)
-  :config
-  (add-hook 'geiser-mode-hook      #'macrostep-geiser-setup)
-  (add-hook 'geiser-repl-mode-hook #'macrostep-geiser-setup))
+;;;###autoload
+(defun java:run-test ()
+  "Runs test at point.
+If in a method, runs the test method, otherwise runs the entire test class."
+  (interactive)
+  (require 'dap-java)
+  (condition-case nil
+      (dap-java-run-test-method)
+    (user-error (dap-java-run-test-class))))
 
-(use-package racket-mode
-  :mode "\\.rkt\\'"
-  :hook (racket-mode-local-vars . (racket-xp-mode lsp-deferred))
-  :preface
-  (defun racket:open-repl ()
-    "Open the Racket REPL."
-    (interactive)
-    (pop-to-buffer
-     (or (get-buffer "*Racket REPL*")
-         (progn (racket-run-and-switch-to-repl)
-                (let ((buf (get-buffer "*Racket REPL*")))
-                  (bury-buffer buf)
-                  buf)))))
-  :config
-  (require 'smartparens-racket)
-  (add-hook! 'racket-mode-hook
-             #'rainbow-delimiters-mode
-             #'highlight-quoted-mode)
+;;;###autoload
+(defun java:debug-test ()
+  "Runs test at point in a debugger.
+If in a method, runs the test method, otherwise runs the entire test class."
+  (interactive)
+  (require 'dap-java)
+  (condition-case nil
+      (call-interactively #'dap-java-debug-test-method)
+    (user-error (call-interactively #'dap-java-debug-test-class))))
 
-  (add-hook! 'racket-xp-mode-hook
-    (defun racket-xp-disable-flycheck ()
-      (cl-pushnew 'racket flyheck-disabled-checkers)))
+(use-package dap-java
+  :after lsp-java
+  :commands dap-java-run-test-class dap-java-debug-test-class)
 
-  (define-key 'racket-xp-mode-map [remap racket-doc]              #'racket-xp-documentation)
-  (define-key 'racket-xp-mode-map [remap racket-visit-definition] #'racket-xp-visit-definition)
-  (define-key 'racket-xp-mode-map [remap next-error]              #'racket-xp-next-error)
-  (define-key 'racket-xp-mode-map [remap previous-error]          #'racket-xp-previous-error))
+(use-package groovy-mode
+  :mode "\\.g\\(?:radle\\|roovy\\)$")
 
 ;;;; .NET Core
 ;;;;
@@ -927,36 +1001,131 @@ Also took this from Doom Emacs"
 ;;   (ess-style 'DEFAULT)
 ;;   (ess-history-directory (expand-file-name "ess-history/" my-cache-dir)))
 
-;;;;; For the LSP support for Julia
+;; `ob-julia' needs this variable to be defined
+;;;###autoload (defvar inferior-julia-program-name (or (executable-find "julia-basic") "julia"))
+
+(use-package julia-mode
+  :interpreter "julia"
+  :config
+  ;; Borrow matlab.el's fontification of math operators. From
+  ;; <https://web.archive.org/web/20170326183805/https://ogbe.net/emacsconfig.html>
+  (font-lock-add-keywords
+   'julia-mode
+   `((,(let ((OR "\\|"))
+         (concat "\\("  ; stolen `matlab.el' operators first
+                 ;; `:` defines a symbol in Julia and must not be highlighted
+                 ;; as an operator. The only operators that start with `:` are
+                 ;; `:<` and `::`. This must be defined before `<`.
+                 "[:<]:" OR
+                 "[<>]=?" OR
+                 "\\.[/*^']" OR
+                 "===" OR
+                 "==" OR
+                 "=>" OR
+                 "\\<xor\\>" OR
+                 "[-+*\\/^&|$]=?" OR  ; this has to come before next (updating operators)
+                 "[-^&|*+\\/~]" OR
+                 ;; Julia variables and names can have `!`. Thus, `!` must be
+                 ;; highlighted as a single operator only in some
+                 ;; circumstances. However, full support can only be
+                 ;; implemented by a full parser. Thus, here, we will handle
+                 ;; only the simple cases.
+                 "[[:space:]]!=?=?" OR "^!=?=?" OR
+                 ;; The other math operators that starts with `!`.
+                 ;; more extra julia operators follow
+                 "[%$]" OR
+                 ;; bitwise operators
+                 ">>>" OR ">>" OR "<<" OR
+                 ">>>=" OR ">>" OR "<<" OR
+                 "\\)"))
+      1 font-lock-type-face))))
+
+;;;;; Inferior Julia REPL
 ;;;;;
 
-;; (use-package lsp-julia
-;;   :after lsp-mode
-;;   :custom
-;;   (lsp-julia-default-environment "~/.julia/environment/v1.0"))
+;;;###autoload
+(defvar julia:repl-start-hook nil)
+
+(use-package julia-repl
+  :hook (julia-mode . julia-repl-mode)
+  :hook (julia:run-start-hook . julia-repl-use-emacsclient)
+  :custom
+  (julia-repl-set-terminal-backend 'vterm)
+  :config
+  (defadvice! julia:run-start-hook (inferior-buf)
+    :after #'julia-repl--setup-term
+    (with-current-buffer inferior-buf
+      (run-hooks 'julia:repl-start-hook)))
+
+  (setq-mode-local julia-mode
+    lsp-enable-folding t
+    lsp-folding-range-limit 100))
+
+;;;;; For the LSP support for Julia
+
+(use-package lsp-julia
+  :after lsp-mode
+  :hook (julia-mode-local-vars . lsp-deferred)
+  :preface (setq lsp-julia-default-environment nil)
+  :custom
+  (lsp-julia-default-environment (expand-file-name "~/.julia/environment/v1.6")))
+
+;;;; Prolog
+;;;;
+
+(use-package prolog
+  :ensure nil
+  :when (executable-find "swipl")
+  :commands (prolog-mode run-prolog)
+  :hook (prolog-mode . lsp-deferred)
+  :custom
+  (prolog-system 'swi)
+  :config
+  (lsp-register-client
+   (make-lsp-client
+    :new-connection
+    (lsp-stdio-connection (list "swipl"
+                                "-g" "use_module(library(lsp_server))."
+                                "-g" "lsp_server:main"
+                                "-t" "halt"
+                                "--" "stdio"))
+    :major-modes '(prolog-mode)
+    :priority 1
+    :multi-root t
+    :server-id 'prolog-ls)))
 
 ;;;; Nim
 ;;;;
 
-;; (use-package nim-mode
-;;   :hook (nim-mode . lsp-deferred)
-;;   :init
-;;   (add-hook! 'nim-mode-hook
-;;     (defun nim:init-nimsuggest-mode ()
-;;       "Conditionally load `nimsuggest-mode', instead of clumsily erroring out if
-;; nimsuggest isn't installed."
-;;       (unless (stringp nimsuggest-path)
-;;         (setq nimsuggest-path (executable-find "nimsuggest")))
-;;       (when (and nimsuggest-path (file-executable-p nimsuggest-path))
-;;         (nimsuggest-mode))))
+(use-package nim-mode
+  :hook (nim-mode . lsp-deferred)
+  :init
+  (add-hook! 'nim-mode-hook
+    (defun nim:init-nimsuggest-mode ()
+      "Conditionally load `nimsuggest-mode', instead of clumsily erroring out if
+nimsuggest isn't installed."
+      (unless (stringp nimsuggest-path)
+        (setq nimsuggest-path (executable-find "nimsuggest")))
+      (when (and nimsuggest-path (file-executable-p nimsuggest-path))
+        (nimsuggest-mode))))
 
-;;   (when windows-nt-p
-;;     (advice-add #'nimsuggest--get-temp-file-name :filter-return
-;;                 (defun nim--suggest-get-temp-file-name (path)
-;;                   (replace-regexp-in-string "[꞉* |<>\"?*]" "" path)))))
+  (when windows-nt-p
+    (advice-add #'nimsuggest--get-temp-file-name :filter-return
+                (defun nim--suggest-get-temp-file-name (path)
+                  (replace-regexp-in-string "[꞉* |<>\"?*]" "" path))))
+  :config
+  ;; Make use of `dap-mode'
+  (require 'dap-gdb-lldb)
+  (dap-register-debug-tempalte "Nim::GDB Run Configuration"
+                               (list :type "gdb"
+                                     :request "launch"
+                                     :name "GDB::Run")
+                               :gdbpath "nim-gdb"
+                               :target nil
+                               :cwd nil))
 
-;; (use-package ob-nim
-;;   :after ob)
+(use-package ob-nim
+  :after ob)
 
 ;;;; Erlang
 ;;;;
@@ -1313,16 +1482,19 @@ Also took this from Doom Emacs"
 (use-package dap-mode
   :when (package-installed-p 'lsp-mode)
   :after lsp-mode
-  :hook (dap-mode . dap-tooltip-mode)
+  :hook ((dap-mode . dap-tooltip-mode)
+         (dap-stopped . (lambda (_arg) (call-interactively #'dap-hydra))))
   :init
   (with-eval-after-load 'lsp
     (require 'dap-mode))
   :custom
   (dap-breakpoints-file (concat my-etc-dir "dap-breakpoints"))
   (dap-utils-extension-path (concat my-etc-dir "dap-extension/"))
-  :config
-  (eval-after-load 'nim-mode
-    (require 'dap-gdb-lldb)))
+  ;; :config
+  ;; TODO maybe need to make use of `dap-register-debug-template'?
+  ;; (eval-after-load 'nim-mode
+  ;;   (require 'dap-gdb-lldb))
+  )
 
 (use-package dap-ui
   :when (and (package-installed-p 'lsp-mode) (package-installed-p 'dap-mode))
