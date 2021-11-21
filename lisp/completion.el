@@ -22,6 +22,7 @@
 ;;; Code:
 
 (require 'lib)
+(require 'thingatpt)
 
 ;;; Packages
 ;;;
@@ -65,13 +66,42 @@
   (minibuffer-depth-indicate-mode 1)
   (minibuffer-electric-default-mode 1))
 
+;;;;; Vertico
+;;;;;
+
+;;;###autoload
+(defun vertico:crm-select ()
+  "Enter candidate in `consult-completing-read-multiple'"
+  (interactive)
+  (let ((idx vertico--index))
+    (unless (get-text-property 0 'consult--crm-selected (nth vertico--index vertico--candidates))
+      (setq idx (1+ idx)))
+    (run-at-time 0 nil (lambda ()
+                         (interactive)
+                         (vertico--goto idx) (vertico--exhibit))))
+  (vertico-exit))
+
+;;;###autoload
+(defun vertico:crm-exit ()
+  "Enter candidate in `consult-completing-read-multiple'"
+  (interactive)
+  (run-at-time 0 nil #'vertico-exit)
+  (vertico-exit))
+
+;;;###autoload
+(defun vertico:search-symbol-at-point ()
+  "Consult the lines that have the symbol at point."
+  (interactive)
+  (consult-line (thing-at-point 'symbol)))
+
+
 (use-package vertico
   :bind (:map vertico-map
          ("?" . minibuffer-completion-help)
          ("M-RET" . minibuffer-force-complete-and-exit)
          ("M-TAB" . minibuffer-complete))
   :functions vertico--exhibit
- :init
+  :init
   ;; we have to have this here to start Vertico
   (vertico-mode)
 
@@ -87,6 +117,9 @@
   :config
   (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy))
 
+;;;;; Consult
+;;;;;
+
 (use-package consult
   :general
   ;; Remappings
@@ -99,6 +132,8 @@
   ([remap yank-pop]                      #'consult-yank-pop)
   ([remap locate]                        #'consult-locate)
   ([remap repeat-complex-command]        #'consult-complex-command)
+  ([remap man]                           #'consult-man)
+  ([remap imenu]                         #'consult-imenu)
   ;; Editing
   ("C-x C-k C-r" #'consult-kmacro)
   ;; Register
@@ -121,7 +156,7 @@
   ("M-s m" #'consult-multi-occur)
   ;; Grep and Find
   ("M-s g" #'consult-ripgrep)
-  ("M-s f" #'consult-fdfind)
+  ("M-s f" #'consult-find)
   ;; Histories
   ("C-c h" #'consult-history)
   ;; Modes
@@ -138,20 +173,6 @@
   ;; Misc.
   ([remap apropos] #'consult-apropos)
   :preface
-  (defun vertico:crm-select ()
-    "Enter candidate in `consult-completing-read-multiple'"
-    (interactive)
-    (let ((idx vertico--index))
-      (unless (get-text-property 0 'consult--crm-selected (nth vertico--index vertico--candidates))
-        (setq idx (1+ idx)))
-      (run-at-time 0 nil (cmd! (vertico--goto idx) (vertico--exhibit))))
-    (vertico-exit))
-
-  (defun vertico:crm-exit ()
-    "Enter candidate in `consult-completing-read-multiple'"
-    (interactive)
-    (run-at-time 0 nil #'vertico-exit)
-    (vertico-exit))
   :init
   (defvar consult:find-program (cl-find-if #'executable-find (list "fdfind" "fd")))
 
@@ -178,6 +199,11 @@
                          (format "%s -0 -i -H --color=never --follow --exclude .git --regex" consult:find-program)
                          (if windows-nt-p "--path-separator=/")))
   :config
+  (defadvice! consult:recent-file-fix (&rest _args)
+    "`consult-recent-file' needs to have `recentf-mode' on to work correctly"
+    :before #'consult-recent-file
+    (recentf-mode +1))
+
   (consult-customize
    consult-ripgrep consult-git-grep consult-grep
    consult-bookmark consult-recent-file consult-xref
@@ -195,6 +221,19 @@
    :preview-key (list (kbd "C-SPC") (kbd "M-.")
                       :debounce 1 'any)))
 
+(use-package consult-dir
+  :bind (([remap list-directory] . consult-dir)
+         :map vertico-map
+         ("C-x C-d" . consult-dir)
+         ("C-x C-j" . consult-dir-jump-file)))
+
+(use-package! consult-flycheck
+  :when (package-installed-p 'flycheck)
+  :after (consult flycheck))
+
+;;;;; Marginalia
+;;;;;
+
 (use-package marginalia
   :bind (:map minibuffer-local-map
          ("M-A" . marginalia-cycle))
@@ -205,11 +244,16 @@
   :config
   (advice-add #'marginalia--project-root :override #'projectile:get-project-root)
   (pushnew! marginalia-command-categories
+            '(flycheck-error-list-set-filter . builtin)
             '(projectile-find-file . project-file)
             '(projectile-recentf . project-file)
             '(projectile-switch-to-buffer . buffer)
             '(projectile-switch-project . project-file)))
 
+;;;;; Embark
+;;;;;
+
+;;; TODO define some Embark maps here
 (use-package embark
   :bind (("C-;" . embark-act)
          ("C-." . embark-dwim)

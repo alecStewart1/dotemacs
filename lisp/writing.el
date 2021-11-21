@@ -493,6 +493,16 @@ Made for `org-tab-first-hook' in evil-mode."
   :config
   (add-hook 'org-mode-local-vars-hook #'eldoc-mode)
   (add-hook 'org-mode-hook #'orgtbl-mode)
+
+  (defvar consult-org-source
+    `(:name     "Org"
+      :narrow   ?o
+      :hidden   t
+      :category buffer
+      :state    ,#'consult--buffer-state
+      :items    ,(lambda () (mapcar #'buffer-name (org-buffer-list)))))
+  (add-to-list 'consult-buffer-sources 'consult-org-source 'append)
+
   ;; TODO
   (snippets:file-snip block 'org
                       "Block type: "

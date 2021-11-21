@@ -23,6 +23,7 @@
 ;;;;
 
 ;;; This can slow things down, so I just comment it out for now.
+;;
 ;; (use-package git-gutter
 ;;   :commands git-gutter:revert-hunk git-gutter:stage-hunk
 ;;   :custom
@@ -113,6 +114,15 @@
       (org-reveal '(4))
     (require 'reveal)
     (reveal-post-command)))
+
+;;; Taken from:
+;;; https://emacs.stackexchange.com/questions/20154/how-can-i-stage-all-changes-and-commit-them-without-displaying-commit-message-bu
+;;;###autoload
+(defun magit:stage-all-and-commit (msg)
+  "Stage all modified files with commit message MSG."
+  (interactive "sCommit Message: ")
+  (magit-stage-modified)
+  (magit-commit (list "-m" msg)))
 
 (use-package magit
   :commands magit-file-delete

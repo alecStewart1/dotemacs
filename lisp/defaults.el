@@ -430,7 +430,23 @@
   (backup-by-copying                     t)
   (version-control                       t)
   (kept-old-versions                     5)
-  (kept-new-versions                     5))
+  (kept-new-versions                     5)
+  :config
+  (defun sudo-file-path (file)
+    (let ((host (or (file-remote-p file 'host) "localhost")))
+      (concat "/" (when (file-remote-p file)
+                    (concat (file-remote-p file 'method) ":"
+                            (if-let (use (file-remote-p file 'user))
+                                (concat user "@" host)
+                              host)
+                            "|"))
+              "sudo:root@" host
+              ":" (or (file-remote-p file 'localname)
+                      file))))
+
+  (defun sudo-find-file (file)
+    (interactive "FOpen file as root: ")
+    (find-file (sudo-file-path file))))
 
 ;;;; Searching and Replacing
 
