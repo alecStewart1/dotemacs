@@ -15,6 +15,9 @@
 (require 'lib)
 (require 'cl-lib)
 
+;;; Do stuff with package.el HERE
+;;;
+
 ;;; Some settings
 ;;;
 
@@ -69,7 +72,7 @@
                   (t (package-menu-mark-delete)))))
         (forward-line 1)))))
 
-(define-key 'package-menu-mode-map (kbd "t") #'package-menu:upgrade-package)
+;(define-key 'package-menu-mode-map (kbd "t") #'package-menu:upgrade-package)
 
 ;;; For use-package
 ;;;

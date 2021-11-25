@@ -13,8 +13,7 @@
 ;;
 ;;; Code:
 
-(eval-when-compile
-  (require 'dash))
+;;(require 'dash)
 
 ;;; Useful variables and constants
 ;;;
@@ -186,7 +185,7 @@ This is used by `file-exists-p!' and `project-file-exists-p!'."
   (if (and (listp spec)
            (memq (car spec) '(or and)))
       (cons (car spec)
-            (mapcar (-rpartial #'resolve-file-path-forms directory)
+            (mapcar (lambda (&rest args-before) apply #'resolve-file-path-forms (append args-before directory))
                     (cdr spec)))
     (let ((filevar (make-symbol "file")))
       `(let ((,filevar ,spec))

@@ -13,48 +13,87 @@
 ;;
 ;;; Code:
 
-;;; Dealing with garbage collection
+
+;;; Things that speed up startup
 ;;;
 
-;;;###autoload
-(defconst my-gc-cons-threshold (if (display-graphic-p) 20000000 2000000))
+;;;; Dealing with dreaded garbage collection
+;;;;
+
+(setq gc-cons-percentage 0.5)
+
+;;;###autolaod
+(defconst my-gc-cons-high-threshold most-positive-fixnum)
 
 ;;;###autoload
-(defconst my-gc-cons-upper-limit (if (display-graphic-p) 400000000 100000000))
+(defconst my-gc-cons-low-threshold 800000)
 
 ;;;###autoload
-(defvar my-gc-timer (run-with-idle-timer 10 t #'garbage-collect)
-  "Run garbage collectin when idle for 10s.")
-
-(setq gc-cons-threshold my-gc-cons-upper-limit
-      gc-cons-percentage 5)
-
-;;; File name handler
-;;;
+(defconst last-gc-time 0.1)
 
 ;;;###autoload
-(defvar default-file-name-handler-alist file-name-handler-alist)
-
-(setq file-name-handler-alist nil)
-
-;;; Restore defaults that I've set
-;;;
+(defvar gc-idle-timer nil)
 
 ;;;###autoload
-(defun my-gc-and-restore ()
-  "Restore some necessary defaults and tell Emacs when to active gc."
-  (setq file-name-handler-alist default-file-name-handler-alist
-        gc-cons-threshold my-gc-cons-threshold
-        gc-cons-percentage 0.1)
-  (if (boundp 'after-focus-change-function)
-      (add-function :after after-focus-change-function
-                    (lambda ()
-                      (unless (frame-focus-state)
-                        (garbage-collect))))
-    (add-hook 'focus-out-hook #'garbage-collect))
+(defmacro gc-time (&rest body)
+  "Measure and return the time it takes to evaluate BODY."
+  `(let ((time (current-time)))
+     ,@body
+     (float-time (time-since time))))
 
-  (add-hook 'minibuffer-setup-hook (lambda () (setq gc-cons-threshold my-gc-cons-upper-limit)))
-  (add-hook 'minibuffer-exit-hook (lambda () (setq gc-cons-threshold my-gc-cons-threshold))))
+;;;###autoload
+(defun set-high-threshold ()
+  "Set the high GC threshold.
+This is to be used with the `pre-command-hook'."
+  (setf gc-cons-threshold my-gc-high-cons-threshold))
+
+;;;###autoload
+(defun register-idle-gc ()
+  "Register a timer to run `idle-garbage-collect'.
+Cancel the previous one if present."
+  (let ((idle-t (* 20 gcmh-last-gc-time)))
+    (when (timerp gc-idle-timer)
+      (cancel-timer gc-idle-timer))
+    (setf gc-idle-timer
+	  (run-with-timer idle-t nil #'idle-collect-garbage))))
+
+;;;###autoload
+(defun idle-collect-garbage ()
+  "Run garbage collection after `gcmh-idle-delay'."
+  (setf last-gc-time (gc-time (garbage-collect)))
+  (setf gc-cons-threshold my-gc-cons-low-threshold)
+  (setf gc-cons-percentage 0.1))
+
+(progn
+  (setf gc-cons-threshold my-gc-cons-high-threshold)
+  (add-hook 'pre-command-hook #'set-high-threshold)
+  (add-hook 'post-command-hook #'register-idle-gc))
+
+;;;; File name handler
+;;;;
+
+(unless (or (daemonp) noninteractive)
+  (let ((old-file-name-handler-alist file-name-handler-alist))
+    ;; If `file-name-handler-alist' is nil, no 256 colors in TUI
+    ;; @see https://emacs-china.org/t/spacemacs-centaur-emacs/3802/839
+    (setq file-name-handler-alist
+          (unless (display-graphic-p)
+            '(("\\(?:\\.tzst\\|\\.zst\\|\\.dz\\|\\.txz\\|\\.xz\\|\\.lzma\\|\\.lz\\|\\.g?z\\|\\.\\(?:tgz\\|svgz\\|sifz\\)\\|\\.tbz2?\\|\\.bz2\\|\\.Z\\)\\(?:~\\|\\.~[-[:alnum:]:#@^._]+\\(?:~[[:digit:]]+\\)?~\\)?\\'" . jka-compr-handler))))
+    (add-hook 'emacs-startup-hook
+              (lambda ()
+                "Recover file name handlers."
+                (setq file-name-handler-alist
+                      (delete-dups (append file-name-handler-alist
+                                           old-file-name-handler-alist)))))))
+
+
+;;;; Apparently this helps?
+
+(setq auto-mode-case-fold nil)
+
+;;;; For PGTK only
+
+(setq pgtk-wait-for-event-timeout 0.001)
 
 ;;; Load Path
 ;;;
@@ -92,16 +131,18 @@ Bootstrap all of my configurations."
 
   ;; Require the other configurations
   (require 'packing)
-  (require 'defaults)
-  (require 'ui-ux)
-  (require 'emacsy)
-  (require 'completion)
-  (require 'term)
-  (require 'editing)
-  (require 'writing)
-  (require 'programming)
-  (require 'vc)
-  (require 'app)
+  ;; TODO rest of these are commented out until I figure out
+  ;; the issue regarding the blank frozen Emacs frame
+  ;(require 'defaults)
+  ;(require 'ui-ux)
+  ;(require 'emacsy)
+  ;(require 'completion)
+  ;(require 'term)
+  ;(require 'editing)
+  ;(require 'writing)
+  ;(require 'programming)
+  ;(require 'vc)
+  ;(require 'app)
 
   ;; Initialize some hooks
   (dolist (fn '(switch-to-buffer display-buffer))
@@ -131,3 +172,15 @@ Bootstrap all of my configurations."
 (my-bootstrap)
 
 ;;; init.el ends here
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages '(major-mode-hydra hydra general diminish use-package)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
