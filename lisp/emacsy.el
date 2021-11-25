@@ -1,9 +1,8 @@
-;;; emacsy.el --- Things that are very Emacs-y -*- lexical-binding: t; -*-
+;;; emacsy.el --- Some things that are very Emacs-y -*- lexical-binding: t; -*-
 ;;
 ;; Copyright (C) 2021 Alec
 ;;
 ;; Created: January 15, 2021
-;; Modified: January 15, 2021
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -26,8 +25,7 @@
   :commands dired-jump
   :hook (dired-load . (lambda ()
                             (require 'dired-x)
-                            (require 'dired-aux)
-                            (require 'dired-guess)))
+                            (require 'dired-aux)))
   :init
   (setq image-dired-dir                    (concat my-cache-dir "image-dired/")
         image-dired-db-file                (concat image-dired-dir "db.el")
@@ -127,53 +125,54 @@
     (file-size-human-readable (buffer-size)))
 
   ;; Embark Keymaps
-  (embark-define-keymap embark:ibuffer-mark-map
-    "Marking buffers in IBuffer."
-    ("*" ibuffer-unmark-all)
-    ("M" ibuffer-mark-by-mode)
-    ("m" ibuffer-mark-modified-buffers)
-    ("u" ibuffer-mark-unsaved-buffers)
-    ("s" ibuffer-mark-special-buffers)
-    ("r" ibuffer-mark-read-only-buffers)
-    ("d" ibuffer-mark-dired-buffers)
-    ("b" ibuffer-hydra/pretty-body))
+  (with-eval-after-load 'embark
+    (embark-define-keymap embark:ibuffer-mark-map
+                          "Marking buffers in IBuffer."
+                          ("*" ibuffer-unmark-all)
+                          ("M" ibuffer-mark-by-mode)
+                          ("m" ibuffer-mark-modified-buffers)
+                          ("u" ibuffer-mark-unsaved-buffers)
+                          ("s" ibuffer-mark-special-buffers)
+                          ("r" ibuffer-mark-read-only-buffers)
+                          ("d" ibuffer-mark-dired-buffers)
+                          ("b" ibuffer-hydra/pretty-body))
 
-  (embark-define-keymap embark:ibuffer-action-map
-    "Doing actions in IBuffer."
-    ("A" ibuffer-do-view)
-    ("H" ibuffer-do-view-other-frame)
-    ("E" ibuffer-do-eval)
-    ("W" ibuffer-do-view-and-eval)
-    ("F" ibuffer-do-shell-command-file)
-    ("X" ibuffer-do-shell-command-pipe)
-    ("N" ibuffer-do-shell-command-pipe-replace)
-    ("Q" ibuffer-do-query-replace-regexp)
-    ("U" ibuffer-do-replace-regexp)
-    ("V" ibuffer-do-revert)
-    ("b" ibuffer-hydra/pretty-body))
+    (embark-define-keymap embark:ibuffer-action-map
+                          "Doing actions in IBuffer."
+                          ("A" ibuffer-do-view)
+                          ("H" ibuffer-do-view-other-frame)
+                          ("E" ibuffer-do-eval)
+                          ("W" ibuffer-do-view-and-eval)
+                          ("F" ibuffer-do-shell-command-file)
+                          ("X" ibuffer-do-shell-command-pipe)
+                          ("N" ibuffer-do-shell-command-pipe-replace)
+                          ("Q" ibuffer-do-query-replace-regexp)
+                          ("U" ibuffer-do-replace-regexp)
+                          ("V" ibuffer-do-revert)
+                          ("b" ibuffer-hydra/pretty-body))
 
-  (embark-define-keymap embark:ibuffer-sort-map
-    "Sorting buffers in IBuffer."
-    ("i" ibuffer-invert-sorting)
-    ("a" ibuffer-do-sort-by-alphabetic)
-    ("v" ibuffer-do-sort-by-recency)
-    ("s" ibuffer-do-sort-by-size)
-    ("f" ibuffer-do-sort-by-filename/process)
-    ("m" ibuffer-do-sort-by-major-mode)
-    ("b" ibuffer-hydra/pretty-body))
+    (embark-define-keymap embark:ibuffer-sort-map
+                          "Sorting buffers in IBuffer."
+                          ("i" ibuffer-invert-sorting)
+                          ("a" ibuffer-do-sort-by-alphabetic)
+                          ("v" ibuffer-do-sort-by-recency)
+                          ("s" ibuffer-do-sort-by-size)
+                          ("f" ibuffer-do-sort-by-filename/process)
+                          ("m" ibuffer-do-sort-by-major-mode)
+                          ("b" ibuffer-hydra/pretty-body))
 
-  (embark-define-keymap embark:ibuffer-filter-map
-    "Filtering buffers in IBuffer."
-    ("m" ibuffer-filter-by-used-mode)
-    ("M" ibuffer-filter-by-derived-mode)
-    ("n" ibuffer-filter-by-name)
-    ("c" ibuffer-filter-by-content)
-    ("e" ibuffer-filter-by-predicate)
-    ("f" ibuffer-filter-by-filename)
-    (">" ibuffer-filter-by-size-gt)
-    ("<" ibuffer-filter-by-size-lt)
-    ("/" ibuffer-filter-disable)
-    ("b" ibuffer-hydra/pretty-body)))
+    (embark-define-keymap embark:ibuffer-filter-map
+                          "Filtering buffers in IBuffer."
+                          ("m" ibuffer-filter-by-used-mode)
+                          ("M" ibuffer-filter-by-derived-mode)
+                          ("n" ibuffer-filter-by-name)
+                          ("c" ibuffer-filter-by-content)
+                          ("e" ibuffer-filter-by-predicate)
+                          ("f" ibuffer-filter-by-filename)
+                          (">" ibuffer-filter-by-size-gt)
+                          ("<" ibuffer-filter-by-size-lt)
+                          ("/" ibuffer-filter-disable)
+                          ("b" ibuffer-hydra/pretty-body))))
 
 ;;;; Electric
 ;;;;
@@ -201,42 +200,42 @@ current line.")
 ;;;; Undo-fu
 ;;;;
 
-(use-package undo-fu
-  :demand t
-  :hook (first-buffer . undo-fu-mode)
-  :init
-  (setq undo-limit        400000
-        undo-strong-limit 3000000
-        undo-outer-limit  3000000)
-  :config
-  (define-minor-mode undo-fu-mode
-    "Enables `undo-fu' for the current session."
-    :keymap (let ((map (make-sparse-keymap)))
-              (define-key map [remap undo]    #'undo-fu-only-undo)
-              (define-key map [remap redo]    #'undo-fu-only-redo)
-              (define-key map (kbd "C-_")     #'undo-fu-only-undo)
-              (define-key map (kbd "M-_")     #'undo-fu-only-redo)
-              (define-key map (kbd "C-M-_")   #'undo-fu-only-redo-all)
-              (define-key map (kbd "C-x r u") #'undo-fu-session-save)
-              (define-key map (kbd "C-x r U") #'undo-fu-session-recover)
-              map)
-    :init-value nil
-    :global t))
-
-(use-package undo-fu-session
-  :demnad t
-  :hook (undo-fu-mode . global-undo-fu-session-mode)
-  :init
-  (setq undo-fu-session-directory          (concat my-cache-dir "undo-fu-session/")
-        undo-fu-session-incompatible-files '("\\.gpg$" "/COMMIT_EDITMSG\\'" "/git-rebase-todo\\'"))
-  :config
-  (when (executable-find "zstd")
-    (defadvice! undo-fu-session:use-zstd (filename)
-      "Have `undo-fu-session--make-file-name' use zstd's .zst file extension for compression on FILENAME."
-      :filter-return #'undo-fu-session--make-file-name
-      (if undo-fun-session-compression
-          (concat (file-name-sans-extension filename) ".zst")
-        filname))))
+;;(use-package undo-fu
+	;;:demand t
+  ;;:hook (first-buffer . undo-fu-mode)
+  ;;:config
+  ;;(setq undo-limit        400000
+        ;;undo-strong-limit 3000000
+        ;;undo-outer-limit  3000000)
+;;
+  ;;(define-minor-mode undo-fu-mode
+    ;;"Enables `undo-fu' for the current session."
+    ;;:keymap (let ((map (make-sparse-keymap)))
+              ;;(define-key map [remap undo]    #'undo-fu-only-undo)
+              ;;(define-key map [remap redo]    #'undo-fu-only-redo)
+              ;;(define-key map (kbd "C-_")     #'undo-fu-only-undo)
+              ;;(define-key map (kbd "M-_")     #'undo-fu-only-redo)
+              ;;(define-key map (kbd "C-M-_")   #'undo-fu-only-redo-all)
+              ;;(define-key map (kbd "C-x r u") #'undo-fu-session-save)
+              ;;(define-key map (kbd "C-x r U") #'undo-fu-session-recover)
+              ;;map)
+    ;;:init-value nil
+    ;;:global t))
+;;
+;;(use-package undo-fu-session
+  ;;:demand t
+  ;;:hook (undo-fu-mode . global-undo-fu-session-mode)
+  ;;:init
+  ;;(setq undo-fu-session-directory          (concat my-cache-dir "undo-fu-session/")
+        ;;undo-fu-session-incompatible-files '("\\.gpg$" "/COMMIT_EDITMSG\\'" "/git-rebase-todo\\'"))
+  ;;:config
+  ;;(when (executable-find "zstd")
+    ;;(defadvice! undo-fu-session:use-zstd (filename)
+      ;;"Have `undo-fu-session--make-file-name' use zstd's .zst file extension for compression on FILENAME."
+      ;;:filter-return #'undo-fu-session--make-file-name
+      ;;(if undo-fun-session-compression
+          ;;(concat (file-name-sans-extension filename) ".zst")
+        ;;filname))))
 
 ;;;; Group projects in IBuffer
 ;;;;

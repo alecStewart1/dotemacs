@@ -1,16 +1,4 @@
-;;; init.el --- My init.el -*- lexical-binding: t no-byte-compile: t -*-
-;;
-;; Copyright (C) 2021 Alec Stewart
-;;
-;; Created: January 15, 2021
-;;
-;; This file is not part of GNU Emacs.
-;;
-;;; Commentary:
-;;
-;;
-;;
-;;; Code:
+;;; init-mini.el ---  -*- lexical-binding: t no-byte-compile: t -*-
 
 ;;; Speeding things up
 ;;;
@@ -80,17 +68,7 @@
 (require 'packing)
 (require 'defaults)
 (require 'ui-ux)
-(require 'emacsy)
-(require 'completion)
-
-;;; Load the dumb ‘custom-file’
-;;;
-
-(when custom-file
-  (load custom-file 'noerror))
-
-;;; Setup our special hooks
-;;;
+;(require 'emacsy)
 
 (unless noninteractive
   (add-hook 'after-change-major-mode-hook #'run-local-var-hooks 100)
@@ -100,4 +78,4 @@
 
 (setq load-prefer-newer noninteractive)
 
-;;; init.el ends here
+;;; init-mini.el ends here

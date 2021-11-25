@@ -3,7 +3,6 @@
 ;; Copyright (C) 2021 Alec
 ;;
 ;; Created: January 15, 2021
-;; Modified: January 15, 2021
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -76,7 +75,7 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
 ;;; Some Transient keys
 ;;; TODO may add more in the future
 
-(eval-after-load 'transient
+(with-eval-after-load 'transient
   (transient-define-prefix zoom-transient ()
     "Zoomin' in and out on text"
     :transient-suffix 'transient--do-stay
@@ -293,7 +292,8 @@ possible."
 
 (use-package nano-modeline
   :diminish nano-modeline-mode
-  :hook (after-init . nano-modeline-mode)
+  :init
+  (nano-modeline-mode)
   :custom
   (nano-modeline-position 'bottom))
 
@@ -329,8 +329,8 @@ possible."
   :demand t
   :hook ((change-major-mode after-revert) . turn-on-solaire-mode)
   :config
-  (solaire-mode-swap-bg)
-  (add-hook 'minibuffer-setup-hook #'solaire-mode-in-minibuffer)
+  ;(solaire-mode-swap-bg)
+  ;(add-hook 'minibuffer-setup-hook #'solaire-mode-in-minibuffer)
   (add-hook 'focus-in-hook #'solaire-mode-reset)
   (add-hook 'org-capture-mode-hook #'turn-on-solaire-mode)
   (add-hook 'solaire-mode-hook (lambda () (set-window-fringes (minibuffer-window) 0 0 nil))))

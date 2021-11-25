@@ -3,7 +3,6 @@
 ;; Copyright (C) 2021 Alec
 ;;
 ;; Created: February 20, 2021
-;; Modified: February 20, 2021
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -94,33 +93,31 @@
   (interactive)
   (consult-line (thing-at-point 'symbol)))
 
-
 (use-package vertico
+  :demand t
   :bind (:map vertico-map
          ("?" . minibuffer-completion-help)
          ("M-RET" . minibuffer-force-complete-and-exit)
          ("M-TAB" . minibuffer-complete))
   :functions vertico--exhibit
   :init
-  ;; we have to have this here to start Vertico
-  (vertico-mode)
-
   ;; these can be annoying so we disable the help at startup
   (advice-add #'vertico--setup :after
               (lambda (&rest _)
                 (setq-local completion-auto-help nil
                             completion-show-inline-help nil)))
-  :custom
-  (vertico-resize nil)
-  (vertico-count 16)
-  (vertico-cycle t)
   :config
+  (vertico-mode)
+  (setq vertico-resize nil
+        vertico-count 16
+        vertico-cycle t)
   (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy))
 
 ;;;;; Consult
 ;;;;;
 
 (use-package consult
+  :demand t
   :general
   ;; Remappings
   ([remap recentf-open-files]            #'consult-recent-file)
@@ -184,26 +181,26 @@
   (advice-add #'multi-occur :override #'consult-multi-occur)
 
   (setq prefix-help-command #'embark-prefix-help-command)
-  :custom
-  (register-preview-delay 0)
-  (register-preview-function #'consult-register-preview)
-  (consult-preview-key '(:debounce 0.2 any))
-  (consult-narrow-key "<")
-  (consult-line-numbers-widen t)
-  (consult-async-min-input 2)
-  (consult-async-refresh-delay 0.15)
-  (consult-async-input-throttle 0.2)
-  (consult-async-input-debounce 0.1)
-  (consult-project-root-function #'projectile:get-project-root)
-  (consult-find-command (concat
-                         (format "%s -0 -i -H --color=never --follow --exclude .git --regex" consult:find-program)
-                         (if windows-nt-p "--path-separator=/")))
+
+  (setq register-preview-delay 0
+        register-preview-function #'consult-register-preview
+        consult-preview-key '(:debounce 0.2 any)
+        consult-narrow-key "<"
+        consult-line-numbers-widen t
+        consult-async-min-input 2
+        consult-async-refresh-delay 0.15
+        consult-async-input-throttle 0.2
+        consult-async-input-debounce 0.1
+        consult-project-root-function #'projectile:get-project-root
+        consult-find-args (concat
+                           (format "%s -0 -i -H --color=never --follow --exclude .git --regex" consult:find-program)
+                           (if windows-nt-p "--path-separator=/")))
   :config
   (defadvice! consult:recent-file-fix (&rest _args)
     "`consult-recent-file' needs to have `recentf-mode' on to work correctly"
     :before #'consult-recent-file
     (recentf-mode +1))
-
+  
   (consult-customize
    consult-ripgrep consult-git-grep consult-grep
    consult-bookmark consult-recent-file consult-xref
@@ -222,12 +219,13 @@
                       :debounce 1 'any)))
 
 (use-package consult-dir
+  :after (consult)
   :bind (([remap list-directory] . consult-dir)
          :map vertico-map
          ("C-x C-d" . consult-dir)
          ("C-x C-j" . consult-dir-jump-file)))
 
-(use-package! consult-flycheck
+(use-package consult-flycheck
   :when (package-installed-p 'flycheck)
   :after (consult flycheck))
 
@@ -235,13 +233,11 @@
 ;;;;;
 
 (use-package marginalia
+  :demand t
   :bind (:map minibuffer-local-map
-         ("M-A" . marginalia-cycle))
-  :init
-  (marginalia-mode)
-  :custom
-  (marginalia-annotators '(marginalia-annotators-light marginalia-annotators-heavy nil))
+              ("M-A" . marginalia-cycle))
   :config
+  (marginalia-mode)
   (advice-add #'marginalia--project-root :override #'projectile:get-project-root)
   (pushnew! marginalia-command-categories
             '(flycheck-error-list-set-filter . builtin)
@@ -255,6 +251,7 @@
 
 ;;; TODO define some Embark maps here
 (use-package embark
+  :demand t
   :bind (("C-;" . embark-act)
          ("C-." . embark-dwim)
          ([remap describe-bindings] . embark-bindings)
@@ -273,11 +270,10 @@
                             (floor (frame-height) 2) 1)))
 
   (set-face-attribute 'embark-verbose-indicator-title nil :height 1.0)
-  :custom
-  (embark-indicator #'embark-verbose-indicator)
-  (embark-verbose-indicator-display-action
-   '(display-buffer-at-bottom (window-height . fit-window-to-buffer)))
   :config
+  (setq embark-indicator #'embark-verbose-indicator
+        embark-verbose-indicator-display-action
+        '(display-buffer-at-bottom (window-height . fit-window-to-buffer)))
   (add-to-list 'display-buffer-alist
                '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
                  nil
@@ -287,7 +283,6 @@
   (add-hook 'embark-collect-post-revert-hook #'embark:resize-collect-window))
 
 (use-package embark-consult
-  :after (:all embark consult)
   :demand t
   :hook (embark-collect-mode . consult-preview-at-point-mode))
 

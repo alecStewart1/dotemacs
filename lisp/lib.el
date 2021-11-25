@@ -23,6 +23,8 @@
 ;;;###autoload
 (defconst emacs28-p    (> emacs-major-version 27))
 ;;;###autoload
+(defconst nativecomp-p (if (fboundp 'native-comp-available-p) (native-comp-available-p)))
+;;;###autoload
 (defconst linux-p      (eq system-type 'gnu/linux))
 ;;;###autoload
 (defconst macos-p      (eq system-type 'darwin))

@@ -1,9 +1,8 @@
 ;;; packing.el --- Managing package.el and use-package.el -*- lexical-binding: t; -*-
 ;;
-;; Copyright (C) 2021 Alec
+;; Copyright (C) 2021 Alec Stewart
 ;;
 ;; Created: January 15, 2021
-;; Modified: January 15, 2021
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -35,10 +34,60 @@
 
 (advice-add #'package--ensure-init-file :override #'ignore)
 
-(if (and (fboundp 'native-comp-available-p)
-         (native-comp-available-p))
-    (setq comp-deferred-compilation t
-          package-native-compile t))
+;;; Emacs really like to put stuff in your init.el if you don’t tell it not to
+;;;
+
+;;;; HACK: DO NOT WRITE `custome-set-variables' AND FRIENDS TO INIT.EL
+;;;;
+
+(defadvice! write-to-sane-paths (fn &rest args)
+  "Write 3rd party files to `my-etc-dir' to keep `user-emacs-directory' clean.
+
+Also writes `put' calls for saved safe-local-variables to `custom-file' instead
+of `user-init-file' (which `en/disable-command' in novice.el.gz is hardcoded to
+do)."
+  :around #'en/disable-command
+  :around #'locate-user-emacs-file
+  (let* ((user-emacs-directory my-etc-dir)
+         (custom-file (expand-file-name "custom.el" user-emacs-directory))
+         (user-init-file custom-file))
+    (apply fn args)))
+
+;;;; HACK: DO NOT copy package-selected-packages to init/custom file forcibly.
+;;;; https://github.com/jwiegley/use-package/issues/383#issuecomment-247801751
+
+(defadvice! dont-write-save-selected-packages (val)
+  "Set `package-selected-packages' to VALUE but don't save to `custom-file'."
+  :override #'package--save-selected-packages
+  (when val
+    (setq package-selected-packages val)))
+
+;;;; Before we require everything else and packages are compiled, set these
+;;;;
+
+(when (and nativecomp-p
+           (featurep 'native-compile)
+           (featurep 'native-compile-async))
+  ;; We're going for distance, we're going for speed
+  (setq native-comp-compiler-options '("-O2" "-mtune=native" "-march=native")
+        comp-deferred-compilation t
+        package-native-compile t)
+
+  ;; Don't store eln files in ~/.emacs.d/eln-cache
+  (add-to-list 'native-comp-eln-load-path (concat my-cache-dir "eln/"))
+
+  ;; Disable some troublesome packages
+  (eval-after-load 'comp
+    (mapc (apply-partially #'add-to-list 'native-comp-deferred-compilation-deny-list)
+          (let ((local-dir-re (concat "\\`" (regexp-quote my-local-dir))))
+            ;; NOTE: I only use `with-editor', lol
+            (list
+             ;;(concat "\\`" (regexp-quote doom-autoloads-file) "\\'")
+             ;;(concat local-dir-re ".*/evil-collection-vterm\\.el\\'")
+             (concat local-dir-re ".*/with-editor\\.el\\'")
+             ;; https://github.com/nnicandro/emacs-jupyter/issues/297
+             ;;(concat local-dir-re ".*/jupyter-channel\\.el\\'")
+             )))))
 
 ;;; Initialize package.el *here*
 
@@ -93,10 +142,24 @@
 (use-package diminish)
 (use-package bind-key)
 (use-package general
-  :functions (general--sanitize-arglist
-              general-normalize-hook-arglist
-              general-normalize-hook
-              use-package-handler/:ghook))
+  :init
+  ;; Please, make the compiler happy.
+  (declare-function use-package-handler/:ghook "general" ())
+  (declare-function general-normalize-hook "general" ())
+  (declare-function general-normalize-hook-arglist "general" ())
+  (declare-function general--sanitize-arglist "general" ())
+  (declare-function general-tomap "general" ())
+  (declare-function general-otomap "general" ())
+  (declare-function general-itomap "general" ())
+  (declare-function general-nvmap "general" ())
+  (declare-function general-iemap "general" ())
+  (declare-function general-rmap "general" ())
+  (declare-function general-omap "general" ())
+  (declare-function general-mmap "general" ())
+  (declare-function general-vmap "general" ())
+  (declare-function general-nmap "general" ())
+  (declare-function general-emap "general" ())
+  (declare-function general-imap "general" ()))
 (use-package hydra
   :commands (hydra-move-splitter-up
              hydra-move-splitter-down

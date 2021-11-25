@@ -1,9 +1,8 @@
 ;;; defaults.el --- Some default settings for Emacs to mkae it more sane and faster -*- lexical-binding: t; -*-
 ;;
-;; Copyright (C) 2021 Alec
+;; Copyright (C) 2021 Alec Stewart
 ;;
 ;; Created: January 15, 2021
-;; Modified: January 15, 2021
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -188,29 +187,6 @@
   :custom
   (pcache-directory (concat my-cache-dir "pcache/")))
 
-;;;;; Native compilation support stuff
-;;;;;
-
-;; From Doom Emacs:
-;; Disable native-compilation for troublesome packages
-(eval-after-load 'comp
-  (mapc (apply-partially #'add-to-list 'native-comp-deferred-compilation-deny-list)
-        (let ((local-dir-re (concat "\\`" (regexp-quote my-local-dir))))
-          ;; NOTE: I only use `with-editor', lol
-          (list
-           ;;(concat "\\`" (regexp-quote doom-autoloads-file) "\\'")
-           ;;(concat local-dir-re ".*/evil-collection-vterm\\.el\\'")
-           (concat local-dir-re ".*/with-editor\\.el\\'")
-           ;; https://github.com/nnicandro/emacs-jupyter/issues/297
-           ;;(concat local-dir-re ".*/jupyter-channel\\.el\\'")
-           ))))
-
-(when (featurep 'native-compile)
-  ;; We're going for distance, we're going for speed
-  (setq native-comp-compiler-options '("-O2" "-mtune=native" "-march=native"))
-  ;; Don't store eln files in ~/.emacs.d/eln-cache
-  (add-to-list 'native-comp-eln-load-path (concat my-cache-dir "eln/")))
-
 ;;;; Startup
 ;;;;
 
@@ -392,7 +368,7 @@
     (funcall orig-fn)))
 
 ;; HACK
-(defadvice files:make-hashed-backup-file-name (orig-fn file)
+(defadvice! files:make-hashed-backup-file-name (orig-fn file)
   "A few places use the backup file name so paths don't get too long."
   :around #'make-backup-file-name-1
   (let ((alist backup-directory-alist)
