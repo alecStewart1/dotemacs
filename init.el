@@ -151,10 +151,7 @@ Bootstrap all of my configurations."
   (add-hook 'after-change-major-mode-hook #'run-local-var-hooks 100)
   (run-hook-on 'first-buffer-hook '(find-file-hook switch-buffer-hook))
   (run-hook-on 'first-file-hook   '(find-file-hook dired-initial-position-hook))
-  (run-hook-on 'first-input-hook  '(pre-command-hook))
-
-  ;; Do GC and all that jazz
-  (add-hook 'emacs-startup-hook #'my-gc-and-restore))
+  (run-hook-on 'first-input-hook  '(pre-command-hook)))
 
 ;;; Misc.
 ;;;
@@ -172,15 +169,4 @@ Bootstrap all of my configurations."
 (my-bootstrap)
 
 ;;; init.el ends here
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages '(major-mode-hydra hydra general diminish use-package)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+
