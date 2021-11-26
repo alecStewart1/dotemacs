@@ -164,7 +164,6 @@
     (eval-after-load 'ob
       (add-to-list 'org-babel-default-lob-header-args '(:sync)))
 
-
     (defadvice! org-babel:fix-newline-and-indent-in-src-blocks (&optional indent _arg _interactive)
       "Mimic `newline-and-indent' in src blocks w/ lang-appropriate indentation."
       :after #'org-return
@@ -254,8 +253,7 @@
               '("gmap"        . "https://maps.google.com/maps?q=%s")
               '("duckduckgo"  . "https://duckduckgo.com/?q=%s")
               '("wikipedia"   . "https://en.wikipedia.org/wiki/%s")
-              '("wolfram"     . "https://wolframalpha.com/input/?i=%s")
-              '("doom-repo"   . "https://github.com/hlissner/doom-emacs/%s"))
+              '("wolfram"     . "https://wolframalpha.com/input/?i=%s"))
 
     (use-package org-yt
       :init
@@ -466,12 +464,12 @@ Made for `org-tab-first-hook' in evil-mode."
 
     (add-hook 'org-tab-first-hook #'org:indent-maybe)
 
-    (define-key 'org-mode-map (kbd "TAB") #'org-cycle)
-    (define-key 'org-mode-map (knd "<tab>") #'org-cycle)
-    (define-key 'org-mode-map (kbd "RET") #'org:return-dwim)
-    (define-key 'org-mode-map (kbd "<return>") #'org:return-dwim)
-    (define-key 'org-mode-map (kbd "C-S-RET") #'org-insert-subheading)
-    (define-key 'org-mode-map (kbd "<C-S-return>") #'org-insert-subheading))
+    (define-key org-mode-map (kbd "TAB") #'org-cycle)
+    (define-key org-mode-map (kbd "<tab>") #'org-cycle)
+    (define-key org-mode-map (kbd "RET") #'org:return-dwim)
+    (define-key org-mode-map (kbd "<return>") #'org:return-dwim)
+    (define-key org-mode-map (kbd "C-S-RET") #'org-insert-subheading)
+    (define-key org-mode-map (kbd "<C-S-return>") #'org-insert-subheading))
 
   :init
   (add-hook! 'org-load-hook

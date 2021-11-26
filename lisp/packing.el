@@ -13,9 +13,38 @@
 
 (require 'lib)
 (require 'cl-lib)
+(require 'comp)
 
 ;;; Do stuff with package.el HERE
 ;;;
+
+;;;; Before we require everything else and packages are compiled, set these
+;;;;
+
+(when (and nativecomp-p
+           (featurep 'native-compile))
+  ;; We're going for distance, we're going for speed
+  (setq-default native-comp-compiler-options '("-O2" "-mtune=native")
+		native-comp-deferred-compilation t
+		comp-deferred-compilation t
+		comp-speed 2
+		package-native-compile t)
+
+  ;; Don't store eln files in ~/.emacs.d/eln-cache
+  (add-to-list 'native-comp-eln-load-path (concat my-cache-dir "eln/"))
+  ;; Disable some troublesome packages
+  ;; (eval-after-load 'comp
+  ;;   (mapc (apply-partially #'add-to-list 'naitve-comp-deferred-compilation-black-list)
+  ;;         (let ((local-dir-re (concat "\\`" (regexp-quote my-local-dir))))
+  ;;           ;; NOTE: I only use `with-editor', lol
+  ;;           (list
+  ;;            ;;(concat "\\`" (regexp-quote doom-autoloads-file) "\\'")
+  ;;            ;;(concat local-dir-re ".*/evil-collection-vterm\\.el\\'")
+  ;;            (concat local-dir-re ".*/with-editor\\.el\\'")
+  ;;            ;; https://github.com/nnicandro/emacs-jupyter/issues/297
+  ;;            ;;(concat local-dir-re ".*/jupyter-channel\\.el\\'")
+  ;;            ))))
+  )
 
 ;;; Some settings
 ;;;
@@ -62,33 +91,6 @@ do)."
   (when val
     (setq package-selected-packages val)))
 
-;;;; Before we require everything else and packages are compiled, set these
-;;;;
-
-(when (and nativecomp-p
-           (featurep 'native-compile)
-           (featurep 'native-compile-async))
-  ;; We're going for distance, we're going for speed
-  (setq native-comp-compiler-options '("-O2" "-mtune=native" "-march=native")
-        comp-deferred-compilation t
-        package-native-compile t)
-
-  ;; Don't store eln files in ~/.emacs.d/eln-cache
-  (add-to-list 'native-comp-eln-load-path (concat my-cache-dir "eln/"))
-
-  ;; Disable some troublesome packages
-  (eval-after-load 'comp
-    (mapc (apply-partially #'add-to-list 'native-comp-deferred-compilation-deny-list)
-          (let ((local-dir-re (concat "\\`" (regexp-quote my-local-dir))))
-            ;; NOTE: I only use `with-editor', lol
-            (list
-             ;;(concat "\\`" (regexp-quote doom-autoloads-file) "\\'")
-             ;;(concat local-dir-re ".*/evil-collection-vterm\\.el\\'")
-             (concat local-dir-re ".*/with-editor\\.el\\'")
-             ;; https://github.com/nnicandro/emacs-jupyter/issues/297
-             ;;(concat local-dir-re ".*/jupyter-channel\\.el\\'")
-             )))))
-
 ;;; Initialize package.el *here*
 
 (unless (bound-and-true-p package--initialized)
@@ -132,34 +134,17 @@ do)."
     (package-install 'use-package))
 
   (setq use-package-always-ensure t
-        use-package-always-defer t
+        ;use-package-always-defer t
         use-package-expand-minimally t
         use-package-enable-imenu-support t))
 
 (eval-when-compile
   (require 'use-package))
 
-(use-package diminish)
-(use-package bind-key)
-(use-package general
-  :init
-  ;; Please, make the compiler happy.
-  (declare-function use-package-handler/:ghook "general" ())
-  (declare-function general-normalize-hook "general" ())
-  (declare-function general-normalize-hook-arglist "general" ())
-  (declare-function general--sanitize-arglist "general" ())
-  (declare-function general-tomap "general" ())
-  (declare-function general-otomap "general" ())
-  (declare-function general-itomap "general" ())
-  (declare-function general-nvmap "general" ())
-  (declare-function general-iemap "general" ())
-  (declare-function general-rmap "general" ())
-  (declare-function general-omap "general" ())
-  (declare-function general-mmap "general" ())
-  (declare-function general-vmap "general" ())
-  (declare-function general-nmap "general" ())
-  (declare-function general-emap "general" ())
-  (declare-function general-imap "general" ()))
+
+(use-package diminish :demand t)
+(use-package bind-key :demand t)
+(use-package general  :demand t)
 (use-package hydra
   :commands (hydra-move-splitter-up
              hydra-move-splitter-down
@@ -189,67 +174,7 @@ do)."
              (concat
               (apply f (list icon-name :face face :height height :v-adjust v-adjust))
               " "))))
-       (propertize title 'face face))))
-  :config
-  (with-eval-after-load 'avy
-    (pretty-hydra-define hydra:avy (:hint nil :color blue :quit-key "q" :title "Avy Things")
-      ("Characters/Symbols"
-       (("c" avy-goto-char-in-line "char (1)")
-        ("C" avy:goto-char-2 "char (2)")
-        ("x" avy-goto-symbol-1 "symbol"))
-       "Words"
-       (("w" avy-goto-word-0 "word")
-        ("f" avy:goto-word-beg "word beg.")
-        ("s" avy-goto-subword-1 "subword"))
-       "Lines"
-       (("n" avy-goto-line-below "line below")
-        ("p" avy-goto-line-above "line above")
-        ("l" avy-copy-line "copy line")
-        ("m" avy-move-line "move line")
-        ("e" avy-goto-end-of-line "end of line"))
-       "Misc"
-       (("C-c" avy:goto-lisp-cond "Lisp conditional"))))
-    (global-set-key (kbd "C-c a") #'hydra:avy/body))
-
-  (with-eval-after-load 'smartparens
-    (pretty-hydra-define hydra:sp (:hint nil :quit-key "q" :title "Smartparens")
-      ("Moving"
-       (("a" sp-beginning-of-sexp)
-        ("e" sp-end-of-sexp)
-        ("f" sp-forward-sexp)
-        ("b" sp-backward-sexp)
-        ("n" sp-down-sexp)
-        ("N" sp-backward-down-sexp)
-        ("p" sp-up-sexp)
-        ("P" sp-backward-up-sexp))
-       "Slurping & Barfing"
-       (("h" sp-backward-slurp-sexp)
-        ("H" sp-backward-barf-sexp)
-        ("l" sp-forward-slurp-sexp)
-        ("L" sp-forward-barf-sexp))
-       "Wrapping"
-       (("R" sp-rewrap-sexp)
-        ("u" sp-unwrap-sexp)
-        ("U" sp-backward-unwrap-sexp)
-        ("(" sp-wrap-round)
-        ("{" sp-wrap-curly)
-        ("[" sp-wrap-square))
-       "Sexp juggling"
-       (("S" sp-split-sexp)
-        ("s" sp-splice-sexp)
-        ("r" sp-raise-sexp)
-        ("j" sp-join-sexp)
-        ("t" sp-transpose-sexp)
-        ("A" sp-absorb-sexp)
-        ("E" sp-emit-sexp)
-        ("o" sp-convolute-sexp))
-       "Destructive editing"
-       (("c" sp-change-inner :exit t)
-        ("C" sp-change-enclosing :exit t)
-        ("k" sp-kill-sexp)
-        ("K" sp-backward-kill-sexp)
-        ("w" sp-copy-sexp))))
-    (define-key 'prog-mode-map (kbd "C-c (") #'hydra:sp/body)))
+       (propertize title 'face face)))))
 
 ;;; For leaf.el
 ;;;

@@ -100,9 +100,10 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
 
 (use-package helpful
   ;; a better *help* buffer
-  :defer t
   :commands helpful--read-symbol
+  :hook (helpful-mode . visual-line-mode)
   :init
+  (setq apropos-do-all t)
   (global-set-key [remap describe-function] #'helpful-callable)
   (global-set-key [remap describe-command]  #'helpful-command)
   (global-set-key [remap describe-variable] #'helpful-variable)
@@ -113,18 +114,19 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
     (letf! ((#'describe-function #'helpful-function)
             (#'describe-variable #'helpful-variable))
       (apply orig-fn args)))
-  (with-eval-after-load 'apropos
-    ;; patch apropos buttons to call helpful instead of help
-    (dolist (fun-bt '(apropos-function apropos-macro apropos-command))
-      (button-type-put
-       fun-bt 'action
-       (lambda (button)
-         (helpful-callable (button-get button 'apropos-symbol)))))
-    (dolist (var-bt '(apropos-variable apropos-user-option))
-      (button-type-put
-       var-bt 'action
-       (lambda (button)
-         (helpful-variable (button-get button 'apropos-symbol)))))))
+  ;; (with-eval-after-load 'apropos
+  ;;   ;; patch apropos buttons to call helpful instead of help
+  ;;   (dolist (fun-bt '(apropos-function apropos-macro apropos-command))
+  ;;     (button-type-put
+  ;;      fun-bt 'action
+  ;;      (lambda (button)
+  ;;        (helpful-callable (button-get button 'apropos-symbol)))))
+  ;;   (dolist (var-bt '(apropos-variable apropos-user-option))
+  ;;     (button-type-put
+  ;;      var-bt 'action
+  ;;      (lambda (button)
+  ;;        (helpful-variable (button-get button 'apropos-symbol)))))
+    )
 
 ;;;; So-Long
 ;;;; So we manage working with large files easier.
@@ -219,19 +221,16 @@ possible."
   :ensure nil
   :hook (after-init . show-paren-mode)
   :custom
-  (blink-matching-paren 'show)
-  (show-paren-style 'paren)
+  (blink-matching-paren t)
+  (show-paren-style 'parenthesis)
   (show-paren-delay 0.03)
   (show-paren-highlight-openparen t)
   (show-paren-when-point-inside-paren nil)
-  (show-paren-when-point-in-periphery t)
-  :config
-  ;; we will call `blink-matching-open` ourselves...
-  (remove-hook 'post-self-insert-hook
-               #'blink-paren-post-self-insert-function))
+  (show-paren-when-point-in-periphery t))
 
 ;;;; Pulse
 ;;;;
+;;;; TODO may figure out how to use this to replace volatile-highlights
 
 ;;;###autoload
 (defun pulse:pulse-line (&rest _)
@@ -258,30 +257,32 @@ possible."
   (define-global-minor-mode global-outline-minor-mode
     outline-minor-mode outline-minor-mode)
   :config
-  (transient-define-prefix outline-transient ()
-    "Transient for Outline Minor Mode navigation"
-    :transient-suffix 'transient--do-stay
-    :transient-non-suffix 'transient--do-stay
-    [["Show/Hide"
-      ("<right>" "Show Subtree" outline-show-subtree)
-      ("<left>" "Hide Subtree" outline-hide-subtree)
-      ("o" "Hide to This Sublevel" outline-hide-sublevels)
-      ("a" "Show All" outline-show-all)]
-     ["Navigate"
-      ("<down>" "Next" outline-next-visible-heading)
-      ("<up>" "Previous" outline-previous-visible-heading)]
-     ["Edit"
-      ("M-<left>"  "Promote" outline-promote)
-      ("M-<right>" "Demote"  outline-demote)
-      ("M-<up>"    "Move Up" outline-move-subtree-up)
-      ("M-<down>"  "Move Down" outline-move-subtree-down)]
-     ["Other"
-      ("C-/" "Undo" undo-only)
-      ("M-/" "Redo" undo-redo)
-      ("c" "Consult" consult-outline :transient nil)]]))
+  (with-eval-after-load 'transient
+    (transient-define-prefix outline-transient ()
+      "Transient for Outline Minor Mode navigation"
+      :transient-suffix 'transient--do-stay
+      :transient-non-suffix 'transient--do-stay
+      [["Show/Hide"
+        ("<right>" "Show Subtree" outline-show-subtree)
+        ("<left>" "Hide Subtree" outline-hide-subtree)
+        ("o" "Hide to This Sublevel" outline-hide-sublevels)
+        ("a" "Show All" outline-show-all)]
+       ["Navigate"
+        ("<down>" "Next" outline-next-visible-heading)
+        ("<up>" "Previous" outline-previous-visible-heading)]
+       ["Edit"
+        ("M-<left>"  "Promote" outline-promote)
+        ("M-<right>" "Demote"  outline-demote)
+        ("M-<up>"    "Move Up" outline-move-subtree-up)
+        ("M-<down>"  "Move Down" outline-move-subtree-down)]
+       ["Other"
+        ("C-/" "Undo" undo-only)
+        ("M-/" "Redo" undo-redo)
+        ("c" "Consult" consult-outline :transient nil)]])))
 
 ;;;; Highlight Line
 ;;;;
+;;;; I hate this
 
 (use-package hl-line
   :ensure nil
@@ -316,7 +317,8 @@ possible."
    ("s-k" . windmove-up)))
 
 (use-package ace-window
-  :bind (("s-w" . ace-window))
+  :bind (("s-w" . ace-window)
+         ([remap other-window] . ace-window))
   :custom
   (aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
   (aw-scope 'frame)
@@ -357,19 +359,20 @@ possible."
     (cl-pushnew `(,keyword . ,(face-foreground 'warning)) hl-todo-keyword-faces)))
 
 (use-package diff-hl
-  :commands diff-hl-magit-post-refresh
-  :defines diff-hl-margin-symbols-alist desktop-minor-mode-table
+  :defer t
+  :hook ((dired-mode . diff-hl-dired-mode-unless-remote)
+         (magit-post-refresh . diff-hl-magit-post-refresh))
   :custom-face
   (diff-hl-change ((t (:inherit 'highlight))))
   (diff-hl-delete ((t (:inherit 'error :inverse-video t))))
   (diff-hl-insert ((t (:inherit 'success :inverse-video t))))
   :bind (:map diff-hl-command-map
-         ("SPC" . diff-hl-mark-hunk))
-  :hook ((after-init . global-diff-hl-mode)
-         (dired-mode. diff-hl-dired-mode))
+              ("SPC" . diff-hl-mark-hunk))
   :config
+  (diff-hl-margin-mode)
+  
   ;; Highlight on-the-fly
-  (diff-hl-flydiff-mode 1)
+  (diff-hl-flydiff-mode +1)
 
   ;; Set fringe style
   (setq-default fringes-outside-margins t)
@@ -385,11 +388,7 @@ possible."
     ;; Avoid restoring `diff-hl-margin-mode'
     (with-eval-after-load 'desktop
       (add-to-list 'desktop-minor-mode-table
-                   '(diff-hl-margin-mode nil))))
-
-  ;; Integration with magit
-  (with-eval-after-load 'magit
-    (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh)))
+                   '(diff-hl-margin-mode nil)))))
 
 (use-package volatile-highlights
   :hook (after-init . volatile-highlights-mode))

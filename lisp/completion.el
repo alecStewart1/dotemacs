@@ -1,6 +1,6 @@
 ;;; completion.el --- Completion in Emacs with Vertico, Consult, Marginalia, and Company with Orderless -*- lexical-binding: t; -*-
 ;;
-;; Copyright (C) 2021 Alec
+;; Copyright (C) 2021 Alec Stewart
 ;;
 ;; Created: February 20, 2021
 ;;
@@ -94,30 +94,29 @@
   (consult-line (thing-at-point 'symbol)))
 
 (use-package vertico
-  :demand t
-  :bind (:map vertico-map
-         ("?" . minibuffer-completion-help)
-         ("M-RET" . minibuffer-force-complete-and-exit)
-         ("M-TAB" . minibuffer-complete))
   :functions vertico--exhibit
   :init
+  (vertico-mode)
   ;; these can be annoying so we disable the help at startup
   (advice-add #'vertico--setup :after
               (lambda (&rest _)
                 (setq-local completion-auto-help nil
                             completion-show-inline-help nil)))
-  :config
-  (vertico-mode)
-  (setq vertico-resize nil
-        vertico-count 16
-        vertico-cycle t)
+  :custom
+  (vertico-resize nil)
+  (vertico-count 16)
+  (vertico-cycle t)
+  :config  
+  ;; (define-key 'vertico-map (kbd "?") #'minibuffer-completion-help)
+  ;; (define-key 'vertico-map (kbd "M-RET") #'minibuffer-force-complete-and-exist)
+  ;; (define-key 'vertico-map (kbd "M-TAB") #'minibuffer-complete)
   (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy))
 
 ;;;;; Consult
 ;;;;;
 
 (use-package consult
-  :demand t
+  :defer t
   :general
   ;; Remappings
   ([remap recentf-open-files]            #'consult-recent-file)
@@ -125,7 +124,6 @@
   ([remap switch-to-buffer-other-window] #'consult-buffer-other-window)
   ([remap switch-to-buffer-other-frame]  #'consult-buffer-other-frame)
   ([remap bookmark-jump]                 #'consult-bookmark)
-  ([remap yank]                          #'consult-yank-from-kill-ring)
   ([remap yank-pop]                      #'consult-yank-pop)
   ([remap locate]                        #'consult-locate)
   ([remap repeat-complex-command]        #'consult-complex-command)
@@ -233,11 +231,11 @@
 ;;;;;
 
 (use-package marginalia
-  :demand t
   :bind (:map minibuffer-local-map
               ("M-A" . marginalia-cycle))
-  :config
+  :init
   (marginalia-mode)
+  :config
   (advice-add #'marginalia--project-root :override #'projectile:get-project-root)
   (pushnew! marginalia-command-categories
             '(flycheck-error-list-set-filter . builtin)
@@ -251,7 +249,8 @@
 
 ;;; TODO define some Embark maps here
 (use-package embark
-  :demand t
+  :defer t
+  :defines vertico-map
   :bind (("C-;" . embark-act)
          ("C-." . embark-dwim)
          ([remap describe-bindings] . embark-bindings)
@@ -269,7 +268,7 @@
       (fit-window-to-buffer (get-buffer-window)
                             (floor (frame-height) 2) 1)))
 
-  (set-face-attribute 'embark-verbose-indicator-title nil :height 1.0)
+  ;(set-face-attribute 'embark-verbose-indicator-title nil :height 1.0)
   :config
   (setq embark-indicator #'embark-verbose-indicator
         embark-verbose-indicator-display-action
@@ -283,8 +282,9 @@
   (add-hook 'embark-collect-post-revert-hook #'embark:resize-collect-window))
 
 (use-package embark-consult
-  :demand t
-  :hook (embark-collect-mode . consult-preview-at-point-mode))
+  :after (embark consult)
+  :config
+  (add-hook 'embark-collect-mode-hook #'consult-preview-at-point-mode))
 
 ;;;; Dabbrev
 ;;;;
@@ -343,13 +343,13 @@
 
 (use-package company
   :diminish
-  :functions (company-dabbrev-ignore-case company-dabbrev-downcase)
   :commands (company-complete-common
              company-complete-common-or-cycle
              company-manual-begin
              company-grab-line
              company-cancel)
-  :hook (first-input-hook . global-company-mode)
+  :functions (company-dabbrev-ignore-case company-dabbrev-downcase)
+  :hook (first-input . global-company-mode)
   :preface
   (put 'company-init-backends 'permanent-local-hook t)
   :init
@@ -366,10 +366,8 @@
   (company-require-match 'never)
   (company-global-modes '(not erc-mode message-mode help-mode gud-mode))
   (company-frontends '(company-pseudo-tooltip-frontend
-                         company-echo-metadata-frontend))
+                       company-echo-metadata-frontend))
   (company-backends '(company-capf))
-  (company-auto-complete nil)
-  (company-auto-complete-chars nil)
   (company-auto-comit nil)
   (company-dabbrev-other-buffers nil)
   (company-dabbrev-ignore-case nil)
@@ -380,21 +378,34 @@
     (advice-add 'company-begin-backend :before
                 (defun company:abort-previous (&rest _)
                   (company-abort))))
+  
+  (defadvice! saner-completion-styles-for-company-capf (orig-fn &rest args)
+    "Orderless doesn’t exactly make Company’s completion all
+ that sane. We simply change the ‘completion-styles’ to the
+saner options."
+    :around #'company-capf
+    (let ((completion-styles '(basic partial-completion)))
+      (apply orig-fn args)))
 
   (add-hook 'after-change-major-mode-hook #'company:init-backends 'append)
-
-  (eval-after-load 'company-files
-    (add-to-list 'company-files--regexps "file:\\(\\(?:\\.\\{1,2\\}/\\|~/\\|/\\)[^\]\n]*\\)")
 
   (eval-after-load 'eldoc
     (eldoc-add-command 'company-complete-selection
                        'company-complete-common
                        'company-capf
-                       'company-abort))))
+                       'company-abort)))
+
+(use-package company-files
+  :defer t
+  :after company
+  :config
+  (add-to-list 'company-files--regexps "file:\\(\\(?:\\.\\{1,2\\}/\\|~/\\|/\\)[^\]\n]*\\)"))
 
 (use-package company-dict
   :defer t
-  :after company)
+  :after company
+  :config
+  (setq company-dict-dir (expand-file-name "dicts" my-etc-dir)))
 
 ;;;; Corfu
 ;;;;

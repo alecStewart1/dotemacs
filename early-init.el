@@ -1,4 +1,4 @@
-;;; early-init.el --- Early initialization for Emacs -*- lexical-binding: t; -*-
+;;; early-init.el --- Early initialization for Emacs -*- lexical-binding: t no-byte-compile: t; -*-
 ;;
 ;; Copyright (C) 2021 Alec
 ;;

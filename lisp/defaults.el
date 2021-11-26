@@ -44,6 +44,9 @@
   (put 'list-threads     'disabled nil)
 
   (fset 'x-popup-menu #'ignore)
+  (fset #'display-startup-echo-area-message #'ignore)
+  (fset #'yes-or-no-p #'y-or-n-p)  
+  
   (if emacs27-p
       (progn
         (setq bidi-inhibit-bpa t)
@@ -52,6 +55,15 @@
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
   (advice-add 'completing-read-multiple :filter-args #'minibuffer:crm-indicator)
   :custom
+  ;; Startup
+  (inhibit-startup-screen            t)
+  (inhibit-startup-message           t)
+  (inhibit-startup-echo-area-message t)
+  (inhibit-startup-echo-area-message user-login-name)
+  (inhibit-default-init              t)
+  (initial-major-mode                'fundamental-mode)
+  (initial-scratch-message           nil)
+
   ;; Scrolling
   (hscroll-margin 1)
   (hscroll-step 1)
@@ -62,10 +74,15 @@
   (auto-window-vscroll nil)
   (scroll-margin 0)
   (scroll-preserve-screen-position t)
-  ;; Cursor
+
+  ;; Cursor and Mouse
   (visible-cursor nil)
   (x-stretch-cursor nil)
   (cursor-in-non-selected-windows nil)
+  (mouse-wheel-scroll-amount '(5 ((shift) . 2)))
+  (mouse-wheel-progressive-speed nil)
+  (mouse-yank-at-point t)
+  
   ;; Window, frame, minibuffer
   (display-line-numbers-width 3)
   (enable-recursive-minibuffers t)
@@ -84,29 +101,41 @@
    '(read-only t intangible t cursor-intangible t face minibuffer-prompt))
   (frame-title-format '("%b - Emacs"))
   (icon-title-format frame-title-format)
+
   ;; Don't use some GUI stuff
   (use-file-dialog nil)
   (use-dialog-box nil)
   (x-gtk-use-system-tooltips nil)
+
   ;; No noise, pls
   (ring-bell-function #'ignore)
   (visible-bell nil)
+
   ;; Keystrokes
   (echo-keystrokes 0.02)
+
   ;; Text
   (x-underline-at-descent-line t)
   (truncate-lines t)
   (truncate-partial-width-windows 50)
+  (sentence-end-double-space nil)
+  
   ;; Fill and wrap
   (fill-column 80)
   (word-wrap t)
+  (adaptive-fill-regexp "[ t]+|[ t]*([0-9]+.|*+)[ t]*")
+  (adaptive-fill-first-line-regexp "^* *$")
+  
   ;; Whitespace
   (show-trailing-whitespace nil)
+
   ;; UTF-8, pls
   (locale-coding-system 'utf-8)
+
   ;; No tabs, only spaces
   (indent-tabs-mode nil)
   (tab-width 4)
+
   ;; Autosave
   (auto-save-list-file-prefix (concat my-cache-dir "autosave/"))
   (auto-save-include-big-deletions t)
@@ -115,10 +144,12 @@
      ;; Prefix tramp autosaves to prevent conflicts with local ones
                (concat auto-save-list-file-prefix "tramp-\\2") t)
          (list ".*" auto-save-list-file-prefix t)))
+
   ;; Don't clutter my Emacs directory
   (shared-game-score-directory        (concat my-etc-dir "shared-game-score/"))
   (gamegrid-user-score-file-directory (concat my-etc-dir "games/"))
   (request-storage-directory          (concat my-cache-dir "request/"))
+
   ;; Misc.
   (apropos-do-all  t)
   (image-animate-loop  t)
@@ -130,6 +161,7 @@
   (create-lockfiles  nil)
   (autoload-compute-prefixes  nil)
   (load-prefer-newer  t)
+  (mode-line-default-help-echo nil)
   (custom-unlispify-menu-entries nil)
   (custom-unlispify-tag-names nil)
   :config
@@ -184,25 +216,9 @@
 
 (use-package pcache
   :ensure nil
+  :defer t
   :custom
   (pcache-directory (concat my-cache-dir "pcache/")))
-
-;;;; Startup
-;;;;
-
-(use-package startup
-  :ensure nil
-  :init
-  (fset #'display-startup-echo-area-message #'ignore)
-  :custom
-  ;; be quiet at startup; don't load or display anything unnecessary
-  (inhibit-startup-screen            t)
-  (inhibit-startup-message           t)
-  (inhibit-startup-echo-area-message t)
-  (inhibit-startup-echo-area-message user-login-name)
-  (inhibit-default-init              t)
-  (initial-major-mode                'fundamental-mode)
-  (initial-scratch-message           nil))
 
 ;;;; Simple
 ;;;;
@@ -211,7 +227,6 @@
   :ensure nil
   :custom
   (idle-update-delay                   1.2)
-  (blink-matching-paren                nil)
   (track-eol                           t)
   (completion-show-help                nil)
   (column-number-mode                  t)
@@ -231,14 +246,6 @@
   :custom
   ;; silence redefined function warnings
   (ad-redefinition-action 'accept))
-
-;;;; Lisp subroutines
-;;;;
-
-(use-package subr
-  :ensure nil
-  :init
-  (fset #'yes-or-no-p #'y-or-n-p))
 
 ;;;; Windows to the Walls
 ;;;;
@@ -278,34 +285,12 @@
   :custom
   (widget-image-enable nil))
 
-;;;; Shmoving the mouse and cursor
+;;;; Cursor
 ;;;;
 
 (use-package cursor-sensor
   :ensure nil
   :hook (minibuffer-setup . cursor-intangible-mode))
-
-(use-package mouse
-  :ensure nil
-  :custom
-  ;; middle-click paste at point, not at click
-  (mouse-yank-at-point t))
-
-(use-package mwsheel
-  :ensure nil
-  :custom
-  (mouse-wheel-scroll-amount     '(5 ((shift) . 2)))
-  ; don't accelerate scrolling
-  (mouse-wheel-progressive-speed nil))
-
-;;;; Standard Keybindings and Variables
-;;;;
-
-(use-package bindings
-  :ensure nil
-  :custom
-  ;; disable mode-line mouseovers
-  (mode-line-default-help-echo nil))
 
 ;;;; Editing Text
 ;;;;
@@ -315,20 +300,9 @@
   :custom
   (x-select-request-type '(UTF8_STRING COMPOUND_TEXT TEXT STRING)))
 
-(use-package fill
-  :ensure nil
-  :custom
-  (adaptive-fill-regexp            "[ t]+|[ t]*([0-9]+.|*+)[ t]*")
-  (adaptive-fill-first-line-regexp "^* *$"))
-
 (use-package delsel
   :ensure nil
   :hook (first-input . delete-selection-mode))
-
-(use-package paragraphs
-  :ensure nil
-  :custom
-  (sentence-end-double-space nil))
 
 (use-package whitespace
   :ensure nil
@@ -390,7 +364,6 @@
 
 (use-package files
   :ensure nil
-  :defer 0.2
   :custom
   (backup-directory-alist (list (cons "." (concat my-cache-dir "backup/"))))
   (large-file-warning-threshold          15000000)
@@ -428,7 +401,7 @@
 
 (use-package grep
   :ensure nil
-  :defer 2
+  :defer t
   :custom
   (grep-command (executable-find "rg"))
   (find-program (executable-find "fd")))
@@ -527,21 +500,19 @@ the form."
   (ansi-color-for-comint-mode t))
 
 (use-package bookmark
-  :defer 0.5
+  :ensure nil
   :custom
   (bookmark-default-file (concat my-etc-dir "bookmarks"))
   (bookmark-save-flag    t))
 
 (use-package url
   :ensure nil
-  :defer 2
   :custom
   (url-configuration-directory (concat my-etc-dir "url/"))
   (url-cache-directory         (concat my-cache-dir "url/")))
 
 (use-package tramp
   :ensure nil
-  :defer 0.5
   :custom
   (tramp-auto-save-directory (concat my-cache-dir "tramp-auto-save/"))
   (tramp-backup-directory-alist backup-directory-alist)

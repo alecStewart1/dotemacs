@@ -200,42 +200,40 @@ current line.")
 ;;;; Undo-fu
 ;;;;
 
-;;(use-package undo-fu
-	;;:demand t
-  ;;:hook (first-buffer . undo-fu-mode)
-  ;;:config
-  ;;(setq undo-limit        400000
-        ;;undo-strong-limit 3000000
-        ;;undo-outer-limit  3000000)
-;;
-  ;;(define-minor-mode undo-fu-mode
-    ;;"Enables `undo-fu' for the current session."
-    ;;:keymap (let ((map (make-sparse-keymap)))
-              ;;(define-key map [remap undo]    #'undo-fu-only-undo)
-              ;;(define-key map [remap redo]    #'undo-fu-only-redo)
-              ;;(define-key map (kbd "C-_")     #'undo-fu-only-undo)
-              ;;(define-key map (kbd "M-_")     #'undo-fu-only-redo)
-              ;;(define-key map (kbd "C-M-_")   #'undo-fu-only-redo-all)
-              ;;(define-key map (kbd "C-x r u") #'undo-fu-session-save)
-              ;;(define-key map (kbd "C-x r U") #'undo-fu-session-recover)
-              ;;map)
-    ;;:init-value nil
-    ;;:global t))
-;;
-;;(use-package undo-fu-session
-  ;;:demand t
-  ;;:hook (undo-fu-mode . global-undo-fu-session-mode)
-  ;;:init
-  ;;(setq undo-fu-session-directory          (concat my-cache-dir "undo-fu-session/")
-        ;;undo-fu-session-incompatible-files '("\\.gpg$" "/COMMIT_EDITMSG\\'" "/git-rebase-todo\\'"))
-  ;;:config
-  ;;(when (executable-find "zstd")
-    ;;(defadvice! undo-fu-session:use-zstd (filename)
-      ;;"Have `undo-fu-session--make-file-name' use zstd's .zst file extension for compression on FILENAME."
-      ;;:filter-return #'undo-fu-session--make-file-name
-      ;;(if undo-fun-session-compression
-          ;;(concat (file-name-sans-extension filename) ".zst")
-        ;;filname))))
+(use-package undo-fu
+  :hook (first-buffer . undo-fu-mode)
+  :config
+  (setq undo-limit        400000
+        undo-strong-limit 3000000
+        undo-outer-limit  3000000)
+
+  (define-minor-mode undo-fu-mode
+    "Enables `undo-fu' for the current session."
+    :keymap (let ((map (make-sparse-keymap)))
+              (define-key map [remap undo]    #'undo-fu-only-undo)
+              (define-key map [remap redo]    #'undo-fu-only-redo)
+              (define-key map (kbd "C-_")     #'undo-fu-only-undo)
+              (define-key map (kbd "M-_")     #'undo-fu-only-redo)
+              (define-key map (kbd "C-M-_")   #'undo-fu-only-redo-all)
+              (define-key map (kbd "C-x r u") #'undo-fu-session-save)
+              (define-key map (kbd "C-x r U") #'undo-fu-session-recover)
+              map)
+    :init-value nil
+    :global t))
+
+(use-package undo-fu-session
+  :hook (undo-fu-mode . global-undo-fu-session-mode)
+  :init
+  (setq undo-fu-session-directory (concat my-cache-dir "undo-fu-session/"))
+  :config
+  (setq undo-fu-session-incompatible-files '("\\.gpg$" "/COMMIT_EDITMSG\\'" "/git-rebase-todo\\'"))
+  (when (executable-find "zstd")
+    (defadvice! undo-fu-session:use-zstd (filename)
+      "Have `undo-fu-session--make-file-name' use zstd's .zst file extension for compression on FILENAME."
+      :filter-return #'undo-fu-session--make-file-name
+      (if undo-fu-session-compression
+          (concat (file-name-sans-extension filename) ".zst")
+        filname))))
 
 ;;;; Group projects in IBuffer
 ;;;;

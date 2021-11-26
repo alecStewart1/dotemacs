@@ -1,4 +1,4 @@
-;;; vc.el --- Version Control in Emacs -*- lexical-binding: t; -*-
+;;; version-control.el --- Version Control in Emacs -*- lexical-binding: t; -*-
 ;;
 ;; Copyright (C) 2021 Alec
 ;;
@@ -135,7 +135,7 @@
   (transient-levels-file (concat my-etc-dir "transient/levels"))
   (transient-values-file (concat my-etc-dir "transient/values"))
   (transient-history-file (concat my-etc-dir "transient/history"))
-  (transient-default-level . 5)
+  (transient-default-level 5)
   (transient-display-buffer-action '(display-buffer-below-selected))
   :config
   (defadvice! magit:rever-repo-buffers-deferred (&rest _)
@@ -181,5 +181,5 @@
 (use-package magit-gitflow
   :hook (magit-mode . turn-on-magit-gitflow))
 
-(provide 'vc)
-;;; vc.el ends here
+(provide 'version-control)
+;;; version-control.el ends here

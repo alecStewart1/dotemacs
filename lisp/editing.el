@@ -14,12 +14,7 @@
 ;;; Code:
 
 (require 'lib)
-
-;;; Things Emacs doesn't enable by default
-;;;
-
-(put 'narrow-to-region 'disabled nil)
-(put 'upcase-region 'disabled nil)
+(require 'ui-ux)
 
 ;;; Some variables we'll use later
 ;;;
@@ -263,16 +258,21 @@
   :hook ((change-major-mode-after-body read-only-mode) . dtrt:detect-indentation)
   :preface
   (defvar dtrt-indent-run-after-smie)
+  :init
+  ;; Please, stop.
+  (setq dtrt-indent-verbosity 0)
   :config
-  (defun dtrt:detect-indentation
-      (unless (or (not after-init-time)
-                  editing:inhibit-indent-detection
-                  ui-ux:large-file-p
-                  (memq major-mode editing:detect-indentation-excluded-modes)
-                  (member (substring (buffer-name) 0 1) '(" " "*")))
-        (dtrt-indent-mode +1)))
+  (defun dtrt:detect-indentation ()
+    (unless (or (not after-init-time)
+                editing:inhibit-indent-detection
+                ui-ux:large-file-p
+                (memq major-mode editing:detect-indent-excluded-modes)
+                (member (substring (buffer-name) 0 1) '(" " "*")))
+      (let ((inhibit-message (not inhibit-message))
+            (message-log-max nil))
+        (dtrt-indent-mode +1))))
 
-  (setq dtrt-indent-run-after-t smie
+  (setq dtrt-indent-run-after-smie t
         dtrt-indent-max-lines 2000)
 
   (push '(t tab-width) dtrt-indent-hook-generic-mapping-list)

@@ -1,9 +1,8 @@
-;;; term.el --- Terminal/Shell packages -*- lexical-binding: t; -*-
+;;; termy.el --- Terminal/Shell packages -*- lexical-binding: t; -*-
 ;;
 ;; Copyright (C) 2021 Alec
 ;;
 ;; Created: February 07, 2021
-;; Modified: February 07, 2021
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -15,6 +14,7 @@
 ;;; Code:
 
 (require 'lib)
+(require 'cl-lib)
 
 ;;; Builtin Emacs Packages
 ;;;
@@ -38,7 +38,7 @@
 
 (defun eshell:unused-buffer (&optional new-p)
   (or (unless new-p
-        (loop for buf in (eshell-buffers)
+        (cl-loop for buf in (eshell-buffers)
               if (and (buffer-live-p buf)
                       (not (get-buffer-window buf t)))
               return buf))
@@ -214,56 +214,14 @@ Once the eshell process is killed, the previous frame layout is restored."
   (eshell/cd dir))
 
 
-;;; Aliases Stuff
-;;;
-
-;;;###autoload
-(defvar eshell:my-aliases
-  '(("q"  "exit")           ; built-in
-    ("f"  "find-file $1")
-    ("ff" "find-file $1")
-    ("d"  "dired $1")
-    ("bd" "eshell-up $1")
-    ("rg" "rg --color=always $*")
-    ("l"  "ls -lh $*")
-    ("ll" "ls -lah $*")
-    ("la" "ls -aAFh $*")
-    (".." "cd ..")
-    ("cdp" "cd-to-project")
-    ("mkdir" "mkdir -p $*")
-    ("rm" "rm -i $*")
-    ("cp" "cp -i $*")
-    ("mv" "mv -i $*")
-    ("git" "git --no-pager $*")
-    ("gg" "magit-status")
-    ("pass" "gopass $*")
-    ("clear" "clear-scrollback")))
-
-;;;###autoload
-(defvar eshell:default-aliases nil)
-
-;;;###autoload
-(defun eshell:set-alias! (&rest aliases)
-  (or (cl-evenp (length aliases))
-      (signal 'wrong-number-of-arguments (list 'even (length aliases))))
-  (with-eval-after-load 'em-alias
-    (while aliases
-      (let ((alias (pop aliases))
-            (command (pop aliases)))
-        (if-let* ((oldval (assoc alias eshell:my-aliases)))
-            (setcdr oldval (list command))
-          (push (list alias command) eshell:my-aliases))))
-    (when (boundp 'eshell-command-aliases-list)
-      (if eshell:default-aliases
-          (setq eshell-command-aliases-list
-                (append eshell:default-aliases eshell:my-aliases))
-        (setq eshell-command-aliases-list eshell:my-aliases)))))
-
 (use-package eshell
   :ensure nil
   :commands (eshell eshell-toggle eshell-frame)
   :defines eshell-prompt-function
   :functions eshell/alias
+  :hook (eshell-mode . (lambda ()
+                         (require 'esh-module)
+                         (require 'em-xtra)))
   :custom
   (eshell-banner-message
      '(format "%s %s\n"
@@ -281,7 +239,6 @@ Once the eshell process is killed, the previous frame layout is restored."
   (eshell-error-if-no-glob t)
   (eshell-term-name "xterm-256color")
   :config
-
   ;; UI Enchancements
   ;;
 
@@ -299,34 +256,77 @@ Once the eshell process is killed, the previous frame layout is restored."
   ;; Add in support for TRAMP.
   ;; This will be redundant in the future.
 
-  (eval-after-load esh-module
-    (add-to-list 'eshell-modules-list 'eshell-tramp))
+  (add-to-list 'eshell-modules-list 'eshell-tramp)
+  
+  ;;; Keys
+  ;;;
+  
+  (with-eval-after-load 'esh-mode
+    (define-key eshell-mode-map (kbd "C-e") #'end-of-line)
+    (define-key eshell-mode-map (kbd "C-a") #'beginning-of-line)
+    (define-key eshell-mode-map (kbd "C-s") #'eshell:search-history)))
 
-  ;; Running CLI commands in Emacs
-  ;;
+;;;; Alias stuff
+;;;;
 
-  (eval-after-load 'em-term
-    (pushnew! eshell-visual-commands "tmux" "htop" "btm" "vim" "nvim" "ncmpcpp"))
+(use-package em-alias
+  :ensure nil
+  :after eshell
+  :preface
+  (defvar eshell:my-aliases
+    '(;;("q"  "exit")
+      ("f"  "find-file $1")
+      ("ff" "find-file $1")
+      ("d"  "dired $1")
+      ("bd" "eshell-up $1")
+      ("rg" "rg --color=always $*")
+      ("l"  "ls -lh $*")
+      ("ll" "ls -lah $*")
+      ("la" "ls -aAFh $*")
+      (".." "cd ..")
+      ("cdp" "cd-to-project")
+      ("mkdir" "mkdir -p $*")
+      ("rm" "rm -i $*")
+      ("cp" "cp -i $*")
+      ("mv" "mv -i $*")
+      ("git" "git --no-pager $*")
+      ("gg" "magit-status")
+      ("pass" "gopass $*")
+      ("clear" "clear-scrollback")))
 
-  ;; Alias Stuff
-  ;;
-
+  (defvar eshell:default-aliases nil)
+  :config
   (advice-add #'eshell-write-aliases-list :override #'ignore)
 
   (defalias 'eshell/more #'eshell/less)
+  
+  (setq eshell:default-aliases eshell-command-aliases-list
+        eshell-command-aliases-list
+        (append eshell-command-aliases-list
+                eshell:my-aliases))
 
-  (eval-after-load 'em-alias
-    (setq eshell:default-aliases eshell-command-aliases-list
-          eshell-command-aliases-list
-          (append eshell-command-aliases-list
-                  eshell:my-aliases)))
 
-  ;;; Keys
-  ;;;
-
-  (define-key 'eshell-mode-map (kbd "C-e") #'end-of-line)
-  (define-key 'eshell-mode-map (kbd "C-a") #'beginning-of-line)
-  (define-key 'eshell-mode-map (kbd "C-s") #'eshell:search-history))
+  (defun set-eshell-alias! (&rest aliases)
+    "Define aliases for eshell.
+ALIASES is a flat list of alias -> command pairs. e.g.
+  (set-eshell-alias!
+    \"hi\"  \"echo hello world\"
+    \"bye\" \"echo goodbye world\")"
+    (or (cl-evenp (length aliases))
+        (signal 'wrong-number-of-arguments (list 'even (length aliases))))
+    (with-eval-after-load 'em-alias
+      (while aliases
+        (let ((alias (pop aliases))
+              (command (pop aliases)))
+          (if-let* ((oldval (assoc alias eshell:my-aliases)))
+              (setcdr oldval (list command))
+            (push (list alias command) eshell:my-aliases))))
+      (when (boundp 'eshell-command-aliases-list)
+        (if eshell:default-aliases
+            (setq eshell-command-aliases-list
+                  (append eshell:default-aliases
+                          eshell:my-aliases))
+          (setq eshell-command-aliases-list eshell:my-aliases))))))
 
 ;;; External Packages
 ;;;
@@ -368,5 +368,5 @@ Once the eshell process is killed, the previous frame layout is restored."
   (setq confirm-kill-processes nil)
   (setq hscroll-margin 0))
 
-(provide 'term)
-;;; term.el ends here
+(provide 'termy)
+;;; termy.el ends here

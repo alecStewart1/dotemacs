@@ -82,6 +82,9 @@
 (require 'ui-ux)
 (require 'emacsy)
 (require 'completion)
+(require 'editing)
+(require 'termy)
+(require 'version-control)
 
 ;;; Load the dumb ‘custom-file’
 ;;;
