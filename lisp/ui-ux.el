@@ -221,64 +221,114 @@ possible."
   :ensure nil
   :hook (after-init . show-paren-mode)
   :custom
-  (blink-matching-paren t)
+  ;;(blink-matching-paren t)
   (show-paren-style 'parenthesis)
   (show-paren-delay 0.03)
   (show-paren-highlight-openparen t)
-  (show-paren-when-point-inside-paren nil)
+  (show-paren-when-point-inside-paren t)
   (show-paren-when-point-in-periphery t))
 
 ;;;; Pulse
 ;;;;
-;;;; TODO may figure out how to use this to replace volatile-highlights
 
 ;;;###autoload
-(defun pulse:pulse-line (&rest _)
+(defun pulse:momentary-line (&rest _)
   "Pulse the current line."
   (pulse-momentary-highlight-one-line (point)))
+
+;;;###autoload
+(defun pulse:momentary (&rest _)
+  "Pulse the region or the current line."
+  (if (fboundp 'xref-pulse-momentarily)
+      (xref-pulse-momentarily)
+    (pulse:momentary-line)))
+
+;;;###autoload
+(defun pulse:recenter-and-pulse (&rest _)
+  "Recenter and pulse the region or the current line."
+  (recenter)
+  (my-pulse-momentary))
+
+;;;###autoload
+(defun pulse:recenter-and-pulse-line (&rest _)
+  "Recenter and pulse the current line."
+  (recenter)
+  (pulse:momentary-line))
 
 (use-package pulse
   :ensure nil
   :demand t
+  :hook ((bookmark-after-jump
+          magit-diff-visit-file
+          next-error) . pulse:recenter-and-pulse-line)
   :config
-  (dolist (command '(scroll-up-command scroll-down-command recenter-top-bottom other-window))
-    (advice-add command :after #'pulse:pulse-line)))
+  (dolist (command '(scroll-up-command
+                     scroll-down-command
+                     forward-page
+                     backward-page
+                     recenter-top-bottom
+                     other-window
+                     ace-window
+                     aw--select-window
+                     windmove-left
+                     windmove-right
+                     windmove-down
+                     windmove-up))
+    (advice-add command :after #'pulse:momentary-line))
+
+  (dolist (command '(pop-to-mark-command
+                     pop-global-mark
+                     goto-last-change))
+    (advice-add command :after #'pulse:recenter-and-pulse))
+
+  ;; From here: https://christiantietze.de/posts/2020/12/emacs-pulse-highlight-yanked-text/
+  (defadvice! pulse:yank (orig-fn &rest args)
+    "Pulse on yanking text, using ‘pulse-momentary-highlight-region’."
+    :around #'yank
+    (let (begin end)
+      (setq begin (point))
+      (apply orig-fn args)
+      (setq end (point))
+      (pulse-momentary-highlight-region begin end)))
+  :custom-face
+  (pulse-highlight-start-face ((t (:inherit region))))
+  (pulse-highlight-face ((t (:inherit region)))))
 
 ;;;; Outline
 ;;;;
 
 ;; Some of this stolen from Oliver Taylor's config:
 ;; https://github.com/olivertaylor/dotfiles/blob/master/emacs/init.el
-(use-package outline
-  :ensure nil
-  :diminsh outline-minor-mode
-  :hook (prog-mode . global-outline-minor-mode)
-  :preface
-  (define-global-minor-mode global-outline-minor-mode
-    outline-minor-mode outline-minor-mode)
-  :config
-  (with-eval-after-load 'transient
-    (transient-define-prefix outline-transient ()
-      "Transient for Outline Minor Mode navigation"
-      :transient-suffix 'transient--do-stay
-      :transient-non-suffix 'transient--do-stay
-      [["Show/Hide"
-        ("<right>" "Show Subtree" outline-show-subtree)
-        ("<left>" "Hide Subtree" outline-hide-subtree)
-        ("o" "Hide to This Sublevel" outline-hide-sublevels)
-        ("a" "Show All" outline-show-all)]
-       ["Navigate"
-        ("<down>" "Next" outline-next-visible-heading)
-        ("<up>" "Previous" outline-previous-visible-heading)]
-       ["Edit"
-        ("M-<left>"  "Promote" outline-promote)
-        ("M-<right>" "Demote"  outline-demote)
-        ("M-<up>"    "Move Up" outline-move-subtree-up)
-        ("M-<down>"  "Move Down" outline-move-subtree-down)]
-       ["Other"
-        ("C-/" "Undo" undo-only)
-        ("M-/" "Redo" undo-redo)
-        ("c" "Consult" consult-outline :transient nil)]])))
+;; (use-package outline
+;;   :ensure nil
+;;   :diminish outline-minor-mode
+;;   :hook (prog-mode . global-outline-minor-mode)
+;;   :init
+;;   (define-global-minor-mode global-outline-minor-mode
+;;     outline-minor-mode outline-minor-mode)
+;;   :config
+;;   (with-eval-after-load 'transient
+;;     (transient-define-prefix outline-transient ()
+;;       "Transient for Outline Minor Mode navigation"
+;;       :transient-suffix 'transient--do-stay
+;;       :transient-non-suffix 'transient--do-stay
+;;       [["Show/Hide"
+;;         ("<right>" "Show Subtree" outline-show-subtree)
+;;         ("<left>" "Hide Subtree" outline-hide-subtree)
+;;         ("o" "Hide to This Sublevel" outline-hide-sublevels)
+;;         ("a" "Show All" outline-show-all)]
+;;        ["Navigate"
+;;         ("<down>" "Next" outline-next-visible-heading)
+;;         ("<up>" "Previous" outline-previous-visible-heading)]
+;;        ["Edit"
+;;         ("M-<left>"  "Promote" outline-promote)
+;;         ("M-<right>" "Demote"  outline-demote)
+;;         ("M-<up>"    "Move Up" outline-move-subtree-up)
+;;         ("M-<down>"  "Move Down" outline-move-subtree-down)]
+;;        ["Other"
+;;         ("C-/" "Undo" undo-only)
+;;         ("M-/" "Redo" undo-redo)
+;;         ("c" "Consult" consult-outline :transient nil)]])))
 
 ;;;; Highlight Line
 ;;;;
@@ -341,7 +391,9 @@ possible."
 ;;;;
 
 (use-package highlight-numbers
-  :hook ((prog-mode conf-mode) . highlight-numbers-mode)
+  :demand t
+  :hook ((prog-mode . highlight-numbers-mode)
+         (conf-mode . highlight-numbers-mode))
   :config
   (setq highlight-numbers-generic-regexp "\\_<[[:digit:]]+\\(?:\\.[0-9]*\\)?\\_>"))
 
@@ -390,17 +442,27 @@ possible."
       (add-to-list 'desktop-minor-mode-table
                    '(diff-hl-margin-mode nil)))))
 
-(use-package volatile-highlights
-  :hook (after-init . volatile-highlights-mode))
-
-;;;###autoload
-(defun rainbow:clear-overlays ()
-  (remove-overlays (point-min) (point-max) 'ovrainbow t))
-
 (use-package rainbow-mode
+  :diminish
+  :bind (:map special-mode-map
+         ("w" . rainbow-mode))
   :hook ((web-mode css-mode scss-mode help-mode org-mode) . rainbow-mode)
   :config
-  (advice-add 'rainbow-turn-off #'rainbow:clear-overlays))
+  (with-no-warnings
+    ;; HACK: Use overlay instead of text properties to override `hl-line' faces.
+    ;; @see https://emacs.stackexchange.com/questions/36420
+    (defun my-rainbow-colorize-match (color &optional match)
+      (let* ((match (or match 0))
+             (ov (make-overlay (match-beginning match) (match-end match))))
+        (overlay-put ov 'ovrainbow t)
+        (overlay-put ov 'face `((:foreground ,(if (> 0.5 (rainbow-x-color-luminance color))
+                                                  "white" "black"))
+                                (:background ,color)))))
+    (advice-add #'rainbow-colorize-match :override #'my-rainbow-colorize-match)
+
+    (defun rainbow:clear-overlays ()
+      (remove-overlays (point-min) (point-max) 'ovrainbow t))
+    (advice-add 'rainbow-turn-off :after #'rainbow:clear-overlays)))
 
 ;; TODO might replace this
 (use-package rainbow-delimiters

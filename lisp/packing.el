@@ -97,7 +97,7 @@ do)."
   (setq package-enable-at-startup nil)
   (package-initialize))
 
-(add-transient-hook! 'package-install (package-refresh-contents))
+(add-transient-hook! 'package-install (package-refresh-contents t))
 
 ;;; Useful functions
 
@@ -130,7 +130,7 @@ do)."
 
 (eval-and-compile
   (unless (package-installed-p 'use-package)
-    (package-refresh-contents)
+    (package-refresh-contents t)
     (package-install 'use-package))
 
   (setq use-package-always-ensure t
@@ -141,11 +141,12 @@ do)."
 (eval-when-compile
   (require 'use-package))
 
-
-(use-package diminish :demand t)
-(use-package bind-key :demand t)
-(use-package general  :demand t)
+(use-package diminish)
+(use-package bind-key)
+(use-package general)
+(use-package ht) ;; <- this is needed in some places
 (use-package hydra
+  :demand t
   :commands (hydra-move-splitter-up
              hydra-move-splitter-down
              hydra-move-splitter-right
@@ -154,11 +155,9 @@ do)."
   (setq lv-use-separator t))
 
 (use-package major-mode-hydra
-  :after hydra
   :functions (major-mode-hydra-define major-mode-hydra-define+))
 
 (use-package pretty-hydra
-  :after hydra
   :functions (pretty-hydra-define pretty-hydra-define+)
   :preface
   (cl-defun pretty-hydra-title (title &optional icon-type icon-name

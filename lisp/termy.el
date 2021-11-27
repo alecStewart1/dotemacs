@@ -15,6 +15,7 @@
 
 (require 'lib)
 (require 'cl-lib)
+(require 'mode-local)
 
 ;;; Builtin Emacs Packages
 ;;;
@@ -60,22 +61,9 @@
       (insert command)
       (eshell-send-input nil t))))
 
-;;; Completion
+;;; TODO Completion
 ;;;
 
-;;;###autoload
-(defun eshell:pcomplete ()
-  "Use pcomplete with completion-in-region backend instead of popup window at
-  bottom. This ties pcomplete into ivy or helm, if they are enabled."
-  (interactive)
-  (require 'pcomplete)
-  (if (and (bound-and-true-p company-mode)
-           (or company-candidates
-               (and (company-pcomplete-available)
-                    (company-pcomplete--prefix)
-                    (company-pcomplete--candidates))))
-      (call-interactively #'company-pcomplete)
-    (ignore-errors (pcomplete-std-complete))))
 
 ;;; Toggle eshell or create a new frame solely for eshell
 ;;;
@@ -183,6 +171,10 @@ Once the eshell process is killed, the previous frame layout is restored."
 ;;;
 
 ;;;###autoload
+(defvar eshell:kill-window-on-exit nil
+  "If non-nil, eshell will close windows along with its eshell buffers.")
+
+;;;###autoload
 (defun eshell/less (&rest args)
   "Invoke `view-file' on a file (ARGS).
 \"less +42 foo\" will go to line 42 in the buffer for foo."
@@ -194,8 +186,6 @@ Once the eshell process is killed, the previous frame layout is restored."
           (forward-line line))
       (eshell-view-file (pop args)))))
 
-
-
 ;;;###autoload
 (defun eshell/cd-to-project ()
   "Change to the project root of the current directory."
@@ -204,7 +194,7 @@ Once the eshell process is killed, the previous frame layout is restored."
 ;;;###autoload
 (defun eshell/quit-and-close (&rest _)
   "Quit the current eshell buffer and close the window it's in."
-  (setq-local +eshell-kill-window-on-exit t)
+  (setq-local eshell:kill-window-on-exit t)
   (throw 'eshell-terminal t))
 
 ;;;###autoload
@@ -219,9 +209,31 @@ Once the eshell process is killed, the previous frame layout is restored."
   :commands (eshell eshell-toggle eshell-frame)
   :defines eshell-prompt-function
   :functions eshell/alias
-  :hook (eshell-mode . (lambda ()
-                         (require 'esh-module)
-                         (require 'em-xtra)))
+  :config
+  (add-hook! 'eshell-mode-hook
+    (lambda ()
+      (set-window-fringes nil 0 0)
+      (set-window-margins nil 1 nil))
+    (lambda ()
+      (visual-line-mode +1)
+      (set-display-table-slot standard-display-table 0 ?\ )))
+
+  (add-hook 'eshell-mode-hook #'smartparens-mode)
+  (add-hook 'eshell-mode-hook #'hide-mode-line-mode)
+
+  (advice-add #'eshell-write-aliases-list :override #'ignore)
+
+  (with-eval-after-load 'esh-mode
+    (setq-local company-backends '(company-keywords
+                                   company-files))
+    (define-key eshell-mode-map [remap eshell-pcomplete] #'completion-at-point)
+    (define-key eshell-mode-map (kbd "C-j") #'eshell-next-matching-input-from-input)
+    (define-key eshell-mode-map (kbd "C-k") #'eshell-previous-matching-input-from-input)
+    (define-key eshell-mode-map (kbd "C-e") #'end-of-line)
+    (define-key eshell-mode-map (kbd "C-s") #'eshell:search-history)
+    (define-key eshell-mode-map (kbd "C-l") (lambda () (interactive)
+                                              (eshell/clear-scrollback)
+                                              (eshell-emit-prompt))))
   :custom
   (eshell-banner-message
      '(format "%s %s\n"
@@ -237,46 +249,41 @@ Once the eshell process is killed, the previous frame layout is restored."
   (eshell-prompt-regexp "^.* ~> ")
   (eshell-glob-case-insensitive t)
   (eshell-error-if-no-glob t)
-  (eshell-term-name "xterm-256color")
+  (eshell-term-name "xterm-256color"))
+
+;;;; Esh-Modules
+;;;;
+
+(use-package esh-module
+  :ensure nil
+  :defer t
+  :custom
+  (eshell-module-list '(eshell-tramp)))
+
+;;;; Smarter EShell
+;;;;
+
+(use-package em-smart
+  :ensure nil
+  :defer t
   :config
-  ;; UI Enchancements
-  ;;
-
-  (add-hook! 'eshell-mode-hook
-    (lambda ()
-      (set-window-fringes nil 0 0)
-      (set-window-margins nil 1 nil))
-    (lambda ()
-      (visual-line-mode +1)
-      (set-display-table-slot standard-display-table 0 ?\ )))
-
-  (add-hook 'eshell-mode-hook #'smartparens-mode)
-  (add-hook 'eshell-mode-hook #'hide-mode-line-mode)
-
-  ;; Add in support for TRAMP.
-  ;; This will be redundant in the future.
-
-  (add-to-list 'eshell-modules-list 'eshell-tramp)
-  
-  ;;; Keys
-  ;;;
-  
-  (with-eval-after-load 'esh-mode
-    (define-key eshell-mode-map (kbd "C-e") #'end-of-line)
-    (define-key eshell-mode-map (kbd "C-a") #'beginning-of-line)
-    (define-key eshell-mode-map (kbd "C-s") #'eshell:search-history)))
+  (eshell-smart-initialize)
+  :custom
+  (eshell-where-to-jump 'begin)
+  (eshell-review-quick-commands nil)
+  (eshell-smart-space-goes-to-end t))
 
 ;;;; Alias stuff
 ;;;;
 
 (use-package em-alias
   :ensure nil
-  :after eshell
+  :defer t
   :preface
   (defvar eshell:my-aliases
-    '(;;("q"  "exit")
+    '(("q"  "quit-and-close")
       ("f"  "find-file $1")
-      ("ff" "find-file $1")
+      ("ff" "find-file-other-window $1")
       ("d"  "dired $1")
       ("bd" "eshell-up $1")
       ("rg" "rg --color=always $*")
@@ -328,6 +335,10 @@ ALIASES is a flat list of alias -> command pairs. e.g.
                           eshell:my-aliases))
           (setq eshell-command-aliases-list eshell:my-aliases))))))
 
+(use-package em-xtra
+  :ensure nil
+  :defer t)
+
 ;;; External Packages
 ;;;
 
@@ -338,6 +349,7 @@ ALIASES is a flat list of alias -> command pairs. e.g.
   :commands eshell-up eshell-up-peek)
 
 (use-package esh-help
+  :disabled t
   :after eshell
   :config (setup-esh-help-eldoc))
 

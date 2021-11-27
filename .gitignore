@@ -14,6 +14,8 @@ test/result
 .org-id-locations
 .tern-port
 .yas-compiled-snippets.el
+projectile-bookmarks.eld
+init-mini.el
 auto-save-list/
 cask/
 ede-projects.el
@@ -21,6 +23,7 @@ elpa/
 eln-cache/
 network-security.data
 semanticdb
+eshell/
 server/
 smex-items
 tramp

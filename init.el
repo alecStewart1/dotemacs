@@ -85,6 +85,7 @@
 (require 'editing)
 (require 'termy)
 (require 'version-control)
+(require 'programming)
 
 ;;; Load the dumb ‘custom-file’
 ;;;
@@ -102,5 +103,7 @@
   (run-hook-on 'first-input-hook  '(pre-command-hook)))
 
 (setq load-prefer-newer noninteractive)
+
+(setq debug-on-message t)
 
 ;;; init.el ends here

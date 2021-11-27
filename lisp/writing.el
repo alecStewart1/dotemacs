@@ -149,7 +149,7 @@
       "TODO"
       :before-until #'org-eldoc-documentation-function
       (when-let (link (org-element-property :raw-link (org-element-context)))
-        (format "Link: %s" link)))
+        (format "Link: %s" link))))
 
   (defun org:setup-babel ()
     (setq org-src-preserve-indentation t
@@ -332,7 +332,7 @@
       :filter-return #'org-id-new
       (if (eq org-id-method 'uuid)
           (downcase uuid)
-        uuid))
+        uuid)))
 
   (defun org:setup-smartparens ()
     (provide 'smartparens-org))
@@ -427,7 +427,8 @@ Taken from: https://github.com/alphapapa/unpackaged.el/blob/master/unpackaged.el
 
 
   (defun org:indent-maybe-h ()
-    "Indent the current item (header or item), if possible.
+    "From Doom Emacs
+Indent the current item (header or item), if possible.
 Made for `org-tab-first-hook' in evil-mode."
     (interactive)
     (cond ((not (and (bound-and-true-p evil-local-mode)
@@ -486,8 +487,8 @@ Made for `org-tab-first-hook' in evil-mode."
              #'org-setup-keys
              #'org:setup-smartparens)
   :custom
-  (org-archive-subtree-save-file-p . t)
-  (org-id-locations-file-relative . t)
+  (org-archive-subtree-save-file-p t)
+  (org-id-locations-file-relative t)
   :config
   (add-hook 'org-mode-local-vars-hook #'eldoc-mode)
   (add-hook 'org-mode-hook #'orgtbl-mode)
@@ -546,8 +547,8 @@ Made for `org-tab-first-hook' in evil-mode."
   :config
   (setq toc-org-hrefify-default "gh"))
 
-  ;;;;; PDFTools
-  ;;;;;
+;;;;; PDFTools
+;;;;;
 
 (use-package org-pdftools
   :when (package-installed-p 'pdftools)
@@ -590,14 +591,6 @@ Made for `org-tab-first-hook' in evil-mode."
   (LaTeX-command . "xelatex"))
 
 (use-package latex
-  :custom
-  (LaTeX-section-hook '(LaTeX-section-heading
-                        LaTeX-section-title
-                        LaTeX-section-toc
-                        LaTeX-section-section
-                        LaTeX-section-label))
-  (LaTeX-fill-break-at-separators nil)
-  (LaTeX-item-indent 0)
   :config
   ;; Fix #1849: allow fill-paragraph in itemize/enumerate
   (defadvice latex:re-indent-itemize-and-enumerate
@@ -615,7 +608,15 @@ Made for `org-tab-first-hook' in evil-mode."
     (let ((LaTeX-indent-environment-list LaTeX-indent-environment-list))
       (delq! "itemize" LaTeX-indent-environment-list 'assoc)
       (delq! "enumerate" LaTeX-indent-environment-list 'assoc)
-      (apply fn args))))
+      (apply fn args)))
+  :custom
+  (LaTeX-section-hook '(LaTeX-section-heading
+                        LaTeX-section-title
+                        LaTeX-section-toc
+                        LaTeX-section-section
+                        LaTeX-section-label))
+  (LaTeX-fill-break-at-separators nil)
+  (LaTeX-item-indent 0))
 
 (use-package context
   :ensure nil
@@ -623,23 +624,27 @@ Made for `org-tab-first-hook' in evil-mode."
 
 (use-package auctex
   :config
-  (company:set-backend 'latex-mode #'company-auctex-environments #'company-auctex-macros))
+  (setq-mode-local latex-mode
+                   company-backends '(company-capf
+                                      company-auctex-environments
+                                      compnay-auctex-macros)))
 
 (use-package cdlatex
   :hook (LaTeX-mode . cdlatex-mode)
   :hook (org-mode   . org-cdlatex-mode)
   :config
-  (define-key 'cdlatex-mode-map (kbd "(") nil)
-  (define-key 'cdlatex-mode-map (kbd "{") nil)
-  (define-key 'cdlatex-mode-map (kbd "[") nil)
-  (define-key 'cdlatex-mode-map (kbd "|") nil)
-  (define-key 'cdlatex-mode-map (kbd "TAB" nil))
-  (define-key 'cdlatex-mode-map (kbd "<tab>") nil)
-  (define-key 'cdlatex-mode-map (kbd "^") nil)
-  (define-key 'cdlatex-mode-map (kbd "_") nil)
-  (define-key 'cdlatex-mode-map [(control return)] nil)
-  (define-key 'cdlatex-mode-map (kbd "C-RET") nil)
-  (define-key 'cdlatex-mode-map (kbd "<C-return>") nil))
+  ;; These mess with a lot stuff in auctex
+  (define-key cdlatex-mode-map (kbd "(") nil)
+  (define-key cdlatex-mode-map (kbd "{") nil)
+  (define-key cdlatex-mode-map (kbd "[") nil)
+  (define-key cdlatex-mode-map (kbd "|") nil)
+  (define-key cdlatex-mode-map (kbd "TAB" nil))
+  (define-key cdlatex-mode-map (kbd "<tab>") nil)
+  (define-key cdlatex-mode-map (kbd "^") nil)
+  (define-key cdlatex-mode-map (kbd "_") nil)
+  (define-key cdlatex-mode-map [(control return)] nil)
+  (define-key cdlatex-mode-map (kbd "C-RET") nil)
+  (define-key cdlatex-mode-map (kbd "<C-return>") nil))
 
 ;;;; SES: Simple Emacs Spreadsheet
 ;;;;
@@ -681,6 +686,7 @@ Made for `org-tab-first-hook' in evil-mode."
         (erase-buffer)
         (yank)
         ;; TODO why?
+        ;; TODO redo this?
         (call-process-region
          (point-min)
          (point-max)
@@ -692,7 +698,7 @@ Made for `org-tab-first-hook' in evil-mode."
 
 (use-package artist
   :ensure nil
-  :preface
+  :config
   ;; TODO need to be able to save art to file and clear scratch buffer
   ;; when finished
   (defun artist:switch ()
@@ -701,88 +707,7 @@ Made for `org-tab-first-hook' in evil-mode."
     (switch-to-buffer "*scratch*" nil t)
     (artist-mode)))
 
-;;;; Skeleton
-;;;;
-
-(use-package skeleton
-  :ensure nil
-  :demand t
-  :config
-  ;; Thank you reddit user b3n:
-  ;; https://old.reddit.com/r/emacs/comments/ml4wql/weekly_tipstricketc_thread/gtkc524/
-  (defmacro snippets:global-snip (name &rest skeleton)
-    "Create a global \"snippet\" with NAME and SKELETON.
-NAME must be valid in the Emacs Lisp naming convention.
-
-SKELETON must be a body that is valid to `Skeleton''s internal language.
-
-This macro makes use of `define-skeleton' and `define-abbrev' in order to
-create something similar to a code/writing snippet system, like that of
-`YASnippet'. Keep in mind that all abbreviations created are put in the
-`global-abbrev-table' under the named passed to this macro. That may or
-may not be something you want, depending on your uses.
-If you're looking to only define an abbrev for a specific file/mode, see
-`snippets:file-snip'."
-    (declare (debug t))
-    (let* ((snip-name (symbol-name `,name))
-           (func-name (intern (concat snip-name "-skel"))))
-      `(progn
-         (define-skeleton ,func-name
-           ,(concat snip-name " skeleton")
-           ,@skeleton)
-         (define-abbrev global-abbrev-table ,snip-name
-           "" ',func-name))))
-
-  (defmacro snippets:file-snip (name mode &rest skeleton)
-    "Create a MODES specific \"snippet\" with NAME and SKELETON.
-NAME must be valid in the Emacs Lisp naming convention.
-
-MODE must be a valid feature or file
-(something acceptable by `eval-after-load').
-
-MODE can be a list of features or files
-(again, something acceptable by `eval-after-load').
-
-SKELETON must be a body that is valid to `Skeleton''s internal language.
-This macro makes use of `define-skeleton' and `define-abbrev' in order to
-create something similar to a code/writing snippet system, like that of
-`YASnippet'.
-
-Keep in mind that all abbreviations created are put in the `local-abbrev-table'
-under the named (MODE) passed to this macro. That may or may not be something
-you want, depending on your uses. If you're looking to only define an abbrev
-globally, see `snippets:global-snip'."
-    (declare (debug t))
-    (let* ((snip-name (symbol-name `,name))
-           (func-name (intern (concat snip-name "-skel")))
-           (mode-str (if (listp)
-                         (mapconcat 'identity mode ", ")
-                       (format "%s" mode))))
-      `(cond ((symbolp ,mode)
-              (define-skeleton ,func-name
-                ,(format "%s %s %s." snip-name " skeleton. Defined in " mode-str)
-                ,@skeleton)
-              (eval-after-load ',mode
-                (define-abbrev local-abbrev-table ,snip-name
-                  "" ',func-name)))
-             ((listp ,mode)
-              (define-skeleton ,func-name
-                ,(format "%s %s %s %s." snip-name " skeleton. Defined in " mode-str " modes/features")
-                ,@skeleton)
-              (dolist (m mode)
-                (eval-after-load ',m
-                  (define-abbrev local-abbrev-table ,snip-name
-                    "" ',func-name)))))))
-
-  ;;;; TODO make more snippets
-
-  (snippets:file-snip if '(enh-ruby-mode fish-mode)
-                      "Condition: "
-                      ?\n "if " @ str
-                      ?\n > @ _ ?\n
-                      "end" ?\n))
-
-;;;; Markdown
+;;;; Markdown, the **inferior** markup format
 ;;;;
 
 (use-package markdown-mode

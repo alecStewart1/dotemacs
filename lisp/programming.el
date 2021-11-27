@@ -23,99 +23,101 @@
 (require 'subr-x)
 (require 'pcase)
 (require 'mode-local)
-(require 'ht)
+;(require 'ht)
+(require 'dash)
 
-;;; Personal Code
+;;; TODO Personal Code
 ;;;
+;;; Pretend you see none of this for now...
 
 ;;;; Formatting Code
-;;;; TODO - format region
+;;;; TODO - fix pcase shadowing matches, create format region
 
 ;;;###autoload
-(defvar format:formatter-command-hash (ht ('cs     "clang-format")
-                                          ('py     "black")
-                                          ('nim    "nimpretty")
-                                          ('elixir "mix format")
-                                          ('perl   "perltidy")
-                                          ('sh     "shfmt")
-                                          ('fish   "fish_indent")
-                                          ('md     "prettier")
-                                          ('html   "prettier")
-                                          ('js     "prettier")
-                                          ('css    "prettier")
-                                          ('scss   "prettier")
-                                          ('json   "prettier")
-                                          ('yaml   "prettier")))
+;; (defvar format:formatter-command-hash (ht ('cs     "clang-format")
+;;                                           ('py     "black")
+;;                                           ('nim    "nimpretty")
+;;                                           ('elixir "mix format")
+;;                                           ('perl   "perltidy")
+;;                                           ('sh     "shfmt")
+;;                                           ('fish   "fish_indent")
+;;                                           ('md     "prettierd")
+;;                                           ('html   "prettierd")
+;;                                           ('js     "prettierd")
+;;                                           ('css    "prettierd")
+;;                                           ('scss   "prettierd")
+;;                                           ('json   "prettierd")
+;;                                           ('yaml   "prettierd")))
 
 ;; TODO
 ;; Need to figure out how to account for formatters that can format entire directories
 ;;;###autoload
-(defvar format:formatter-args-hash (ht ('cs   " --sort-includes")
-                                       ('perl " -npro -gnu -nst -nt -dws -b")
-                                       ('fish " -w")
-                                       ('md   " -w --prose-wrap --parser markdown")
-                                       ('html " -w --parser html")
-                                       ('css  " -w --parser css")
-                                       ('scss " -w --parser scss")
-                                       ('json " -w --parser json")
-                                       ('yaml " -w --parser yaml")))
+;; (defvar format:formatter-args-hash (ht ('cs   " --sort-includes")
+;;                                        ('perl " -npro -gnu -nst -nt -dws -b")
+;;                                        ('fish " -w")
+;;                                        ('md   " -w --prose-wrap --parser markdown")
+;;                                        ('html " -w --parser html")
+;;                                        ('css  " -w --parser css")
+;;                                        ('scss " -w --parser scss")
+;;                                        ('json " -w --parser json")
+;;                                        ('yaml " -w --parser yaml")))
 ;; TODO
 ;;;###autoload
-(defvar format:formatter-region-args-hash (ht (py   . " -c")))
+;; (defvar format:formatter-region-args-hash (ht ('py " -c")))
 
-(defun format::shfmt-lang-args ()
-  (let ((lang " -ln "))
-    (cl-case (and (eql major-mode 'sh-mode)
-                  (boundp 'sh-shell)
-                  (symbol-value 'sh-shell))
-      (bash (concat lang "bash"  " -s"))
-      (mksh (concat lang "mksh"  " -s"))
-      (t    (concat lang "posix" " -s")))))
+;; (defun format::shfmt-lang-args ()
+;;   (let ((lang " -ln "))
+;;     (cl-case (and (eql major-mode 'sh-mode)
+;;                   (boundp 'sh-shell)
+;;                   (symbol-value 'sh-shell))
+;;       (bash (concat lang "bash"  " -s"))
+;;       (mksh (concat lang "mksh"  " -s"))
+;;       (t    (concat lang "posix" " -s")))))
 
-(defun format:get-command-for-mode (mode &optional on-region-p)
-  "Get the commandline command for formatting for the current MODE.
-ON-REGION-P (not yet implemented) when non-nil is for when we want to only
-format text in a specific region."
-  ;; I know, Common Lispers, flet is a stinky
-  (cl-flet ((get-cmd  (k)
-                      (ht-get format:formatter-command-hash k))
-            (get-args (k)
-                      (if on-region-p
-                          (ht-get format:formatter-region-args-hash k)
-                        (ht-get format:formatter-args-hash k))))
-    (pcase mode
-      ((or c-mode c++-mode objc-mode)  (concat (get-cmd 'cs) (get-args 'cs)))
-      (python-mode                     (get-cmd 'py))
-      (nim-mode                        (get-cmd 'nim))
-      (elixir-mode                     (get-cmd 'elixir))
-      (cperl-mode                      (concat (get-cmd 'perl) (get-args 'perl)))
-      (sh-mode                         (concat (get-cmd 'sh) (format::shfmt-lang-args)))
-      (fish-mode                       (concat (get-cmd 'fish) (get-args 'fish)))
-      (markdown-mode                   (concat (get-cmd 'md) (get-args 'md)))
-      ((or html-mode mhtml-mode)       (concat (get-cmd 'html) (get-args 'html)))
-      ((or js-mode js2-mode rjsx-mode) (get-cmd 'js))
-      (css-mode                        (concat (get-cmd 'css) (get-args 'css)))
-      (scss-mode                       (concat (get-cmd 'scss) (get-args 'scss)))
-      (json-mode                       (concat (get-cmd 'json) (get-args 'json)))
-      (yaml-mode                       (concat (get-cmd 'yaml) (get-args 'yaml)))
-      (_                               #'indent-region))))
+;; (defun format:get-command-for-mode (mode &optional on-region-p)
+;;   "Get the commandline command for formatting for the current MODE.
+;; ON-REGION-P (not yet implemented) when non-nil is for when we want to only
+;; format text in a specific region."
+;;   ;; I know, Common Lispers, flet is a stinky
+;;   (cl-flet ((get-cmd  (k)
+;;                       (ht-get format:formatter-command-hash k))
+;;             (get-args (k)
+;;                       (if on-region-p
+;;                           (ht-get format:formatter-region-args-hash k)
+;;                         (ht-get format:formatter-args-hash k))))
+;;     (pcase mode
+;;       ((or c-mode c++-mode objc-mode)  (concat (get-cmd 'cs) (get-args 'cs)))
+;;       (python-mode                     (get-cmd 'py))
+;;       (nim-mode                        (get-cmd 'nim))
+;;       (elixir-mode                     (get-cmd 'elixir))
+;;       (cperl-mode                      (concat (get-cmd 'perl) (get-args 'perl)))
+;;       (sh-mode                         (concat (get-cmd 'sh) (format::shfmt-lang-args)))
+;;       (fish-mode                       (concat (get-cmd 'fish) (get-args 'fish)))
+;;       (markdown-mode                   (concat (get-cmd 'md) (get-args 'md)))
+;;       ((or html-mode mhtml-mode)       (concat (get-cmd 'html) (get-args 'html)))
+;;       ((or js-mode js2-mode rjsx-mode) (get-cmd 'js))
+;;       (css-mode                        (concat (get-cmd 'css) (get-args 'css)))
+;;       (scss-mode                       (concat (get-cmd 'scss) (get-args 'scss)))
+;;       (json-mode                       (concat (get-cmd 'json) (get-args 'json)))
+;;       (yaml-mode                       (concat (get-cmd 'yaml) (get-args 'yaml)))
+;;       (_                               #'indent-region))))
 
-(defun format:format-current-file ()
-  "Format the current file in the current buffer."
-  (interactive)
-  (let* ((mode    (with-current-buffer (current-buffer) major-mode))
-         (cmd     (formet:get-command-for-mode mode))
-         (file    (expand-file-name (buffer-file-name))))
-    (if (stringp cmd)
-        ;; TODO Is this jank?
-        (async-shell-command
-         (concat cmd " " file)
-         nil t)
-      ;; If we don't have a formatter for the given langauge, we'll
-      ;; end up using `indent-region'
-      (save-excursion
-        (mark-whole-buffer)
-        (funcall-interactively cmd (point-min) (point-max))))))
+;; (defun format:format-current-file ()
+;;   "Format the current file in the current buffer."
+;;   (interactive)
+;;   (let* ((mode    (with-current-buffer (current-buffer) major-mode))
+;;          (cmd     (format:get-command-for-mode mode))
+;;          (file    (expand-file-name (buffer-file-name))))
+;;     (if (stringp cmd)
+;;         ;; TODO Is this jank?
+;;         (async-shell-command
+;;          (concat cmd " " file)
+;;          nil t)
+;;       ;; If we don't have a formatter for the given langauge, we'll
+;;       ;; end up using `indent-region'
+;;       (save-excursion
+;;         (mark-whole-buffer)
+;;         (funcall-interactively cmd (point-min) (point-max))))))
 
 ;; TODO
 ;; The issue with formatting regions is that:
@@ -129,24 +131,35 @@ format text in a specific region."
 ;;         (shell-command-on-region
 ;;          (region-beginning) (region-end) cmd nil t nil t nil))))
 
-(defun format:cheap-indent-sexp ()
-  "Indent the current s-expression, or next s-expression as `sp-mark-sexp'
-will use `sp-forward-sexp' if there's a currently marked region.
+;; (defun format:cheap-indent-sexp ()
+;;   "Indent the current s-expression, or next s-expression as `sp-mark-sexp'
+;; will use `sp-forward-sexp' if there's a currently marked region.
 
-This is \"cheap\" because it just uses `smartparens'.
+;; This is \"cheap\" because it just uses `smartparens'.
 
-Uses whatever the indent function is for the current mode, as this uses
-`indent-region'."
-  (interactive)
-  (save-excursion
-    (sp-mark-sexp)
-    (indent-region (region-beginning) (region-end))))
+;; Uses whatever the indent function is for the current mode, as this uses
+;; `indent-region'."
+;;   (interactive)
+;;   (save-excursion
+;;     (sp-mark-sexp)
+;;     (indent-region (region-beginning) (region-end))))
 
 ;;; Packages
 ;;;
 
 ;;;; Utilities
 ;;;;
+
+;;;;; Let’s first set ‘company-backends’
+;;;;;
+
+(setq-mode-local prog-mode
+                 company-backends '(company-capf
+                                    (company-dabbrev-code company-keywords company-files)
+                                    company-dabbrev))
+
+;;;;; Compiling things
+;;;;;
 
 (use-package compile
   :ensure nil
@@ -157,9 +170,12 @@ Uses whatever the indent function is for the current mode, as this uses
     (when (eq major-mode 'compilation-mode)
       (ansi-color-apply-on-region compilation-filter-start (point-max))))
   :custom
-  (compilation-always-kill . 1)
-  (compilation-ask-about-save . nil)
-  (compilation-scroll-output . 'first-error))
+  (compilation-always-kill 1)
+  (compilation-ask-about-save nil)
+  (compilation-scroll-output 'first-error))
+
+;;;;; Make sure you code doesn’t suck (too much)
+;;;;;
 
 (use-package flymake
   :ensure nil
@@ -167,8 +183,14 @@ Uses whatever the indent function is for the current mode, as this uses
   :config
   (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake))
 
+;;;;; Uh...this thing
+;;;;;
+
 (use-package goto-addr
   :hook (prog-mode . goto-address-mode))
+
+;;;;; Get brief documentation in the message area
+;;;;;
 
 (use-package eldoc
   :ensure nil
@@ -178,32 +200,21 @@ Uses whatever the indent function is for the current mode, as this uses
     (setq-default eldoc-documentation-format-function #'eldoc-documentation-format-concat-hr))
   :custom
   (eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
-  (eldoc-idle-delay .1))
+  (eldoc-idle-delay 0.1))
+
+;;;;; RMSBolt, deeply inspect you code
+;;;;;
 
 (use-package rmsbolt
   :after (:any c-mode c++-mode objc-mode emacs-lisp-mode common-lisp-mode python-mode java-mode))
 
+;;;;; Tree-Sitter gives use pretty colors
+;;;;;
+
 (use-package tree-sitter
   :if (functionp 'module-load)
-  :hook ((sh-mode . tree-sitter-mode)
-         (c-mode . (tree-sitter-mode tree-sitter-hl-mode))
-         (csharp-mode . (tree-sitter-mode tree-sitter-hl-mode))
-         (c++-mode . (tree-sitter-mode tree-sitter-hl-mode))
-         (css-mode . tree-sitter-mode)
-         (html-mode . tree-sitter-mode)
-         (mhtml-mode . tree-sitter-mode)
-         (java-mode . (tree-sitter-mode tree-sitter-hl-mode))
-         (js-mode . tree-sitter-mode)
-         (js-jsx-mode . tree-sitter-mode)
-         (js2-mode . tree-sitter-mode)
-         (ruby-mode  . (tree-sitter-mode tree-sitter-hl-mode))
-         (enh-ruby-mode . (tree-sitter-mode tree-sitter-hl-mode))
-         (rjsx-mode . tree-sitter-mode)
-         (typescript-mode . tree-sitter-mode)
-         (json-mode . (tree-sitter-mode tree-sitter-hl-mode))
-         (jsonc-mode . (tree-sitter-mode tree-sitter-hl-mode))
-         (python-mode . (tree-sitter-mode tree-sitter-hl-mode))
-         (ruby-mode . (tree-sitter-mode tree-sitter-hl-mode))))
+  :hook (prog-mode . global-tree-sitter-mode)
+  :hook (tree-sitter-after-on . tree-sitter-hl-mode))
 
 (use-package tree-sitter-langs
   :after tree-sitter
@@ -227,7 +238,12 @@ Uses whatever the indent function is for the current mode, as this uses
      (python-mode . python)
      (ruby-mode . ruby))))
 
+;;;;; Projectile
+;;;;;
+
 (use-package projectile
+  :defer 0.5
+  :hook (after-init . projectile-mode)
   :commands (projectile-project-root
              projectile-project-name
              projectile-project-p
@@ -354,8 +370,11 @@ And if it's a function, evaluate it."
                     projectile-project-root-files)
             projectile-project-root-files-bottom-up nil))))
 
-;;;; Assembler
+;;;; Coding and programming modes
 ;;;;
+
+;;;;; Assembler
+;;;;;
 
 (use-package asm-mode
   :ensure nil
@@ -374,8 +393,8 @@ And if it's a function, evaluate it."
   :if (or windows-nt-p cygwin-p)
   :mode "\\.masm$")
 
-;;;; C/C++, Objective-C
-;;;;
+;;;;; C/C++, Objective-C
+;;;;;
 
 (use-package cc-mode
   :ensure nil
@@ -386,9 +405,9 @@ And if it's a function, evaluate it."
           cmake-mode-local-vars) . lsp-deferred)
   :hook (c-mode-common . rainbow-delimiters-mode)
   :custom
-  (c-default-style . "bsd")
-  (c-basic-offset . tab-width)
-  (c-backspace-function . #'delete-backward-char))
+  ;;(c-default-style "bsd")
+  (c-basic-offset tab-width)
+  (c-backspace-function #'delete-backward-char))
 
 ;; (use-package ccls
 ;;   :when (package-installed-p 'lsp-mode)
@@ -410,11 +429,12 @@ And if it's a function, evaluate it."
 ;;     (setq ccls-initialization-options
 ;;           `(:index (:trackDependency 1)))))
 
-;;;; Shell
-;;;;
+;;;;; Shell
+;;;;;
 
 (use-package sh-script
   :ensure nil
+  :defer t
   :mode ("\\.\\(?:zunit\\|env\\)\\'" . sh-mode)
   :mode ("/bspwmrc\\'" . sh-mode)
   :preface
@@ -447,9 +467,10 @@ And if it's a function, evaluate it."
 
   (setq sh-indent-after-continuation 'always)
 
-  (add-to-list 'sh-imenu-generic-expression
-               'sh (nil "^\\s-*function\\s-+\\([[:alpha:]_-][[:alnum:]_-]*\\)\\s-*\\(?:()\\)?" 1)
-               (nil "^\\s-*\\([[:alpha:]_-][[:alnum:]_-]*\\)\\s-*()" 1))
+  ;; (add-to-list 'sh-imenu-generic-expression
+  ;;              '(sh (nil "^\\s-*function\\s-+\\([[:alpha:]_-][[:alnum:]_-]*\\)\\s-*\\(?:()\\)?" 1)
+  ;;                   (nil "^\\s-*\\([[:alpha:]_-][[:alnum:]_-]*\\)\\s-*()" 1)))
+  
   (add-hook! 'sh-mode-hook
     (defun sh-init-extra-fontification ()
       (font-lock-add-keywords nil
@@ -464,34 +485,39 @@ And if it's a function, evaluate it."
   (sp-local-pair 'sh-mode "`" "`" :unless '(sp-point-before-word-p sp-point-before-same-p)))
 
 (use-package company-shell
-  :after sh-script
+  :after (company sh-script)
   :config
-  (company:set-backend 'sh-mode '(company-shell company-files))
+  (setq-mode-local sh-mode
+                   company-backends '(company-shell
+                                      company-capf
+                                      company-keywords
+                                      company-files))
   (setq company-shell-delete-duplicates t))
 
 (use-package fish-mode
-  :config
-  (snippets:file-snip fn 'fish-mode
-                      "Function Name: "
-                      ?\n "function " str " " @ (skeleton-read "Args: ")
-                      ?\n > @ _ ?\n
-                      "end" ?\n))
+  ;; :config
+  ;; (snippets:file-snip fn 'fish-mode
+  ;;                     "Function Name: "
+  ;;                     ?\n "function " str " " @ (skeleton-read "Args: ")
+  ;;                     ?\n > @ _ ?\n
+  ;;                     "end" ?\n)
+  )
 
-;;;; Sieve scripts
-;;;;
+;;;;; Sieve scripts (not really coding but whatever)
+;;;;;
 ;;;; TODO can we enhance this somehow?
 
 (use-package sieve-mode
   :ensure nil
   :mode "\\.s\\(v\\|iv\\|ieve\\)\\'")
 
-;;;; Emacs-Lisp
-;;;;
+;;;;; Emacs-Lisp
+;;;;;
 
 (use-package elisp-mode
   :ensure nil
   :mode ("\\.Cask\\'" . emacs-lisp-mode)
-  :hook (before-save . format:format-current-file)
+  ;;:hook (before-save . format:format-current-file)
   :init
   (defun elisp-mode:indent-function (indent-point state)
     "A replacement for `lisp-indent-function'.
@@ -541,10 +567,10 @@ Also took this from Doom Emacs"
                       (funcall method indent-point state))))))))
 
   :custom
-  (tab-width . 8)
-  (mode-name . "Elisp")
-  (outline-regexp . "[ \t];;;; [^ \t\n]")
-  (lisp-indent-function . #'elisp-mode:indent-function)
+  (tab-width 8)
+  (mode-name "Elisp")
+  (outline-regexp "[ \t];;;; [^ \t\n]")
+  (lisp-indent-function #'elisp-mode:indent-function)
   :config
   (put 'add-function 'lisp-indent-function 2)
   (put 'advice-add   'lisp-indent-function 2)
@@ -577,6 +603,7 @@ Also took this from Doom Emacs"
 
 (use-package ielm
   :ensure nil
+  :commands ielm ielm-send-input inferior-emacs-lisp-mode
   ;; Adapted from http://www.modernemacs.com/post/comint-highlighting/ to add
   ;; syntax highlighting to ielm REPLs.
   :config
@@ -617,22 +644,28 @@ Also took this from Doom Emacs"
   :preface
   (defvar buttercup-minor-mode-map (make-sparse-keymap)))
 
-;;;; Common Lisp
-;;;;
+(use-package highlight-quoted
+  :defer t)
 
-;;;###autoload (defvar sly-contribs '(sly-fancy))
+;;;;; Common Lisp
+;;;;;
 
 (defer-feature! lisp-mode)
 
-(add-hook 'lisp-mode-hook #'rainbow-delimiters-mode)
-
 (use-package sly
+  :defer t
   :hook ((lisp-mode-local-vars . sly-editing-mode)
          (sly-mrepl-mode . electric-pair-local-mode))
   :preface
+  ;; This causes problems, so we remove it here...
+  (remove-hook 'lisp-mode-hook #'sly--lisp-indent-lisp-mode-hook)
+
+  (defvar sly-contribs '(sly-fancy))
   (defvar inferior-lisp-program (concat (executable-find "ros") " -L sbcl-bin -l ~/.sbclrc -Q run"))
+
   :init
   (setq sly-contribs '(sly-fancy))
+  ;;(add-hook 'lisp-mode-hook #'rainbow-delimiters-mode)
   (add-hook! 'after-init-hook
     (with-eval-after-load 'sly
       (sly-setup)))
@@ -640,19 +673,6 @@ Also took this from Doom Emacs"
     (remove-hook 'lisp-mode-hook #'sly-editing-mode))
   (eval-after-load 'lisp
     (remove-hook 'lisp-mode-hook #'sly-editing-mode))
-  :custom
-  (sly-mrepl-history-file-name (concat my-cache-dir "sly-mrepl-history"))
-  (sly-net-coding-system 'utf-8-unix)
-  (sly-kill-without-query-p t)
-  (sly-lisp-implementations
-   `((sbcl ("sbcl" "--dynamic-space-size" "2000"))
-     (roswell (,(executable-find "ros") " -Q run"))))
-  (sly-default-lisp 'roswell)
-  (sly-description-autofocus t)
-  (sly-inhibit-pipelining nil)
-  (sly-load-failed-fasl 'always)
-  (sly-ignore-protocol-mismatches t)
-  (sly-complete-symbol-function 'sly-flex-completions)
   :config
   (defun sly:cleanup-maybe ()
     "Kill processes and leftover buffers when killing the last sly buffer."
@@ -684,6 +704,10 @@ Also took this from Doom Emacs"
 
   (add-hook! 'sly-mode-hook #'sly:init)
 
+  ;; ...and add it back in here
+  (add-hook 'lisp-mode-hook #'sly--lisp-indent-lisp-mode-hook)
+
+  ;; Cool stuff with Consult
   (defvar consult::sly-mrepl-hist-source
     `(:name "Sly History"
       :narrow ?<
@@ -719,7 +743,20 @@ Also took this from Doom Emacs"
     (consult--read consult::sly-mrepl-shortcut-source
                    :prompt "Action: "
                    :require-match t
-                   :sort nil)))
+                   :sort nil))
+  :custom
+  (sly-mrepl-history-file-name (concat my-cache-dir "sly-mrepl-history"))
+  (sly-net-coding-system 'utf-8-unix)
+  (sly-kill-without-query-p t)
+  (sly-lisp-implementations
+   `((sbcl ("sbcl" "--dynamic-space-size" "2000"))
+     (roswell (,(executable-find "ros") " -Q run"))))
+  (sly-default-lisp 'roswell)
+  (sly-description-autofocus t)
+  (sly-inhibit-pipelining nil)
+  (sly-load-failed-fasl 'always)
+  (sly-ignore-protocol-mismatches t)
+  (sly-complete-symbol-function 'sly-flex-completions))
 
 (use-package sly-macrostep
   :after sly)
@@ -740,8 +777,8 @@ Also took this from Doom Emacs"
   :init
   (add-to-list 'sly-contribs 'sly-named-readtables))
 
-;;;; Schemes
-;;;;
+;;;;; Schemin’
+;;;;;
 
 ;; (use-package scheme
 ;;   :ensure nil
@@ -844,14 +881,15 @@ Also took this from Doom Emacs"
 ;;   (define-key 'racket-xp-mode-map [remap next-error]              #'racket-xp-next-error)
 ;;   (define-key 'racket-xp-mode-map [remap previous-error]          #'racket-xp-previous-error))
 
-;;;; Java
-;;;;
+;;;;; Still waiting for the JVM to startup,
+;;;;; and for Project Valhalla to be production ready (*quiet sobbing*)
 
 (use-package lsp-java
   :after lsp-mode
   :hook (java-mode-local-vars . java-lsp)
-  :preface
+  :init
   (setq lsp-java-workspace-dir (concat my-etc-dir "java-workspace"))
+  :config
   ;; Stolen from: https://github.com/dakra/dmacs/blob/master/init.org#java
   (defun java-lsp ()
     (setq electric-indent-inhibit nil)
@@ -896,15 +934,11 @@ If in a method, runs the test method, otherwise runs the entire test class."
       (call-interactively #'dap-java-debug-test-method)
     (user-error (call-interactively #'dap-java-debug-test-class))))
 
-(use-package dap-java
-  :after lsp-java
-  :commands dap-java-run-test-class dap-java-debug-test-class)
-
 (use-package groovy-mode
   :mode "\\.g\\(?:radle\\|roovy\\)$")
 
-;;;; .NET Core
-;;;;
+;;;;; .NET Core
+;;;;;
 
 ;; (with-eval-after-load 'projectile
 ;;   (pushnew! projectile-project-root-files "global.json")
@@ -965,8 +999,8 @@ If in a method, runs the test method, otherwise runs the entire test class."
 ;;   (bmx-mode-setup-defaults))
 
 
-;;;; Go
-;;;;
+;;;;; Go
+;;;;;
 
 ;; (use-package go-mode
 ;;   :defer t
@@ -979,9 +1013,9 @@ If in a method, runs the test method, otherwise runs the entire test class."
 ;; (use-package go-gen-test
 ;;   :after go-mode)
 
-;;;; ESS
-;;;;
-;;;; I mostly use this for Julia support
+;;;;; ESS
+;;;;;
+;;;;; I mostly use this for Julia support
 
 ;; (use-package ess
 ;;   :commands stata SAS
@@ -1040,8 +1074,8 @@ If in a method, runs the test method, otherwise runs the entire test class."
                  "\\)"))
       1 font-lock-type-face))))
 
-;;;;; Inferior Julia REPL
-;;;;;
+;;;;;; Inferior Julia REPL
+;;;;;;
 
 ;;;###autoload
 (defvar julia:repl-start-hook nil)
@@ -1061,7 +1095,7 @@ If in a method, runs the test method, otherwise runs the entire test class."
     lsp-enable-folding t
     lsp-folding-range-limit 100))
 
-;;;;; For the LSP support for Julia
+;;;;;; For the LSP support for Julia
 
 (use-package lsp-julia
   :after lsp-mode
@@ -1070,8 +1104,8 @@ If in a method, runs the test method, otherwise runs the entire test class."
   :custom
   (lsp-julia-default-environment (expand-file-name "~/.julia/environment/v1.6")))
 
-;;;; Prolog
-;;;;
+;;;;; Prolog
+;;;;;
 
 (use-package prolog
   :ensure nil
@@ -1094,8 +1128,8 @@ If in a method, runs the test method, otherwise runs the entire test class."
     :multi-root t
     :server-id 'prolog-ls)))
 
-;;;; Nim
-;;;;
+;;;;; Nim
+;;;;;
 
 (use-package nim-mode
   :hook (nim-mode . lsp-deferred)
@@ -1113,22 +1147,23 @@ nimsuggest isn't installed."
     (advice-add #'nimsuggest--get-temp-file-name :filter-return
                 (defun nim--suggest-get-temp-file-name (path)
                   (replace-regexp-in-string "[꞉* |<>\"?*]" "" path))))
-  :config
-  ;; Make use of `dap-mode'
-  (require 'dap-gdb-lldb)
-  (dap-register-debug-tempalte "Nim::GDB Run Configuration"
-                               (list :type "gdb"
-                                     :request "launch"
-                                     :name "GDB::Run")
-                               :gdbpath "nim-gdb"
-                               :target nil
-                               :cwd nil))
+  ;; :config
+  ;; ;; Make use of `dap-mode'
+  ;; (require 'dap-gdb-lldb)
+  ;; (dap-register-debug-tempalte "Nim::GDB Run Configuration"
+  ;;                              (list :type "gdb"
+  ;;                                    :request "launch"
+  ;;                                    :name "GDB::Run")
+  ;;                              :gdbpath "nim-gdb"
+  ;;                              :target nil
+  ;;                              :cwd nil)
+  )
 
 (use-package ob-nim
   :after ob)
 
-;;;; Erlang
-;;;;
+;;;;; Erlang
+;;;;;
 
 ;; (use-package erlang
 ;;   :mode ("\\.erlang\\'" . erlang-mode)
@@ -1138,8 +1173,8 @@ nimsuggest isn't installed."
 ;;   (when (package-installed-p 'lsp-mode)
 ;;     (add-hook 'erlang-mode-local-vars-hook #'lsp-deferred)))
 
-;;;; Elixir
-;;;;
+;;;;; Elixir
+;;;;;
 
 (use-package elixir-mode
   :defer t
@@ -1165,23 +1200,24 @@ nimsuggest isn't installed."
              "\\_<-?[[:digit:]]+\\(?:_[[:digit:]]\\{3\\}\\)*\\_>"
              highlight-numbers-modelist))
 
-  (snippet:file-snip mod 'elixir-mode
-                     "Name: "
-                     ?\n "defmodule " str " do"
-                     ?\n > @ _ ?\n
-                     "end" ?\n)
+  ;; (snippet:file-snip mod 'elixir-mode
+  ;;                    "Name: "
+  ;;                    ?\n "defmodule " str " do"
+  ;;                    ?\n > @ _ ?\n
+  ;;                    "end" ?\n)
 
-  (snippet:file-snip def 'elixir-mode
-                     "Name: "
-                     ?\n "def " @ str " (" @ ") do"
-                     ?\n > @ _ ?\n
-                     "end" ?\n)
+  ;; (snippet:file-snip def 'elixir-mode
+  ;;                    "Name: "
+  ;;                    ?\n "def " @ str " (" @ ") do"
+  ;;                    ?\n > @ _ ?\n
+  ;;                    "end" ?\n)
 
-  (snippet:file-snip if 'elixir-mode
-                     "Condition: "
-                     ?\n "if " @ str "do"
-                     ?\n > @ _ ?\n
-                     "end" ?\n))
+  ;; (snippet:file-snip if 'elixir-mode
+  ;;                    "Condition: "
+  ;;                    ?\n "if " @ str "do"
+  ;;                    ?\n > @ _ ?\n
+  ;;                    "end" ?\n)
+  )
 
 (use-package mix
   :after elixir-mode
@@ -1203,8 +1239,8 @@ nimsuggest isn't installed."
 (use-package ob-elixir
   :after ob)
 
-;;;; Perl
-;;;;
+;;;;; Perl
+;;;;;
 
 ;; (use-package cperl-mode
 ;;   :mode ("\\.\\([pP][Llm]\\|al\\)\\'" . cperl-mode)
@@ -1231,8 +1267,8 @@ nimsuggest isn't installed."
 
 ;;   (add-hook 'cperl-mode-local-vars-hook #'lsp-deferred))
 
-;;;; Ruby
-;;;;
+;;;;; Ruby
+;;;;;
 
 ;; (use-package enh-ruby-mode
 ;;   :mode "\\(?:\\.rb\\|ru\\|rake\\|thor\\|jbuilder\\|gemspec\\|podspec\\|/\\(?:Gem\\|Rake\\|Cap\\|Thor\\|Vagrant\\|Guard\\|Pod\\)file\\)\\'"
@@ -1268,8 +1304,8 @@ nimsuggest isn't installed."
 ;;   (setq auto-insert-query nil)
 ;;   (setq inf-ruby-console-environment "development"))
 
-;;;; Python
-;;;;
+;;;;; Python
+;;;;;
 
 ;; (use-package python
 ;;   :ensure nil
@@ -1314,8 +1350,8 @@ nimsuggest isn't installed."
 ;; (use-package lsp-pyright
 ;;   :after (:all lsp-mode python))
 
-;;;; Webdev
-;;;;
+;;;;; lol webdev (*more quiet sobbing*)
+;;;;;
 
 (use-package sgml-mode
   :ensure nil
@@ -1335,11 +1371,14 @@ nimsuggest isn't installed."
   :mode "\\.xaml\\'"
   :mode "\\.rss\\'"
   :magic "<\\?xml"
+  :config
+  (setq-mode-local nxml-mode
+                   company-backends '(company-nxml
+                                      company-capf
+                                      company-files))
   :custom
   (nxml-slash-auto-complete-flag t)
-  (nxml-auto-insert-xml-declaration-flag t)
-  :config
-  (company:set-backend 'nxml-mode '(company-nxml)))
+  (nxml-auto-insert-xml-declaration-flag t))
 
 (use-package web-mode
   :mode "\\.[px]?html?\\'"
@@ -1362,11 +1401,7 @@ nimsuggest isn't installed."
   ;; `auto-mode-alist' rather than prepending it, its autoload will have
   ;; priority over this one.
   (add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode) 'append)
-  :custom
-  (web-mode-enable-html-entities-fontification t)
-  (web-mode-auto-close-style 1)
-  (web-mode-enable-auto-quoting nil)
-  (web-mode-enable-auto-pairing t)
+
   :config
   ;; 1. Remove web-mode auto pairs whose end pair starts with a latter
   ;;    (truncated autopairs like <?p and hp ?>). Smartparens handles these
@@ -1379,7 +1414,12 @@ nimsuggest isn't installed."
                      unless (string-match-p "^[a-z-]" (cdr pair))
                      collect (cons (car pair)
                                    (string-trim-right (cdr pair)
-                                                      "\\(?:>\\|]\\|}\\)+\\'"))))))
+                                                      "\\(?:>\\|]\\|}\\)+\\'")))))
+  :custom
+  (web-mode-enable-html-entities-fontification t)
+  (web-mode-auto-close-style 1)
+  (web-mode-enable-auto-quoting nil)
+  (web-mode-enable-auto-pairing t))
 
 (use-package emmet-mode
   :hook (css-mode web-mode html-mode haml-mode nxml-mode)
@@ -1388,8 +1428,8 @@ nimsuggest isn't installed."
     (add-hook 'emmet-mode-hook #'yas-minor-mode-on))
   (setq emmet-move-cursor-between-quotes t))
 
-;;;; LSP and DAP
-;;;;
+;;;;; LSP and DAP
+;;;;;
 
 (use-package lsp-mode
   :commands (lsp-format-buffer
@@ -1397,26 +1437,14 @@ nimsuggest isn't installed."
              lsp-install-server)
   :hook
   (lsp-mode . (lambda ()
-                     (add-hook 'before-save-hook #'lsp-format-buffer t t)
-                     (add-hook 'before-save-hook #'lsp-organize-imports t t)))
+                (add-hook 'before-save-hook #'lsp-format-buffer t t)
+                (add-hook 'before-save-hook #'lsp-organize-imports t t)))
   :preface
   (defvar lsp-company-backends 'company-capf)
   (defvar lsp--deferred-shutdown-timer nil)
   :init
   (setq lsp-session-file (concat my-etc-dir "lsp-seesion")
         lsp-server-install-dir (concat my-etc-dir "lsp/"))
-  :custom
-  (lsp-keep-workspace-alive nil)
-  (lsp-intelephense-storage-path (concat my-cache-dir "lsp-intelephense/"))
-  (lsp-clients-emmy-lua-jar-path (concat lsp-server-install-dir "EmmyLua-LS-all.jar"))
-  (lsp-xml-jar-file              (concat lsp-server-install-dir "org.eclipse.lsp4xml-0.3.0-uber.jar"))
-  (lsp-groovy-server-file        (concat lsp-server-install-dir "groovy-language-server-all.jar"))
-  (lsp-clients-python-library-directories '("/usr/local/" "/usr/"))
-  (lsp-enable-folding nil)
-  (lsp-enable-text-document-color nil)
-  (lsp-enable-on-type-formatting nil)
-  (lsp-headerline-breadcrumb-enable nil)
-  (lsp-keymap-prefix nil)
   :config
   (defadvice! lsp:respect-user-defined-checkers (orig-fn &rest args)
     :around #'lsp-diagnostics-flycheck-enable
@@ -1444,9 +1472,9 @@ nimsuggest isn't installed."
              (if (numberp lsp-defer-shutdown) lsp-defer-shutdown 3)
              nil (lambda (workspace)
                    (with-lsp-workspace workspace
-                                       (unless (lsp--workspace-buffers workspace)
-                                         (let ((lsp-restart 'ignore))
-                                           (funcall orig-fn)))))
+                     (unless (lsp--workspace-buffers workspace)
+                       (let ((lsp-restart 'ignore))
+                         (funcall orig-fn)))))
              lsp--cur-workspace))))
 
   (add-hook! 'lsp-mode-hook
@@ -1460,11 +1488,24 @@ nimsuggest isn't installed."
 
   (add-hook! 'lsp-completion-mode-hook
     (defun lsp:init-company-backends ()
+      "Remove redundant ‘company-capf’ in ‘lsp-company-backends’."
       (when lsp-completion-mode
         (set (make-local-variable 'company-backends)
              (cons lsp-company-backends
                    (remove lsp-company-backends
-                           (remq 'company-capf company-backends))))))))
+                           (remq 'company-capf company-backends)))))))
+  :custom
+  (lsp-keep-workspace-alive nil)
+  (lsp-intelephense-storage-path (concat my-cache-dir "lsp-intelephense/"))
+  (lsp-clients-emmy-lua-jar-path (concat lsp-server-install-dir "EmmyLua-LS-all.jar"))
+  (lsp-xml-jar-file              (concat lsp-server-install-dir "org.eclipse.lsp4xml-0.3.0-uber.jar"))
+  (lsp-groovy-server-file        (concat lsp-server-install-dir "groovy-language-server-all.jar"))
+  (lsp-clients-python-library-directories '("/usr/local/" "/usr/"))
+  (lsp-enable-folding nil)
+  (lsp-enable-text-document-color nil)
+  (lsp-enable-on-type-formatting nil)
+  (lsp-headerline-breadcrumb-enable nil)
+  (lsp-keymap-prefix nil))
 
 (use-package lsp-ui
   :custom
@@ -1487,6 +1528,10 @@ nimsuggest isn't installed."
   :init
   (with-eval-after-load 'lsp
     (require 'dap-mode))
+  :config
+  (require 'dap-ui)
+  (add-hook 'dap-mode-hook #'dap-ui-mode)
+  (add-hook 'dap-ui-mode-hook #'dap-ui-controls-mode)
   :custom
   (dap-breakpoints-file (concat my-etc-dir "dap-breakpoints"))
   (dap-utils-extension-path (concat my-etc-dir "dap-extension/"))
@@ -1496,13 +1541,8 @@ nimsuggest isn't installed."
   ;;   (require 'dap-gdb-lldb))
   )
 
-(use-package dap-ui
-  :when (and (package-installed-p 'lsp-mode) (package-installed-p 'dap-mode))
-  :hook ((dap-mode . dap-ui-mode)
-         (dap-ui-mode . dap-ui-controls-mode)))
-
-;;;; Docker
-;;;;
+;;;;; Containers all the way down
+;;;;;
 
 (use-package dockerfile-mode
   :config

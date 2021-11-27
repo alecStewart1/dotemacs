@@ -85,6 +85,15 @@
   (declare (pure t) (side-effect-free t))
   (if (listp exp) exp (list exp)))
 
+(defun rpartial (fn &rest args)
+  "Return a partial application of FUN to right-hand ARGS.
+
+ARGS is a list of the last N arguments to pass to FUN. The result is a new
+function which does the same as FUN, except that the last N arguments are fixed
+at the values with which this function was called."
+  (declare (side-effect-free t))
+  (lambda (&rest pre-args)
+    (apply fn (append pre-args args))))
 
 ;;;###autoload
 (defun get-buffer-mode (buf)
@@ -162,18 +171,14 @@ scratch buffer. See `fallback-buffer-name' to change this."
                                             var mode))))))
 
 ;;;###autoload
-(defun resolve-file-paths-forms (spec &optional directory)
+(defun resolve-file-path-forms (spec &optional directory)
   "Converts a simple nested series of or/and forms into a series of
 `file-exists-p' checks.
-
 For example
-
   (resolve-file-path-forms
     '(or A (and B C))
     \"~\")
-
 Returns (approximately):
-
   '(let* ((_directory \"~\")
           (A (expand-file-name A _directory))
           (B (expand-file-name B _directory))
@@ -181,13 +186,12 @@ Returns (approximately):
      (or (and (file-exists-p A) A)
          (and (if (file-exists-p B) B)
               (if (file-exists-p C) C))))
-
 This is used by `file-exists-p!' and `project-file-exists-p!'."
   (declare (pure t) (side-effect-free t))
   (if (and (listp spec)
            (memq (car spec) '(or and)))
       (cons (car spec)
-            (mapcar (lambda (&rest args-before) apply #'resolve-file-path-forms (append args-before directory))
+            (mapcar (rpartial #'resolve-file-path-forms directory)
                     (cdr spec)))
     (let ((filevar (make-symbol "file")))
       `(let ((,filevar ,spec))
@@ -197,6 +201,7 @@ This is used by `file-exists-p!' and `project-file-exists-p!'."
                       (file-exists-p ,filevar))
                  `(file-exists-p ,filevar))
               ,filevar)))))
+
 
 ;;;###autoload
 (defmacro file-exists-p! (files &optional directory)
@@ -271,8 +276,11 @@ TRIGGER-HOOK is a list of quoted hooks and/or sharp-quoted functions."
         buffer))))
 
 
-;;;; After certin functions have loaded
+;;;; Stuff for certain packages that a lot of configurations need
 ;;;;
+
+;;;;; Projectile
+;;;;;
 
 ;;;###autoload
 (defun projectile:get-project-root (&optional dir)
@@ -282,6 +290,76 @@ Returns nil if not in a project."
         projectile-require-project-root)
     (projectile-project-root dir)))
 
+;;;;; Skeleton
+;;;;;
+
+;; Thank you reddit user b3n:
+;; https://old.reddit.com/r/emacs/comments/ml4wql/weekly_tipstricketc_thread/gtkc524/
+;;;###autoload
+(defmacro snippets:global-snip (name &rest skeleton)
+  "Create a global \"snippet\" with NAME and SKELETON.
+NAME must be valid in the Emacs Lisp naming convention.
+
+SKELETON must be a body that is valid to `Skeleton''s internal language.
+
+This macro makes use of `define-skeleton' and `define-abbrev' in order to
+create something similar to a code/writing snippet system, like that of
+`YASnippet'. Keep in mind that all abbreviations created are put in the
+`global-abbrev-table' under the named passed to this macro. That may or
+may not be something you want, depending on your uses.
+If you're looking to only define an abbrev for a specific file/mode, see
+`snippets:file-snip'."
+  (declare (debug t))
+  (let* ((snip-name (symbol-name `,name))
+         (func-name (intern (concat snip-name "-skel"))))
+    `(progn
+       (define-skeleton ,func-name
+         ,(concat snip-name " skeleton")
+         ,@skeleton)
+       (define-abbrev global-abbrev-table ,snip-name
+         "" ',func-name))))
+
+;;;###autoload
+(defmacro snippets:file-snip (name mode &rest skeleton)
+  "Create a MODES specific \"snippet\" with NAME and SKELETON.
+NAME must be valid in the Emacs Lisp naming convention.
+
+MODE must be a valid feature or file
+(something acceptable by `eval-after-load').
+
+MODE can be a list of features or files
+(again, something acceptable by `eval-after-load').
+
+SKELETON must be a body that is valid to `Skeleton''s internal language.
+This macro makes use of `define-skeleton' and `define-abbrev' in order to
+create something similar to a code/writing snippet system, like that of
+`YASnippet'.
+
+Keep in mind that all abbreviations created are put in the `local-abbrev-table'
+under the named (MODE) passed to this macro. That may or may not be something
+you want, depending on your uses. If you're looking to only define an abbrev
+globally, see `snippets:global-snip'."
+  (declare (debug t))
+  (let* ((snip-name (symbol-name `,name))
+         (func-name (intern (concat snip-name "-skel")))
+         (mode-str (if (listp)
+                       (mapconcat 'identity mode ", ")
+                     (format "%s" mode))))
+    `(cond ((symbolp ,mode)
+            (define-skeleton ,func-name
+              ,(format "%s %s %s." snip-name " skeleton. Defined in " mode-str)
+              ,@skeleton)
+            (eval-after-load ',mode
+              (define-abbrev local-abbrev-table ,snip-name
+                "" ',func-name)))
+           ((listp ,mode)
+            (define-skeleton ,func-name
+              ,(format "%s %s %s %s." snip-name " skeleton. Defined in " mode-str " modes/features")
+              ,@skeleton)
+            (dolist (m mode)
+              (eval-after-load ',m
+                (define-abbrev local-abbrev-table ,snip-name
+                  "" ',func-name)))))))
 
 ;;; Macros
 ;;;
@@ -517,26 +595,25 @@ DOCSTRING and BODY are as in `defun'.
   "From Doom Emacs.
 
 Pretend FEATURE hasn't been loaded yet, until FEATURE-hook or FN runs.
-
 Some packages (like `elisp-mode' and `lisp-mode') are loaded immediately at
 startup, which will prematurely trigger `after!' (and `with-eval-after-load')
 blocks. To get around this we make Emacs believe FEATURE hasn't been loaded yet,
 then wait until FEATURE-hook (or MODE-hook, if FN is provided) is triggered to
 reverse this and trigger `after!' blocks at a more reasonable time."
-  (let ((advice-fn (intern (format "my--defer-feature-%s" feature))))
+  (let ((advice-fn (intern (format "doom--defer-feature-%s-a" feature))))
     `(progn
        (delq! ',feature features)
-       (advice-add ',fns :before
-                   (defun ,advice-fn (&rest _)
-                     ;; Some plugins (like yasnippet) will invoke a fn early to parse
-                     ;; code, which would prematurely trigger this. In those cases, well
-                     ;; behaved plugins will use `delay-mode-hooks', which we can check for:
-                     (unless delay-mode-hooks
-                       (provide ',feature)
-                       ;; ...Otherwise, announce to the world this package has been loaded,
-                       ;; so `after!' handlers can react.
-                       (dolist (fn ',fn)
-                         (advice-remove fn #',advice-fn))))))))
+       (defadvice! ,advice-fn (&rest _)
+         :before ',fns
+         ;; Some plugins (like yasnippet) will invoke a fn early to parse
+         ;; code, which would prematurely trigger this. In those cases, well
+         ;; behaved plugins will use `delay-mode-hooks', which we can check for:
+         (unless delay-mode-hooks
+           ;; ...Otherwise, announce to the world this package has been loaded,
+           ;; so `after!' handlers can react.
+           (provide ',feature)
+           (dolist (fn ',fns)
+             (advice-remove fn #',advice-fn)))))))
 
 (provide 'lib)
 ;;; lib.el ends here

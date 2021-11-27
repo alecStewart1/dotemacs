@@ -38,7 +38,7 @@
         completion-category-defaults nil
         completion-category-overrides
         '((file (styles . (orderless partial-completion)))
-          (buffer (styles (orderless partial-completion)))
+          (buffer (styles . (orderless partial-completion)))
           (info-menu (styles . (orderless partial-completion)))))
   (set-face-attribute 'completions-first-difference nil :inherit nil))
 
@@ -47,8 +47,13 @@
 
 (use-package minibuffer
   :ensure nil
+  :config
+  (unless (package-installed-p 'orderless)
+    (setq completion-styles '(basic substring flex partial-completion)))
+  (file-name-shadow-mode 1)
+  (minibuffer-depth-indicate-mode 1)
+  (minibuffer-electric-default-mode 1)
   :custom
-  ;; IMPORTANT!! Since we use Corfu, we need to set this
   (tab-always-indent 'complete)
   (completions-format 'vertical)
   (completion-cycle-threshold 3)
@@ -57,13 +62,7 @@
   (completion-pcm-complete-word-inserts-delimiters t)
   (read-buffer-completion-ignore-case t)
   (read-file-name-completion-ignore-case t)
-  (resize-mini-windows 'grow-only)
-  :config
-  (unless (package-installed-p 'orderless)
-    (setq completion-styles '(basic substring flex partial-completion)))
-  (file-name-shadow-mode 1)
-  (minibuffer-depth-indicate-mode 1)
-  (minibuffer-electric-default-mode 1))
+  (resize-mini-windows 'grow-only))
 
 ;;;;; Vertico
 ;;;;;
@@ -94,23 +93,24 @@
   (consult-line (thing-at-point 'symbol)))
 
 (use-package vertico
+  :hook (after-init . vertico-mode)
   :functions vertico--exhibit
   :init
-  (vertico-mode)
   ;; these can be annoying so we disable the help at startup
   (advice-add #'vertico--setup :after
               (lambda (&rest _)
                 (setq-local completion-auto-help nil
                             completion-show-inline-help nil)))
+  :config
+  (define-key vertico-map (kbd "?") #'minibuffer-completion-help)
+  (define-key vertico-map (kbd "M-RET") #'minibuffer-force-complete-and-exist)
+  (define-key vertico-map (kbd "M-TAB") #'minibuffer-complete)
+
+  (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy)
   :custom
   (vertico-resize nil)
   (vertico-count 16)
-  (vertico-cycle t)
-  :config  
-  ;; (define-key 'vertico-map (kbd "?") #'minibuffer-completion-help)
-  ;; (define-key 'vertico-map (kbd "M-RET") #'minibuffer-force-complete-and-exist)
-  ;; (define-key 'vertico-map (kbd "M-TAB") #'minibuffer-complete)
-  (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy))
+  (vertico-cycle t))
 
 ;;;;; Consult
 ;;;;;
@@ -171,8 +171,9 @@
   :init
   (defvar consult:find-program (cl-find-if #'executable-find (list "fdfind" "fd")))
 
-  (autoload 'projectile-project-root "projectile")
-  (setq consult-project-root-function #'projectile:get-project-root)
+  (with-eval-after-load 'projectile
+    (autoload 'projectile-project-root "projectile")
+    (setq consult-project-root-function #'projectile:get-project-root))
 
   (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
   (advice-add #'register-preview :override #'consult-register-window)
@@ -191,8 +192,9 @@
         consult-async-input-debounce 0.1
         consult-project-root-function #'projectile:get-project-root
         consult-find-args (concat
-                           (format "%s -0 -i -H --color=never --follow --exclude .git --regex" consult:find-program)
-                           (if windows-nt-p "--path-separator=/")))
+                           (format "%s --color=never -i -H -E .git --regex %s"
+                                   consult:find-program
+                                   (if windows-nt-p "--path-separator=/" ""))))
   :config
   (defadvice! consult:recent-file-fix (&rest _args)
     "`consult-recent-file' needs to have `recentf-mode' on to work correctly"
@@ -297,50 +299,6 @@
 ;;;; Company
 ;;;;
 
-;;;###autoload
-(defvar company:backend-alist
-  '((text-mode company-dabbrev company-ispell)
-    (prog-mode company-capf company-dabbrev-code)
-    (conf-mode company-capf company-dabbrev-code)))
-
-;;;###autoload
-(defun comapny:set-backend (modes &rest backends)
-  (declare (indent defun))
-  (dolist (mode (enlist modes))
-    (if (null (car backends))
-        (setq company:backend-alist
-              (delq (assq mode company:backend-alist)
-                    company:backend-alist))
-      (setf (alist-get mode company:backend-alist)
-            backends))))
-
-;;;###autoload
-(defun company:backends ()
-  (let (backends)
-    (let ((mode major-mode)
-          (modes (list major-mode)))
-      (while (setq mode (get mode 'derived-mode-parent))
-        (push mode modes))
-      (dolist (mode modes)
-        (dolist (backend (append (cdr (assq mode company:backend-alist))
-                                 (default-value 'company-backends)))
-          (push backend backends)))
-      (delete-dups
-       (append (cl-loop for (mode . backends) in company:backend-alist
-                        if (or (eq major-mode mode)  ; major modes
-                               (and (boundp mode)
-                                    (symbol-value mode))) ; minor modes
-                        append backends)
-               (nreverse backends))))))
-
-;;;###autoload
-(defun company:init-backends ()
-  "Set `company-backends' for the current buffer."
-  (or (memq major-mode '(fundamental-mode special-mode))
-      buffer-read-only
-      (buffer-temp-p (or (buffer-base-buffer) (current-buffer)))
-      (setq-local company-backends (company:backends))))
-
 (use-package company
   :diminish
   :commands (company-complete-common
@@ -351,12 +309,35 @@
   :functions (company-dabbrev-ignore-case company-dabbrev-downcase)
   :hook (first-input . global-company-mode)
   :preface
-  (put 'company-init-backends 'permanent-local-hook t)
-  :init
+  (put 'company-backends 'permanent-local-hook t)
+  :config
   (add-hook 'global-company-mode-hook #'company-tng-mode)
   (add-to-list 'company-frontends 'company-tng-frontend)
+  
+  (when (package-installed-p 'evil)
+    (add-hook 'company-mode-hook #'evil-normalize-keymaps)
+    (advice-add 'company-begin-backend :before
+                (defun company:abort-previous (&rest _)
+                  (company-abort))))
+
+  ;; TODO this breaks some other modes
+  (defadvice! saner-completion-styles-for-company-capf (orig-fn &rest args)
+    "Orderless doesn’t exactly make Company’s completion all
+   that sane. We simply change the ‘completion-styles’ to the
+  saner options."
+    :around #'company-capf
+    (let ((completion-styles '(basic partial-completion)))
+      (apply orig-fn args)))
+
+  ;;(add-hook 'after-change-major-mode-hook #'company--maybe-init-backend 'append)
+
+  (eval-after-load 'eldoc
+    (eldoc-add-command 'company-complete-selection
+                       'company-complete-common
+                       'company-capf
+                       'company-abort))
   :custom
-  (company-minimum-prefix-length 2)
+  (company-minimum-prefix-length 1)
   (company-idle-delay 0.2)
   (company-idle-delay 0.2)
   (company-echo-delay (if (display-graphic-p) nil 0))
@@ -364,42 +345,15 @@
   (company-tooltip-limit 14)
   (company-tooltip-align-annotations t)
   (company-require-match 'never)
-  (company-global-modes '(not erc-mode message-mode help-mode gud-mode))
+  (company-global-modes '(not erc-mode message-mode help-mode gud-mode vterm-mode))
   (company-frontends '(company-pseudo-tooltip-frontend
                        company-echo-metadata-frontend))
-  (company-backends '(company-capf))
+  ;;(company-backends '(company-capf))
   (company-auto-comit nil)
   (company-dabbrev-other-buffers nil)
   (company-dabbrev-ignore-case nil)
   (company-dabbrev-downcase nil)
-  :config
-  (when (package-installed-p 'evil)
-    (add-hook 'company-mode-hook #'evil-normalize-keymaps)
-    (advice-add 'company-begin-backend :before
-                (defun company:abort-previous (&rest _)
-                  (company-abort))))
-  
-  (defadvice! saner-completion-styles-for-company-capf (orig-fn &rest args)
-    "Orderless doesn’t exactly make Company’s completion all
- that sane. We simply change the ‘completion-styles’ to the
-saner options."
-    :around #'company-capf
-    (let ((completion-styles '(basic partial-completion)))
-      (apply orig-fn args)))
-
-  (add-hook 'after-change-major-mode-hook #'company:init-backends 'append)
-
-  (eval-after-load 'eldoc
-    (eldoc-add-command 'company-complete-selection
-                       'company-complete-common
-                       'company-capf
-                       'company-abort)))
-
-(use-package company-files
-  :defer t
-  :after company
-  :config
-  (add-to-list 'company-files--regexps "file:\\(\\(?:\\.\\{1,2\\}/\\|~/\\|/\\)[^\]\n]*\\)"))
+  (company-dabbrev-minimum-length 2))
 
 (use-package company-dict
   :defer t

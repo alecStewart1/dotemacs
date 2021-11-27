@@ -97,7 +97,7 @@
 (use-package saveplace
   :ensure nil
   :diminish
-  :hook (first-file . save-place-mode)
+  :hook (after-init . save-place-mode)
   :init
   (setq save-place-file (concat my-cache-dir "saveplace")
         save-place-limit 100)
@@ -120,7 +120,7 @@
 (use-package savehist
   :ensure nil
   :diminish
-  :hook (first-input . savehist-mode)
+  :hook (after-init . savehist-mode)
   :custom
   (savehist-file (concat my-cache-dir "savehist"))
   (savehist-save-minibuffer-history t)
@@ -260,7 +260,7 @@
   (defvar dtrt-indent-run-after-smie)
   :init
   ;; Please, stop.
-  (setq dtrt-indent-verbosity 0)
+  (setq-default dtrt-indent-verbosity 0)
   :config
   (defun dtrt:detect-indentation ()
     (unless (or (not after-init-time)
@@ -268,7 +268,7 @@
                 ui-ux:large-file-p
                 (memq major-mode editing:detect-indent-excluded-modes)
                 (member (substring (buffer-name) 0 1) '(" " "*")))
-      (let ((inhibit-message (not inhibit-message))
+      (let ((inhibit-message nil)
             (message-log-max nil))
         (dtrt-indent-mode +1))))
 
