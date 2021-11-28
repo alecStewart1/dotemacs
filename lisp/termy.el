@@ -210,6 +210,9 @@ Once the eshell process is killed, the previous frame layout is restored."
   :defines eshell-prompt-function
   :functions eshell/alias
   :config
+  ;; At the moment, Company is causing issues in Eshell
+  (company-mode -1)
+
   (add-hook! 'eshell-mode-hook
     (lambda ()
       (set-window-fringes nil 0 0)

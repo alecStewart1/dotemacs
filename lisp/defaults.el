@@ -45,7 +45,7 @@
 
   (fset 'x-popup-menu #'ignore)
   (fset #'display-startup-echo-area-message #'ignore)
-  (fset #'yes-or-no-p #'y-or-n-p)  
+  (fset #'yes-or-no-p #'y-or-n-p)
   
   (if emacs27-p
       (progn
@@ -54,6 +54,44 @@
                       bidi-paragraph-direction 'left-to-right)))
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
   (advice-add 'completing-read-multiple :filter-args #'minibuffer:crm-indicator)
+  :config
+  (setq-default
+   ediff-window-setup-function 'ediff-setup-windows-plain
+   ; silence compression messages
+   jka-compr-verbose           nil
+   ; don't ping things that look like domain names
+   ffap-machine-p-known        'reject
+   vc-follow-symlinks           t
+   tabify-regexp                "^\t* [ \t]+")
+
+  (setq abbrev-file-name (concat my-local-dir "abbrev.el")
+
+        server-auth-dir  (concat my-cache-dir "server/"))
+
+  (mouse-avoidance-mode 'exile)
+
+  ;; Unicode, pls
+  (when (fboundp 'set-charset-priority)
+    (set-charset-priority 'unicode))
+  (prefer-coding-system 'utf-8)
+  (set-buffer-file-coding-system 'utf-8)
+  (set-file-name-coding-system 'utf-8)
+  (set-default-coding-systems 'utf-8)
+  (set-language-environment 'utf-8)
+  (set-keyboard-coding-system 'utf-8)
+  (set-terminal-coding-system 'utf-8)
+  (unless windows-nt-p
+    (set-selection-coding-system 'utf-8))
+  (modify-coding-system-alist 'process "*" 'utf-8)
+
+  (with-eval-after-load 'eshell
+    (setq hscroll-margin 0)
+    (setenv "PAGER" "cat"))
+  (with-eval-after-load 'shell
+    (setq hscroll-margin 0)
+    (setenv "PAGER" "cat"))
+  (eval-after-load 'term
+    (setq hscroll-margin 0))
   :custom
   ;; Startup
   (inhibit-startup-screen            t)
@@ -164,44 +202,7 @@
   (mode-line-default-help-echo nil)
   (custom-unlispify-menu-entries nil)
   (custom-unlispify-tag-names nil)
-  :config
-  (setq-default
-   ediff-window-setup-function 'ediff-setup-windows-plain
-   ; silence compression messages
-   jka-compr-verbose           nil
-   ; don't ping things that look like domain names
-   ffap-machine-p-known        'reject
-   vc-follow-symlinks           t
-   tabify-regexp                "^\t* [ \t]+")
-
-  (setq abbrev-file-name (concat my-local-dir "abbrev.el")
-
-        server-auth-dir  (concat my-cache-dir "server/"))
-
-  (mouse-avoidance-mode 'exile)
-
-  ;; Unicode, pls
-  (when (fboundp 'set-charset-priority)
-    (set-charset-priority 'unicode))
-  (prefer-coding-system 'utf-8)
-  (set-buffer-file-coding-system 'utf-8)
-  (set-file-name-coding-system 'utf-8)
-  (set-default-coding-systems 'utf-8)
-  (set-language-environment 'utf-8)
-  (set-keyboard-coding-system 'utf-8)
-  (set-terminal-coding-system 'utf-8)
-  (unless windows-nt-p
-    (set-selection-coding-system 'utf-8))
-  (modify-coding-system-alist 'process "*" 'utf-8)
-
-  (with-eval-after-load 'eshell
-    (setq hscroll-margin 0)
-    (setenv "PAGER" "cat"))
-  (with-eval-after-load 'shell
-    (setq hscroll-margin 0)
-    (setenv "PAGER" "cat"))
-  (eval-after-load 'term
-    (setq hscroll-margin 0)))
+  (read-process-output-max (* 2 1024 1024)))
 
 ;;;; Compiling things
 ;;;;
@@ -302,11 +303,12 @@
 
 (use-package delsel
   :ensure nil
-  :hook (first-input . delete-selection-mode))
+  :hook (pre-command . delete-selection-mode))
 
 (use-package whitespace
   :ensure nil
-  :hook (first-file . whitespace-mode)
+  ;; :hook ((find-file . whitespace-mode)
+  ;;        (dired-initial-position . whitespace-mode))
   :init
   (put 'whitespace-toggle-options 'disabled t)
   (put 'global-whitespace-toggle-options 'disabled t))

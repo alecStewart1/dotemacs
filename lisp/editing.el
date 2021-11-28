@@ -57,7 +57,8 @@
 (use-package recentf
   :ensure nil
   :diminish
-  :hook (first-file . recentf-mode)
+  :hook ((find-file . recentf-mode)
+         (dired-initial-position . recentf-mode))
   :commands recentf-open-files
   :custom
   (recentf-filename-handlers
@@ -120,7 +121,7 @@
 (use-package savehist
   :ensure nil
   :diminish
-  :hook (after-init . savehist-mode)
+  :hook (pre-command . savehist-mode)
   :custom
   (savehist-file (concat my-cache-dir "savehist"))
   (savehist-save-minibuffer-history t)
@@ -204,7 +205,8 @@
 
 (use-package elec-pair
   :ensure nil
-  :hook (first-file . electric-pair-mode)
+  :hook ((find-file . electric-pair-mode)
+         (dired-initial-position . electric-pair-mode))
   :init
   (setq electric-pair-inhibit-predicate 'electric-pair-conservative-inhibit))
 
@@ -259,18 +261,19 @@
   :preface
   (defvar dtrt-indent-run-after-smie)
   :init
-  ;; Please, stop.
+  ;; Please
   (setq-default dtrt-indent-verbosity 0)
   :config
+  ;; Please, stop.
+  (shut-up! (dtrt-indent-undo))
+
   (defun dtrt:detect-indentation ()
     (unless (or (not after-init-time)
                 editing:inhibit-indent-detection
                 ui-ux:large-file-p
                 (memq major-mode editing:detect-indent-excluded-modes)
                 (member (substring (buffer-name) 0 1) '(" " "*")))
-      (let ((inhibit-message nil)
-            (message-log-max nil))
-        (dtrt-indent-mode +1))))
+        (dtrt-indent-mode +1)))
 
   (setq dtrt-indent-run-after-smie t
         dtrt-indent-max-lines 2000)
@@ -334,7 +337,7 @@
 ;;;;
 
 (use-package smartparens
-  :hook (first-buffer . smartparens-global-mode)
+  :hook (find-file . smartparens-global-mode)
   :commands sp-pair sp-local-pair sp-with-modes sp-point-in-comment sp-point-in-string
   :custom
   (sp-highlight-pair-overlay nil)
@@ -395,7 +398,7 @@
 
 (use-package ws-butler
   :diminish
-  :hook (first-buffer . ws-butler-global-mode))
+  :hook (find-file . ws-butler-global-mode))
 
 ;;;; EditorConfig
 ;;;;

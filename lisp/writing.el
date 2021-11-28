@@ -1,9 +1,8 @@
 ;;; writing.el --- Writing and taking notes in Emacs -*- lexical-binding: t; -*-
 ;;
-;; Copyright (C) 2021 Alec
+;; Copyright (C) 2021 Alec Stewart <alec-stewart@protonmail.com>
 ;;
 ;; Created: February 20, 2021
-;; Modified: February 20, 2021
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -27,6 +26,7 @@
 ;;;;
 
 (use-package org
+  :ensure org-contrib
   :preface
   (defvar org-directory nil)
   (defvar org-attach-id-dir nil)
@@ -161,8 +161,8 @@
           org-confirm-babel-evaluate nil
           org-link-elisp-confirm-function nil)
 
-    (eval-after-load 'ob
-      (add-to-list 'org-babel-default-lob-header-args '(:sync)))
+    ;; (eval-after-load 'ob
+    ;;   (add-to-list 'org-babel-default-lob-header-args '(:sync)))
 
     (defadvice! org-babel:fix-newline-and-indent-in-src-blocks (&optional indent _arg _interactive)
       "Mimic `newline-and-indent' in src blocks w/ lang-appropriate indentation."
@@ -178,52 +178,53 @@
     (define-key org-src-mode-map (kbd "C-c C-c") #'org-edit-src-exit))
 
   (defun org:setup-capture ()
-    (with-eval-after-load 'org-capture
-      (org-capture-put :kill-buffer t))
-
-    (add-hook 'org-after-refile-insert-hook #'save-buffer)
-
-    (defadvice! org-capture:expand-var-file (file)
-      "TODO"
-      :filter-args #'org-capture-expand-file
-      (if (and (symbolp file) (boundp file))
-          (expand-file-name (symbol-value file) org-directory)
-        file))
-
-    (when (package-installed-p evil)
-      (add-hook 'org-capture-mode-hook #'evil-insert-state))
-
-    (setq org-capture-templates (append org-capture-templates
-                                        '(("f" "Fitness Note" entry
-                                           (file+olp+datetree "~/Documents/Org/Notes/personal-fitness.org")
-                                           "* Log :DAILY: \n %? \n"
-                                           :empty-lines 1
-                                           :tree-type 'week)
-                                          ("i" "Ideas/Thoughts")
-                                          ("ii" "Ideas" entry
-                                           (file "~/Documents/Org/Notes/ideas.org")
-                                           "* %^{Idea Name: } \n %? \n"
-                                           :empty-lines 1)
-                                          ("it" "Thought" entry
-                                           (file "~/Documents/Org/Notes/thoughts.org")
-                                           "* %^{Thought: } \n %? \n"
-                                           :empty-lines 1))))
-
-    (use-package org-chef
-      :after org-capture
+    (use-package org-capture
+      :ensure nil
+      :commands org-capture
       :config
-      (setq org-capture-templates (append org-capture-templates
-                                          '(("c" "Cookbook" entry (file "~/Documents/org/cookbook.org")
-                                             "%(org-chef-get-recipe-from-url)"
-                                             :empty-lines 1)
-                                            ("m" "Manual Cookbook" entry (file "~/Documents/Org/cookbook.org")
-                                             "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n"))))))
+      (org-capture-put :kill-buffer t)
+      (add-hook 'org-after-refile-insert-hook #'save-buffer)
+      (defadvice! org-capture:expand-var-file (file)
+        "TODO"
+        :filter-args #'org-capture-expand-file
+        (if (and (symbolp file) (boundp file))
+            (expand-file-name (symbol-value file) org-directory)
+          file))
+
+      (if (package-installed-p 'evil)
+          (add-hook 'org-capture-mode-hook #'evil-insert-state))
+      (setq org-capture-templates
+            (append org-capture-templates
+                    '(("f" "Fitness Note" entry
+                       (file+olp+datetree "~/Documents/Org/Notes/personal-fitness.org")
+                       "* Log :DAILY: \n %? \n"
+                       :empty-lines 1
+                       :tree-type 'week)
+                      ("i" "Ideas/Thoughts")
+                      ("ii" "Ideas" entry
+                       (file "~/Documents/Org/Notes/ideas.org")
+                       "* %^{Idea Name: } \n %? \n"
+                       :empty-lines 1)
+                      ("it" "Thought" entry
+                       (file "~/Documents/Org/Notes/thoughts.org")
+                       "* %^{Thought: } \n %? \n"
+                       :empty-lines 1))))
+      (use-package org-chef
+        :after org-capture
+        :config
+        (setq org-capture-templates (append org-capture-templates
+                                            '(("c" "Cookbook" entry (file "~/Documents/org/cookbook.org")
+                                               "%(org-chef-get-recipe-from-url)"
+                                               :empty-lines 1)
+                                              ("m" "Manual Cookbook" entry (file "~/Documents/Org/cookbook.org")
+                                               "* %^{Recipe title: }\n  :PROPERTIES:\n  :source-url:\n  :servings:\n  :prep-time:\n  :cook-time:\n  :ready-in:\n  :END:\n** Ingredients\n   %?\n** Directions\n\n")))))))
 
   (defun org:setup-attachments ()
     (setq org-attach-store-link-p t
           org-attach-use-inheritance t)
 
     (use-package org-attach
+      :ensure nil
       :commands (org-attach-new
                  org-attach-open
                  org-attach-open-in-emacs
@@ -255,10 +256,11 @@
               '("wikipedia"   . "https://en.wikipedia.org/wiki/%s")
               '("wolfram"     . "https://wolframalpha.com/input/?i=%s"))
 
-    (use-package org-yt
-      :init
-      (advice-add org-yt-image-data-fun :before-while (lambda (&rest _)
-                                                        (not (eq org-display-remote-inline-images 'skip))))))
+    ;; (use-package org-yt
+    ;;   :init
+    ;;   (advice-add org-yt-image-data-fun :before-while (lambda (&rest _)
+    ;;                                                     (not (eq org-display-remote-inline-images 'skip)))))
+    )
 
   (defun org:setup-export ()
     (setq org-export-with-smart-quotes t
@@ -288,9 +290,39 @@
     (add-to-list 'org-file-apps '(directory . emacs))
     (add-to-list 'org-file-apps '(remote . emacs))
 
+    (advice-add #'org-link--open-help :around #'use-helpful)
+
+    (defadvice! org:recenter-after-follow-link (&rest _args)
+      "Recenter after following a link, but only internal or file links."
+      :after '(org-footnote-action
+               org-follow-timestamp-link
+               org-link-open-as-file
+               org-link-search)
+      (when (get-buffer-window)
+        (recenter)))
+
     (with-eval-after-load 'org-eldoc
       (puthash "org" #'ignore org-eldoc-local-functions-cache)
+      (puthash "plantuml" #'ignore org-eldoc-local-functions-cache)
       (puthash "python" #'python-eldoc-function org-eldoc-local-functions-cache))
+
+    (defadvice! org:show-parents (&optional arg)
+      "Show all headlines in the buffer, like a table of contents.
+With numerical argument N, show content up to level N."
+      :override #'org-content
+      (interactive "p")
+      (org-show-all '(headings drawers))
+      (save-excursion
+        (goto-char (point-max))
+        (let ((regexp (if (and (wholenump arg) (> arg 0))
+                          (format "^\\*\\{%d,%d\\} " (1- arg) arg)
+                        "^\\*+ "))
+              (last (point)))
+          (while (re-search-backward regexp nil t)
+            (when (or (not (wholenump arg))
+                      (= (org-current-level) arg))
+              (org-flag-region (line-end-position) last t 'outline))
+            (setq last (line-end-position 0))))))
 
     (defadvice! org:strip-properties-from-outline (fn &rest args)
       "Fix variable height faces in eldoc breadcrumbs."
@@ -426,7 +458,7 @@ Taken from: https://github.com/alphapapa/unpackaged.el/blob/master/unpackaged.el
         (org-return)))))
 
 
-  (defun org:indent-maybe-h ()
+  (defun org:indent-maybe ()
     "From Doom Emacs
 Indent the current item (header or item), if possible.
 Made for `org-tab-first-hook' in evil-mode."
@@ -484,7 +516,7 @@ Made for `org-tab-first-hook' in evil-mode."
              #'org:setup-export
              #'org:setup-habit
              #'org:setup-hacks
-             #'org-setup-keys
+             #'org:setup-keys
              #'org:setup-smartparens)
   :custom
   (org-archive-subtree-save-file-p t)
@@ -492,15 +524,6 @@ Made for `org-tab-first-hook' in evil-mode."
   :config
   (add-hook 'org-mode-local-vars-hook #'eldoc-mode)
   (add-hook 'org-mode-hook #'orgtbl-mode)
-
-  (defvar consult-org-source
-    `(:name     "Org"
-      :narrow   ?o
-      :hidden   t
-      :category buffer
-      :state    ,#'consult--buffer-state
-      :items    ,(lambda () (mapcar #'buffer-name (org-buffer-list)))))
-  (add-to-list 'consult-buffer-sources 'consult-org-source 'append)
 
   ;; TODO
   (snippets:file-snip block 'org
@@ -528,9 +551,6 @@ Made for `org-tab-first-hook' in evil-mode."
   :commands org-clock-save
   :init
   (setq org-clock-persist-file (concat my-etc-dir "org-clock-save.el"))
-  :custom
-  (org-clock-persist . 'history)
-  (org-clock-in-resume . t)
   :config
   (defadvice! org-clock:lazy-load (&rest _)
     "Lazy load org-clock until its commands are used."
@@ -540,7 +560,10 @@ Made for `org-tab-first-hook' in evil-mode."
               org-clock-goto
               org-clock-cancel)
     (org-clock-load))
-  (add-hook 'kill-emacs-hook #'org-clock-save))
+  (add-hook 'kill-emacs-hook #'org-clock-save)
+  :custom
+  (org-clock-persist 'history)
+  (org-clock-in-resume t))
 
 (use-package toc-org
   :hook (org-mode-hook . toc-org-enable)
@@ -571,26 +594,10 @@ Made for `org-tab-first-hook' in evil-mode."
 ;;;;
 
 (use-package tex-mode
-  :ensure nil
+  :ensure auctex
   :mode ("\\.tex\\'" . LaTeX-mode)
-  :custom
-  (TeX-parse-self . t) ; parse on load
-  (TeX-auto-save . t)  ; parse on save
-  ;; use hidden dirs for auctex files
-  (TeX-auto-local . ".auctex-auto")
-  (TeX-style-local . ".auctex-style")
-  (TeX-source-correlate-mode . t)
-  (TeX-source-correlate-method . 'synctex)
-  ;; don't start the emacs server when correlating sources
-  (TeX-source-correlate-start-server . nil)
-  ;; automatically insert braces after sub/superscript in math mode
-  (TeX-electric-sub-and-superscript . t)
-  ;; Use xelatex to support unicode
-  (TeX-engine . 'xetex)
-  (tex-command . "xelatex")
-  (LaTeX-command . "xelatex"))
-
-(use-package latex
+  :hook ((LaTeX-mode . visual-line-mode)
+         (LaTeX-mode . LaTeX-math-mode))
   :config
   ;; Fix #1849: allow fill-paragraph in itemize/enumerate
   (defadvice latex:re-indent-itemize-and-enumerate
@@ -609,7 +616,27 @@ Made for `org-tab-first-hook' in evil-mode."
       (delq! "itemize" LaTeX-indent-environment-list 'assoc)
       (delq! "enumerate" LaTeX-indent-environment-list 'assoc)
       (apply fn args)))
+
+  (setq-mode-local latex-mode
+                   company-backends '(company-capf
+                                      company-auctex-environments
+                                      compnay-auctex-macros))
   :custom
+  (TeX-parse-self t) ; parse on load
+  (TeX-auto-save t)  ; parse on save
+  ;; use hidden dirs for auctex files
+  (TeX-auto-local ".auctex-auto")
+  (TeX-style-local ".auctex-style")
+  (TeX-source-correlate-mode t)
+  (TeX-source-correlate-method 'synctex)
+  ;; don't start the emacs server when correlating sources
+  (TeX-source-correlate-start-server nil)
+  ;; automatically insert braces after sub/superscript in math mode
+  (TeX-electric-sub-and-superscript t)
+  ;; Use xelatex to support unicode
+  (TeX-engine 'xetex)
+  (tex-command "xelatex")
+  (LaTeX-command "xelatex")
   (LaTeX-section-hook '(LaTeX-section-heading
                         LaTeX-section-title
                         LaTeX-section-toc
@@ -617,17 +644,6 @@ Made for `org-tab-first-hook' in evil-mode."
                         LaTeX-section-label))
   (LaTeX-fill-break-at-separators nil)
   (LaTeX-item-indent 0))
-
-(use-package context
-  :ensure nil
-  :magic ("%!TEX TS-PROGRAM: context" . ConTeXt-mode))
-
-(use-package auctex
-  :config
-  (setq-mode-local latex-mode
-                   company-backends '(company-capf
-                                      company-auctex-environments
-                                      compnay-auctex-macros)))
 
 (use-package cdlatex
   :hook (LaTeX-mode . cdlatex-mode)
@@ -638,7 +654,7 @@ Made for `org-tab-first-hook' in evil-mode."
   (define-key cdlatex-mode-map (kbd "{") nil)
   (define-key cdlatex-mode-map (kbd "[") nil)
   (define-key cdlatex-mode-map (kbd "|") nil)
-  (define-key cdlatex-mode-map (kbd "TAB" nil))
+  (define-key cdlatex-mode-map (kbd "TAB") nil)
   (define-key cdlatex-mode-map (kbd "<tab>") nil)
   (define-key cdlatex-mode-map (kbd "^") nil)
   (define-key cdlatex-mode-map (kbd "_") nil)
@@ -715,6 +731,16 @@ Made for `org-tab-first-hook' in evil-mode."
   :init
   (with-eval-after-load 'org-src
     (add-to-list 'org-src-lang-modes '("md" . markdown)))
+  :config
+  (advice-add #'markdown-match-generic-metadata :override (lambda (&rest _)
+                                                            (ignore (goto-char (point-max)))))
+  (sp-local-pair '(markdown-mode gfm-mode) "`" "`"
+                 :unless '(:add sp-point-before-word-p sp-point-before-same-p))
+
+  ;; Don't trigger autofill in code blocks (see `auto-fill-mode')
+  (setq-mode-local markdown-mode
+                   fill-nobreak-predicate (cons #'markdown-code-block-at-point-p
+                                                fill-nobreak-predicate))
   :custom
   (markdown-enable-math t)
   (markdown-enable-wiki-links t)
@@ -735,17 +761,7 @@ Made for `org-tab-first-hook' in evil-mode."
                                           "<style> body { box-sizing: border-box; max-width: 740px; width: 100%; margin: 40px auto; padding: 0 10px; } </style>"
                                           "<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>"
                                           "<script src='https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/highlight.min.js'></script>"
-                                          "<script>document.addEventListener('DOMContentLoaded', () => { document.body.classList.add('markdown-body'); document.querySelectorAll('pre[lang] > code').forEach((code) => { code.classList.add(code.parentElement.lang); }); document.querySelectorAll('pre > code').forEach((code) => { hljs.highlightBlock(code); }); });</script>"))
-  :config
-  (advice-add #'markdown-match-generic-metadata :override (lambda (&rest _)
-                                                            (ignore (goto-char (point-max)))))
-  (sp-local-pair '(markdown-mode gfm-mode) "`" "`"
-                 :unless '(:add sp-point-before-word-p sp-point-before-same-p))
-
-  ;; Don't trigger autofill in code blocks (see `auto-fill-mode')
-  (setq-mode-local markdown-mode
-                   fill-nobreak-predicate (cons #'markdown-code-block-at-point-p
-                                                fill-nobreak-predicate)))
+                                          "<script>document.addEventListener('DOMContentLoaded', () => { document.body.classList.add('markdown-body'); document.querySelectorAll('pre[lang] > code').forEach((code) => { code.classList.add(code.parentElement.lang); }); document.querySelectorAll('pre > code').forEach((code) => { hljs.highlightBlock(code); }); });</script>")))
 
 ;;;; Literate Calc
 ;;;;

@@ -86,6 +86,7 @@
 (require 'termy)
 (require 'version-control)
 (require 'programming)
+(require 'writing)
 
 ;;; Load the dumb ‘custom-file’
 ;;;
@@ -93,17 +94,8 @@
 (when custom-file
   (load custom-file 'noerror))
 
-;;; Setup our special hooks
-;;;
-
-(unless noninteractive
-  (add-hook 'after-change-major-mode-hook #'run-local-var-hooks 100)
-  (run-hook-on 'first-buffer-hook '(find-file-hook switch-buffer-hook))
-  (run-hook-on 'first-file-hook   '(find-file-hook dired-initial-position-hook))
-  (run-hook-on 'first-input-hook  '(pre-command-hook)))
+;;; Uh..this.
 
 (setq load-prefer-newer noninteractive)
-
-(setq debug-on-message t)
 
 ;;; init.el ends here

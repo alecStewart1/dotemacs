@@ -179,9 +179,10 @@
 
 (use-package electric
   :ensure nil
-  :hook (first-file . electric-quote-mode)
+  :hook ((find-file . electric-quote-mode)
+         (dired-initial-position . electric-quote-mode))
   :preface
-  (defvar-local electric--indent-words '()
+  (defvar-local electric:indent-words '()
     "The list of electric words. Typing these will trigger reindentation of the
 current line.")
   :config
@@ -189,10 +190,10 @@ current line.")
 
   (add-hook! 'electric-indent-functions
     (defun electric-indent-char-fn (_c)
-      (when (and (eolp) electric--indent-words)
+      (when (and (eolp) electric:indent-words)
         (save-excursion
           (backward-word)
-          (looking-at-p (concat "\\<" (regexp-opt electric--indent-words))))))))
+          (looking-at-p (concat "\\<" (regexp-opt electric:indent-words))))))))
 
 ;;; External packages
 ;;;
@@ -201,7 +202,7 @@ current line.")
 ;;;;
 
 (use-package undo-fu
-  :hook (first-buffer . undo-fu-mode)
+  :hook ((find-file . undo-fu-mode))
   :config
   (setq undo-limit        400000
         undo-strong-limit 3000000

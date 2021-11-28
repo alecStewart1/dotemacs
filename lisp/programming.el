@@ -474,10 +474,10 @@ And if it's a function, evaluate it."
   (add-hook! 'sh-mode-hook
     (defun sh-init-extra-fontification ()
       (font-lock-add-keywords nil
-                              `((sh--match-variables-in-quotes
+                              `((sh-script:match-variables-in-quotes
                                  (1 'font-lock-constant-face preprend)
                                  (2 'font-lock-variable-name-face prepend))
-                                (sh--match-command-subst-in-quotes
+                                (sh-script:match-command-subst-in-quotes
                                  (1 'sh-quoted-exec prepend))
                                 (,(regexp-opt sh-builtin-keywords 'symbols)
                                  (0 'font-lock-type-face append))))))

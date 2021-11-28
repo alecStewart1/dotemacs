@@ -47,28 +47,12 @@
 
 (defconst my-cache-dir (concat my-local-dir "cache/"))
 
+(defvar transient-counter 0)
+
 ;;; Errors
 
 (define-error 'my-config-error "Error with my config")
 (define-error 'my-hook-error "An error with a hook of mine" 'my-config-error)
-
-;;; Hooks
-;;;
-
-;;;###autoload
-(defvar first-input-hook nil)
-;;;###autoload
-(defvar first-file-hook nil)
-;;;###autoload
-(defvar first-buffer-hook nil)
-;;;###autoload
-(defvar switch-buffer-hook nil)
-;;;###autoload
-(defvar inhibit-switch-buffer-hooks nil)
-;;;###autoload
-(defvar inhibit-local-var-hooks nil)
-
-(defvar transient-counter 0)
 
 ;;; Functions
 ;;;
@@ -214,68 +198,6 @@ single file or nested compound statement of `and' and `or' statements."
   `(let ((p ,(resolve-file-path-forms files directory)))
      (and p (expand-file-name p ,directory))))
 
-;;;; Run hooks on a specific function or when switching a buffer.
-;;;; We need these here for bootstraping the configuration
-
-;;;###autoload
-(defun try-run-hook (hook)
-  "Run HOOK (a hook function) with better error handling.
-Meant to be used with `run-hook-wrapped'."
-  (condition-case e
-      (funcall hook)
-    ((debug error)
-     (signal 'my-hook-error (list hook e))))
-  nil)
-
-;;;###autoload
-(defun run-local-var-hooks ()
-  "Run MODE-local-vars-hook after local variables are initialized."
-  (unless inhibit-local-var-hooks
-    (setq-local inhibit-local-var-hooks t)
-    (run-hook-wrapped (intern-soft (format "%s-local-vars-hook" major-mode))
-                      #'try-run-hook)))
-
-;;;###autoload
-(defun run-hook-on (hook-var trigger-hooks)
-  "Configure HOOK-VAR to be invoked exactly once when any of the TRIGGER-HOOKS
-are invoked. Once HOOK-VAR is triggered, it is reset to nil.
-
-HOOK-VAR is a quoted hook.
-
-TRIGGER-HOOK is a list of quoted hooks and/or sharp-quoted functions."
-  (dolist (hook trigger-hooks)
-    (let ((fn (intern (format "%s-init-on-%s" hook-var hook))))
-      (fset
-       fn (lambda (&rest _)
-            (when (and after-init-time
-                       (boundp hook)
-                       (symbol-value hook))
-              (run-hook-wrapped hook-var #'try-run-hook)
-              (set hook-var nil))))
-      (let ((target (if (eq hook 'find-file-hook) 'after-find-file hook)))
-        (if (functionp target)
-            (advice-add target :before fn '((depth . -101)))
-          (add-hook target fn (if emacs27-p -101)))))))
-
-;;;###autoload
-(defun run-switch-buffer-hooks (orig-fn buffer-or-name &rest args)
-  (if (or inhibit-switch-buffer-hooks
-          (and buffer-or-name
-               (eq (current-buffer)
-                   (get-buffer buffer-or-name)))
-          (and (eq orig-fn #'switch-to-buffer) (car args)))
-      (apply orig-fn buffer-or-name args)
-    (let ((gc-cons-threshold most-positive-fixnum)
-          (inhibit-switch-buffer-hooks t)
-          (inhibit-redisplay t))
-      (when-let (buffer (apply orig-fn buffer-or-name args))
-        (with-current-buffer (if (windowp buffer)
-                                 (window-buffer buffer)
-                               buffer)
-          (run-hooks 'switch-buffer-hook))
-        buffer))))
-
-
 ;;;; Stuff for certain packages that a lot of configurations need
 ;;;;
 
@@ -319,6 +241,7 @@ If you're looking to only define an abbrev for a specific file/mode, see
        (define-abbrev global-abbrev-table ,snip-name
          "" ',func-name))))
 
+;;; WARNING only works with singular modes, at the moment.
 ;;;###autoload
 (defmacro snippets:file-snip (name mode &rest skeleton)
   "Create a MODES specific \"snippet\" with NAME and SKELETON.
@@ -340,24 +263,23 @@ under the named (MODE) passed to this macro. That may or may not be something
 you want, depending on your uses. If you're looking to only define an abbrev
 globally, see `snippets:global-snip'."
   (declare (debug t))
+  ;; TODO need to figure out how to work with lists better
   (let* ((snip-name (symbol-name `,name))
          (func-name (intern (concat snip-name "-skel")))
-         (mode-str (if (listp)
-                       (mapconcat 'identity mode ", ")
-                     (format "%s" mode))))
+         (mode-str (format "%s" `,mode)))
     `(cond ((symbolp ,mode)
             (define-skeleton ,func-name
-              ,(format "%s %s %s." snip-name " skeleton. Defined in " mode-str)
+              ,(format "%s %s %s." snip-name "skeleton. Defined in" mode-str)
               ,@skeleton)
-            (eval-after-load ',mode
+            (eval-after-load ,mode
               (define-abbrev local-abbrev-table ,snip-name
                 "" ',func-name)))
            ((listp ,mode)
             (define-skeleton ,func-name
-              ,(format "%s %s %s %s." snip-name " skeleton. Defined in " mode-str " modes/features")
+              ,(format "%s %s %s %s." snip-name "skeleton. Defined in" mode-str  "modes/features")
               ,@skeleton)
-            (dolist (m mode)
-              (eval-after-load ',m
+            (dolist (m ,mode)
+              (eval-after-load 'm
                 (define-abbrev local-abbrev-table ,snip-name
                   "" ',func-name)))))))
 
@@ -614,6 +536,27 @@ reverse this and trigger `after!' blocks at a more reasonable time."
            (provide ',feature)
            (dolist (fn ',fns)
              (advice-remove fn #',advice-fn)))))))
+
+;;;###autoload
+(defmacro shut-up! (&rest forms)
+  "From Doom Emacs’s ‘quiet!’.
+
+Runs FORMS without generating any output.
+
+Emacs likes to tell you _everything_. Tell it not to sometimes.
+This won’t prevent the *Messages* buffer from being wrote to, just in the echo area."
+  `(unless noninteractive
+     (let ((inhibit-message t)
+           (save-silently t))
+       (prog1 ,@forms (message "")))
+     (letf! ((standard-output (lambda (&rest _)))
+             (defun message (&rest _))
+             (defun load (file &optional noerror nomessage nosuffix must-suffix)
+               (funcall load file noerror t nosuffix must-suffix))
+             (defun write-region (start end filename &optional append visit lockname mustbenew)
+               (unless visit (setq visit 'no-message))
+               (funcall write-region start end filename append visit lockname mustbenew)))
+       ,@forms)))
 
 (provide 'lib)
 ;;; lib.el ends here

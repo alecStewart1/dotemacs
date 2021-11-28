@@ -55,11 +55,12 @@
       package-gnupghome-dir (expand-file-name "gpg" package-user-dir)
       ;; I omit Marmalade because its packages are manually submitted rather
       ;; than pulled, so packages are often out of date with upstream.
+      ;; Also Org ELPA is going to be closed on further releases of Org
       package-archives
       (let ((proto (if gnutls-verify-error "https" "http")))
         `(("gnu"   . ,(concat proto "://elpa.gnu.org/packages/"))
           ("melpa" . ,(concat proto "://melpa.org/packages/"))
-          ("org"   . ,(concat proto "://orgmode.org/elpa/")))))
+					("nongnu" . ,(concat proto "://elpa.nongnu.org/nongnu/")))))
 
 (advice-add #'package--ensure-init-file :override #'ignore)
 

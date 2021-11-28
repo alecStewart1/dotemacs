@@ -200,7 +200,22 @@
     "`consult-recent-file' needs to have `recentf-mode' on to work correctly"
     :before #'consult-recent-file
     (recentf-mode +1))
-  
+
+  ;; Sources
+  ;;
+
+  (defvar consult-org-source
+    `(:name     "Org"
+      :narrow   ?o
+      :hidden   t
+      :category buffer
+      :state    ,#'consult--buffer-state
+      :items    ,(lambda () (mapcar #'buffer-name (org-buffer-list)))))
+  (add-to-list 'consult-buffer-sources 'consult-org-source 'append)
+
+  ;; Customizations
+  ;;
+
   (consult-customize
    consult-ripgrep consult-git-grep consult-grep
    consult-bookmark consult-recent-file consult-xref
@@ -307,7 +322,7 @@
              company-grab-line
              company-cancel)
   :functions (company-dabbrev-ignore-case company-dabbrev-downcase)
-  :hook (first-input . global-company-mode)
+  :hook (pre-command . global-company-mode)
   :preface
   (put 'company-backends 'permanent-local-hook t)
   :config
@@ -368,7 +383,7 @@
 ;;   :straight (corfu :type git :host github
 ;;                    :repo "minad/corfu"
 ;;                    :branch "history")
-;;   :hook (first-input . corfu-global-mode)
+;;   :hook (pre-command . corfu-global-mode)
 ;;   :bind (:map corfu-map
 ;;          ("TAB" . corfu-next)
 ;;          ("S-TAB" . corfu-previous))

@@ -175,7 +175,8 @@ possible."
 (use-package so-long
   :ensure nil
   :diminish
-  :hook ((first-file . global-so-long-mode)
+  :hook ((find-file . global-so-long-mode)
+         (dired-initial-position . global-so-long-mode)
          (org-mode . so-long-minor-mode)
          (prog-mode . so-long-minor-mode))
   :config
@@ -329,6 +330,12 @@ possible."
 ;;         ("C-/" "Undo" undo-only)
 ;;         ("M-/" "Redo" undo-redo)
 ;;         ("c" "Consult" consult-outline :transient nil)]])))
+
+;;;; Better in-buffer search
+;;;;
+
+(use-package ctrlf
+  :hook (pre-command . ctrlf-mode))
 
 ;;;; Highlight Line
 ;;;;
