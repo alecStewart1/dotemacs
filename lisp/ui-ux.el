@@ -337,6 +337,16 @@ possible."
 (use-package ctrlf
   :hook (pre-command . ctrlf-mode))
 
+;;;; Line numbers
+;;;;
+
+(use-package display-line-numbers
+  :ensure nil
+  :hook (find-file-hook . display-line-numbers-mode)
+  :init
+  ;; I’m a baby and I need this
+  (setq display-line-numbers 'relative))
+
 ;;;; Highlight Line
 ;;;;
 ;;;; I hate this
@@ -537,6 +547,9 @@ possible."
 
 (use-package doom-themes
   :hook (org-load-hook . doom-themes-org-config))
+
+(use-package nano-themes
+  :hook (after-init . nano-dark))
 
 (provide 'ui-ux)
 ;;; ui-ux.el ends here

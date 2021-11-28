@@ -104,12 +104,6 @@
 
 (use-package elfeed
   :commands elfeed
-  :custom
-  (elfeed-db-directory (concat my-local-dir "elfeed/db/"))
-  (elfeed-enclosure-default-dir (concat my-local-dir "elfeed/enclosures/"))
-  (elfeed-search-filter "@2-week-ago ")
-  (elfeed-show-entry-switch #'pop-to-buffer)
-  (shr-max-image-proportion 0.8)
   :config
   (make-directory elfeed-db-directory t)
 
@@ -119,7 +113,16 @@
 
   (setq-mode-local elfeed-show-mode
                    shr-put-image-function #'elfeed:put-sliced-image
-                   shr-external-rendering-functions '((img . elfeed:render-image-tag-without-underline))))
+                   shr-external-rendering-functions '((img . elfeed:render-image-tag-without-underline)))
+  :custom
+  (elfeed-db-directory (concat my-local-dir "elfeed/db/"))
+  (elfeed-enclosure-default-dir (concat my-local-dir "elfeed/enclosures/"))
+  ;; TODO add in more
+  (elfeed-feeds '(("https://archlinux.org/feeds/news/" news arch-linux)
+                  ("https://planet.gentoo.org/universe/rss20.xml" blog news gentoo)))
+  (elfeed-search-filter "@2-week-ago ")
+  (elfeed-show-entry-switch #'pop-to-buffer)
+  (shr-max-image-proportion 0.8))
 
 (use-package elfeed-org
   :after elfeed
