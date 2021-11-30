@@ -1,12 +1,38 @@
 ;;; app.el --- Using Emacs Like an actual application -*- lexical-binding: t; -*-
 ;;
-;; Copyright (C) 2021 Alec
-;;
-;; Created: June 28, 2021
-;; Modified: June 28, 2021
-;;
+;; Copyright (C) 2021 Alec Stewart
+
+;; Author: Alec Stewart <alec-stewart@protonmail.com>
+;; URL: https://github.com/alecStewart1/dotemacs
+;; Keywords: emacs .emacs.d dotemacs
+
 ;; This file is not part of GNU Emacs.
-;;
+
+;; This is free and unencumbered software released into the public domain.
+
+;; Anyone is free to copy, modify, publish, use, compile, sell, or
+;; distribute this software, either in source code form or as a compiled
+;; binary, for any purpose, commercial or non-commercial, and by any
+;; means.
+
+;; In jurisdictions that recognize copyright laws, the author or authors
+;; of this software dedicate any and all copyright interest in the
+;; software to the public domain. We make this dedication for the benefit
+;; of the public at large and to the detriment of our heirs and
+;; successors. We intend this dedication to be an overt act of
+;; relinquishment in perpetuity of all present and future rights to this
+;; software under copyright law.
+
+;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+;; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+;; IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+;; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+;; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+;; OTHER DEALINGS IN THE SOFTWARE.
+
+;; For more information, please refer to <http://unlicense.org/>
+
 ;;; Commentary:
 ;;
 ;;
@@ -23,6 +49,7 @@
 ;;;;;
 
 (use-package epg-config
+  :ensure nil
   :demand t
   :init
   (setq epg-pinentry-mode 'loopback))
@@ -42,9 +69,9 @@
 
 (use-package emms
   :defer t
-  :custom
-  (emms-directory  (concat my-etc-dir "emms"))
-  (emms-cache-file (concat my-cache-dir "emms"))
+  :init
+  (setq emms-directory (concat my-etc-dir "emms")
+        emms-cache-file (concat my-cache-dir "emms"))
   :config
   (emms-all)
   (emms-default-players))
@@ -114,21 +141,32 @@
   (setq-mode-local elfeed-show-mode
                    shr-put-image-function #'elfeed:put-sliced-image
                    shr-external-rendering-functions '((img . elfeed:render-image-tag-without-underline)))
+
+  (setq elfeed-feeds '(("https://archlinux.org/feeds/news/" news arch)
+                       ("https://planet.gentoo.org/universe/rss20.xml" news gentoo)
+                       ("http://planet.sbcl.org/rss20.xml" news dev)
+                       ("https://updates.orgmode.org/feed/changes" news orgmode)
+                       ("https://neovim.io/news.xml" news neovim)
+                       ("https://blog.jetbrains.com/category/news/" news jetbrains)
+                       ("https://www.winehq.org/news/rss/" news wine)
+                       ("http://planet.lisp.org/rss20.xml" blog dev)
+                       ("https://planet.emacslife.com/atom.xml" blog emacs)
+                       ("https://sachachua.com/blog/category/emacs/feed/" blog emacs)
+                       ("https://with-emacs.com/rss.xml" blog emacs)
+                       ("https://blog.jetbrains.com/category/how-tos/" blog jetbrains)))
   :custom
   (elfeed-db-directory (concat my-local-dir "elfeed/db/"))
   (elfeed-enclosure-default-dir (concat my-local-dir "elfeed/enclosures/"))
-  ;; TODO add in more
-  (elfeed-feeds '(("https://archlinux.org/feeds/news/" news arch-linux)
-                  ("https://planet.gentoo.org/universe/rss20.xml" blog news gentoo)))
   (elfeed-search-filter "@2-week-ago ")
   (elfeed-show-entry-switch #'pop-to-buffer)
   (shr-max-image-proportion 0.8))
 
 (use-package elfeed-org
   :after elfeed
-  :init
+  :preface
   (setq rmh-elfeed-org-files (list "elfeed.org"))
   :config
+  (elfeed-org)
   (defadvice! elfeed-org:skip-missing-files (&rest _)
     "TODO"
     :before '(elfeed rmh-elfeed-org-mark-feed-ignore elfeed-or-export-opml)
@@ -137,9 +175,12 @@
              (files (mapcar #'expand-file-name rmh-elfeed-org-files)))
         (dolist (file (cl-remove-if #'file-exists-p files))
           (message "elfeed-org: ignoring %S because it can't be read" file))
-        (setq rmh-elfeed-org-files (cl-remove-if-not #'file-exists-p files)))))
+        (setq rmh-elfeed-org-files (cl-remove-if-not #'file-exists-p files))))))
 
-  (elfeed-org))
+(use-package elfeed-goodies
+  :after elfeed
+	:config
+	(elfeed-goodies/setup))
 
 (provide 'app)
 ;;; app.el ends here

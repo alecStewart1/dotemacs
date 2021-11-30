@@ -1,11 +1,38 @@
 ;;; completion.el --- Completion in Emacs with Vertico, Consult, Marginalia, and Company with Orderless -*- lexical-binding: t; -*-
 ;;
 ;; Copyright (C) 2021 Alec Stewart
-;;
-;; Created: February 20, 2021
-;;
+
+;; Author: Alec Stewart <alec-stewart@protonmail.com>
+;; URL: https://github.com/alecStewart1/dotemacs
+;; Keywords: emacs .emacs.d dotemacs
+
 ;; This file is not part of GNU Emacs.
-;;
+
+;; This is free and unencumbered software released into the public domain.
+
+;; Anyone is free to copy, modify, publish, use, compile, sell, or
+;; distribute this software, either in source code form or as a compiled
+;; binary, for any purpose, commercial or non-commercial, and by any
+;; means.
+
+;; In jurisdictions that recognize copyright laws, the author or authors
+;; of this software dedicate any and all copyright interest in the
+;; software to the public domain. We make this dedication for the benefit
+;; of the public at large and to the detriment of our heirs and
+;; successors. We intend this dedication to be an overt act of
+;; relinquishment in perpetuity of all present and future rights to this
+;; software under copyright law.
+
+;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+;; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+;; IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+;; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+;; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+;; OTHER DEALINGS IN THE SOFTWARE.
+
+;; For more information, please refer to <http://unlicense.org/>
+
 ;;; Commentary:
 ;;
 ;;  While I myself am not a minialist, I do appreciate the simplicity yet also featureful-ness of
@@ -312,7 +339,8 @@
          ("C-M-/" . dabbrev-expand)))
 
 ;;;; Company
-;;;;
+;;;; TODO may still make use of but use with Cape
+;;;; https://github.com/minad/cape#company-adapter
 
 (use-package company
   :diminish
@@ -377,12 +405,9 @@
   (setq company-dict-dir (expand-file-name "dicts" my-etc-dir)))
 
 ;;;; Corfu
-;;;;
+;;;; TODO may use in the future
 
 ;; (use-package corfu
-;;   :straight (corfu :type git :host github
-;;                    :repo "minad/corfu"
-;;                    :branch "history")
 ;;   :hook (pre-command . corfu-global-mode)
 ;;   :bind (:map corfu-map
 ;;          ("TAB" . corfu-next)
@@ -391,7 +416,24 @@
 ;;   (require 'corfu-history)
 ;;   (add-hook 'corfu--mode-hook 'corfu-histroy-mode)
 ;;   :custom
-;;   (corfu-cycle t))
+;;   (corfu-cycle t)
+;;   (corfu-auto t)
+;;   (corfu-preselect-first nil)
+;;   (corfu-scroll-margin 6))
+
+;;;; Cape
+;;;; TODO may use in the future, with Corfu and using some Company backends
+;;;; https://github.com/minad/cape#company-adapter
+
+;; (use-package cape
+;;   :bind (())
+;;   :preface
+;;   ;; TODO
+;;   (defvar cape:mega-capf (cape-capf-buster (cape-super-capf #’cape-dabbrev #’cape-keywords #’cape-file))
+;;;   "A ‘cape-super-capf’ that’s similar to most simpler Company configurations.")
+;;   (defvar cape:mega-company-capf (mapcar #’cape-company-to-capf
+;;                                    (list #’company-capf #’company-dabberv-code #’company-keywords #’company-files #’company-dabbrev))
+;;    "A Cap CAPF that uses a lot of commonly use Company backends."))
 
 (provide 'completion)
 ;;; completion.el ends here

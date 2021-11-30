@@ -1,11 +1,38 @@
 ;;; emacsy.el --- Some things that are very Emacs-y -*- lexical-binding: t; -*-
 ;;
-;; Copyright (C) 2021 Alec
-;;
-;; Created: January 15, 2021
-;;
+;; Copyright (C) 2021 Alec Stewart
+
+;; Author: Alec Stewart <alec-stewart@protonmail.com>
+;; URL: https://github.com/alecStewart1/dotemacs
+;; Keywords: emacs .emacs.d dotemacs
+
 ;; This file is not part of GNU Emacs.
-;;
+
+;; This is free and unencumbered software released into the public domain.
+
+;; Anyone is free to copy, modify, publish, use, compile, sell, or
+;; distribute this software, either in source code form or as a compiled
+;; binary, for any purpose, commercial or non-commercial, and by any
+;; means.
+
+;; In jurisdictions that recognize copyright laws, the author or authors
+;; of this software dedicate any and all copyright interest in the
+;; software to the public domain. We make this dedication for the benefit
+;; of the public at large and to the detriment of our heirs and
+;; successors. We intend this dedication to be an overt act of
+;; relinquishment in perpetuity of all present and future rights to this
+;; software under copyright law.
+
+;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+;; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+;; IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+;; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+;; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+;; OTHER DEALINGS IN THE SOFTWARE.
+
+;; For more information, please refer to <http://unlicense.org/>
+
 ;;; Commentary:
 ;;
 ;;
@@ -23,9 +50,6 @@
 (use-package dired
   :ensure nil
   :commands dired-jump
-  :hook (dired-load . (lambda ()
-                            (require 'dired-x)
-                            (require 'dired-aux)))
   :init
   (setq image-dired-dir                    (concat my-cache-dir "image-dired/")
         image-dired-db-file                (concat image-dired-dir "db.el")
@@ -41,12 +65,13 @@
   ; suggest a target for moving/copying intelligently
   (dired-dwim-target t)
   (dired-hide-details-hide-symlink-targets nil)
-  (dired-omit-verbose nil)
-  (dired-omit-files "\\`[.]?#\\|\\`[.][.]?\\'\\|^.DS_Store\\'\\|^.project\\(?:ile\\)?\\'\\|^.\\(svn\\|git\\)\\'\\|^.ccls-cache\\'\\|\\(?:\\.js\\)?\\.meta\\'\\|\\.\\(?:elc\\|o\\|pyo\\|swp\\|class\\)\\'")
   (dired-garbage-files-regexp "\\.idx\\|\\.run\\.xml$\\|\\.bbl$\\|\\.bcf$\\|.blg$\\|-blx.bib$\\|.nav$\\|.snm$\\|.out$\\|.synctex.gz$\\|\\(?:\\.\\(?:aux\\|bak\\|dvi\\|log\\|orig\\|rej\\|toc\\|pyg\\)\\)\\'")
   ; Always copy/delete recursively
   (dired-recursive-copies 'always)
   (dired-recursive-deletes 'top)
+
+  ;; Ask whether destination dirs should get created when copying/removing files.
+  (dired-create-destination-dirs 'ask)
   :config
   (put 'dired-find-alternate-file 'disabled nil)
 
@@ -58,6 +83,76 @@
 (use-package image-dired
   :ensure nil
   :commands (image-dired image-dired-display-thumb image-dired-display-thumbs image-dired-minor-mode))
+
+(use-package dired-aux
+  :ensure nil
+  :defer t
+  :config
+  (setq dired-create-destination-dirs 'ask
+        dired-vc-rename-file t))
+
+(use-package dired-x
+  :ensure nil
+  :hook (dired-mode . dired-omit-mode)
+  :config
+  (setq dired-omit-verbose nil
+        dired-omit-files
+        (concat dired-omit-files
+                "\\`[.]?#\\|\\`[.][.]?\\'\\|^.DS_Store\\'\\|^.project\\(?:ile\\)?\\'\\|^.\\(svn\\|git\\)\\'\\|^.ccls-cache\\'\\|\\(?:\\.js\\)?\\.meta\\'\\|\\.\\(?:elc\\|o\\|pyo\\|swp\\|class\\)\\'")
+        dired-clean-confirm-killing-deleted-buffers nil)
+  (let ((cmd (cond (macos-p "open")
+                   (linux-p "xdg-open")
+                   (windows-nt-p "start")
+                   (t ""))))
+    (setq dired-guess-shell-alist-user
+          `(("\\.pdf\\'" ,cmd)
+            ("\\.docx\\'" ,cmd)
+            ("\\.\\(?:djvu\\|eps\\)\\'" ,cmd)
+            ("\\.\\(?:jpg\\|jpeg\\|png\\|gif\\|xpm\\)\\'" ,cmd)
+            ("\\.\\(?:xcf\\)\\'" ,cmd)
+            ("\\.csv\\'" ,cmd)
+            ("\\.tex\\'" ,cmd)
+            ("\\.\\(?:mp4\\|mkv\\|avi\\|flv\\|rm\\|rmvb\\|ogv\\)\\(?:\\.part\\)?\\'" ,cmd)
+            ("\\.\\(?:mp3\\|flac\\)\\'" ,cmd)
+            ("\\.html?\\'" ,cmd)
+            ("\\.md\\'" ,cmd)))))
+
+(use-package fd-dired
+  :when (executable-find "fd")
+  :defer t
+  :init
+  (global-set-key [remap find-dired] #'fd-dired))
+
+(use-package dired-git-info
+  :after dired
+  :bind (:map dired-mode-map
+         (")" . dired-git-info-mode))
+  :config
+  (setq dgi-commit-message-format "%h %c %s"
+        dgi-auto-hide-details-p nil)
+  (with-eval-after-load 'wdired
+    (defvar dired--git-info-p nil)
+    (defadvice! dired:disable-git-info (&rest _)
+      :before #'wdired-change-to-wdired-mode
+      (setq dired--git-info-p (bound-and-true-p dired-git-info-mode))
+      (when dired--git-info-p
+        (dired-git-info-mode -1)))
+    (defadvice! dired:reactivate-git-info (&rest _)
+      :after '(wdired-exit
+               wdired-abort-changes
+               wdired-finish-edit)
+      (when dired--git-info-p
+        (dired-git-info-mode +1)))))
+
+(use-package diredfl
+  :hook (dired-mode . diredfl-mode))
+
+(use-package diff-hl
+  :hook (dired-mode . diff-hl-dired-mode-unless-remote)
+  :hook (magit-post-refresh . diff-hl-magit-post-refresh)
+  :config
+  ;; use margin instead of fringe
+  (diff-hl-margin-mode))
 
 ;;;; IBuffer
 ;;;;

@@ -1,11 +1,38 @@
 ;;; writing.el --- For editing text -*- lexical-binding: t; -*-
 ;;
-;; Copyright (C) 2021 Alec
-;;
-;; Created: January 16, 2021
-;; Modified: January 16, 2021
-;;
+;; Copyright (C) 2021 Alec Stewart
+
+;; Author: Alec Stewart <alec-stewart@protonmail.com>
+;; URL: https://github.com/alecStewart1/dotemacs
+;; Keywords: emacs .emacs.d dotemacs
+
 ;; This file is not part of GNU Emacs.
+
+;; This is free and unencumbered software released into the public domain.
+
+;; Anyone is free to copy, modify, publish, use, compile, sell, or
+;; distribute this software, either in source code form or as a compiled
+;; binary, for any purpose, commercial or non-commercial, and by any
+;; means.
+
+;; In jurisdictions that recognize copyright laws, the author or authors
+;; of this software dedicate any and all copyright interest in the
+;; software to the public domain. We make this dedication for the benefit
+;; of the public at large and to the detriment of our heirs and
+;; successors. We intend this dedication to be an overt act of
+;; relinquishment in perpetuity of all present and future rights to this
+;; software under copyright law.
+
+;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+;; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+;; IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+;; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+;; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+;; OTHER DEALINGS IN THE SOFTWARE.
+
+;; For more information, please refer to <http://unlicense.org/>
+
 ;;
 ;;; Commentary:
 ;;
@@ -57,8 +84,8 @@
 (use-package recentf
   :ensure nil
   :diminish
-  :hook ((find-file . recentf-mode)
-         (dired-initial-position . recentf-mode))
+  :hook (after-init . recentf-mode)
+
   :commands recentf-open-files
   :custom
   (recentf-filename-handlers
@@ -253,6 +280,45 @@
   :bind (("M-z" . avy-zap-to-char-dwim)
          ("M-Z" . avy-zap-up-to-char-dwim)))
 
+;;;; Easy-Kill
+;;;;
+;;;; Don’t know if I like these
+
+(use-package easy-kill
+  :unless (package-installed-p 'meow)
+  :bind (([remap kill-ring-save] . easy-kill)
+         ([remap mark-sexp] . easy-mark)))
+
+(use-package easy-kill-extras
+  :unless (package-installed-p 'meow)
+  :after easy-kill
+  :config
+  (require 'extra-things)
+  (global-set-key [remap mark-word] #'easy-mark-word)
+  (define-key easy-kill-base-map (kbd "o") #'easy-kill-er-expand)
+  (define-key easy-kill-base-map (kbd "i") #'easy-kill-er-unexpand)
+  (add-to-list 'easy-kill-alist '(?W  WORD " ") t)
+  (add-to-list 'easy-kill-alist '(?\' squoted-string "") t)
+  (add-to-list 'easy-kill-alist '(?\" dquoted-string "") t)
+  (add-to-list 'easy-kill-alist '(?\` bquoted-string "") t)
+  (add-to-list 'easy-kill-alist '(?q  quoted-string "") t)
+  (add-to-list 'easy-kill-alist '(?Q  quoted-string-universal "") t)
+  (add-to-list 'easy-kill-alist '(?\) parentheses-pair-content "\n") t)
+  (add-to-list 'easy-kill-alist '(?\( parentheses-pair "\n") t)
+  (add-to-list 'easy-kill-alist '(?\] brackets-pair-content "\n") t)
+  (add-to-list 'easy-kill-alist '(?\[ brackets-pair "\n") t)
+  (add-to-list 'easy-kill-alist '(?}  curlies-pair-content "\n") t)
+  (add-to-list 'easy-kill-alist '(?{  curlies-pair "\n") t)
+  (add-to-list 'easy-kill-alist '(?^ backward-line-edge "") t)
+  (add-to-list 'easy-kill-alist '(?$ forward-line-edge "") t)
+  (add-to-list 'easy-kill-alist '(?b buffer "") t)
+  (add-to-list 'easy-kill-alist '(?< buffer-before-point "") t)
+  (add-to-list 'easy-kill-alist '(?> buffer-after-point "") t)
+  (add-to-list 'easy-kill-alist '(?f string-to-char-forward "") t)
+  (add-to-list 'easy-kill-alist '(?F string-up-to-char-forward "") t)
+  (add-to-list 'easy-kill-alist '(?t string-to-char-backward "") t)
+  (add-to-list 'easy-kill-alist '(?T string-up-to-char-backward "") t))
+
 ;;;; DTRT Indent
 ;;;;
 
@@ -264,16 +330,13 @@
   ;; Please
   (setq-default dtrt-indent-verbosity 0)
   :config
-  ;; Please, stop.
-  (shut-up! (dtrt-indent-undo))
-
   (defun dtrt:detect-indentation ()
     (unless (or (not after-init-time)
                 editing:inhibit-indent-detection
                 ui-ux:large-file-p
                 (memq major-mode editing:detect-indent-excluded-modes)
                 (member (substring (buffer-name) 0 1) '(" " "*")))
-        (dtrt-indent-mode +1)))
+        (shut-up! (dtrt-indent-mode +1))))
 
   (setq dtrt-indent-run-after-smie t
         dtrt-indent-max-lines 2000)
@@ -353,7 +416,7 @@
   (require 'smartparens-config)
   ;; Overlays are too distracting and not terribly helpful. show-parens does
   ;; this for us already (and is faster), so...
-  (with-eval-after-load 'evil
+  (with-eval-after-load 'meow
     ;; But if someone does want overlays enabled, evil users will be stricken
     ;; with an off-by-one issue where smartparens assumes you're outside the
     ;; pair when you're really at the last character in insert mode. We must
@@ -380,7 +443,7 @@
   (sp-local-pair 'minibuffer-inactive-mode "`" nil :actions nil)
 
   ;; Smartparens breaks evil-mode's replace state
-  (defvar buffer-smartparens-mode nil)
+  ;;(defvar buffer-smartparens-mode nil)
   ;; (add-hook! 'evil-replace-state-exit-hook
   ;;   (defun smartparens:enable-maybe? ()
   ;;     (when buffer-smartparens-mode
@@ -391,7 +454,35 @@
   ;;     (when smartparens-mode
   ;;       (setq-local buffer-smartparens-mode t)
   ;;       (turn-off-smartparens-mode))))
-  )
+
+  ;; Autopair quotes more conservatively; if I'm next to a word/before another
+  ;; quote, I don't want to open a new pair or it would unbalance them.
+  (let ((unless-list '(sp-point-before-word-p
+                       sp-point-after-word-p
+                       sp-point-before-same-p)))
+    (sp-pair "'"  nil :unless unless-list)
+    (sp-pair "\"" nil :unless unless-list))
+
+  ;; Expand {|} => { | }
+  ;; Expand {|} => {
+  ;;   |
+  ;; }
+  (dolist (brace '("(" "{" "["))
+    (sp-pair brace nil
+             :post-handlers '(("||\n[i]" "RET") ("| " "SPC"))
+             ;; Don't autopair opening braces if before a word character or
+             ;; other opening brace. The rationale: it interferes with manual
+             ;; balancing of braces, and is odd form to have s-exps with no
+             ;; whitespace in between, e.g. ()()(). Insert whitespace if
+             ;; genuinely want to start a new form in the middle of a word.
+             :unless '(sp-point-before-word-p sp-point-before-same-p)))
+
+  ;; In lisps ( should open a new form if before another parenthesis
+  (sp-local-pair sp-lisp-modes "(" ")" :unless '(:rem sp-point-before-same-p))
+
+  ;; Don't do square-bracket space-expansion where it doesn't make sense to
+  (sp-local-pair '(emacs-lisp-mode org-mode markdown-mode gfm-mode)
+                 "[" nil :post-handlers '(:rem ("| " "SPC"))))
 
 ;;;; WS-Butler
 ;;;;

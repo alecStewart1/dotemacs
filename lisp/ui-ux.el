@@ -1,11 +1,38 @@
 ;;; ui-ux.el --- To make the UI & UX of Emacs more sensible and modern  -*- lexical-binding: t; -*-
 ;;
-;; Copyright (C) 2021 Alec
-;;
-;; Created: January 15, 2021
-;;
+;; Copyright (C) 2021 Alec Stewart
+
+;; Author: Alec Stewart <alec-stewart@protonmail.com>
+;; URL: https://github.com/alecStewart1/dotemacs
+;; Keywords: emacs .emacs.d dotemacs
+
 ;; This file is not part of GNU Emacs.
-;;
+
+;; This is free and unencumbered software released into the public domain.
+
+;; Anyone is free to copy, modify, publish, use, compile, sell, or
+;; distribute this software, either in source code form or as a compiled
+;; binary, for any purpose, commercial or non-commercial, and by any
+;; means.
+
+;; In jurisdictions that recognize copyright laws, the author or authors
+;; of this software dedicate any and all copyright interest in the
+;; software to the public domain. We make this dedication for the benefit
+;; of the public at large and to the detriment of our heirs and
+;; successors. We intend this dedication to be an overt act of
+;; relinquishment in perpetuity of all present and future rights to this
+;; software under copyright law.
+
+;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+;; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+;; IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+;; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+;; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+;; OTHER DEALINGS IN THE SOFTWARE.
+
+;; For more information, please refer to <http://unlicense.org/>
+
 ;;; Commentary:
 ;;
 ;;  A lot of customizations for the UI/UX of Emacs.
@@ -126,7 +153,9 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
   ;;      var-bt 'action
   ;;      (lambda (button)
   ;;        (helpful-variable (button-get button 'apropos-symbol)))))
-    )
+  :custom
+  ;; Minimuze the amount of unused helpful buffers open
+  (helpful-max-buffers 2))
 
 ;;;; So-Long
 ;;;; So we manage working with large files easier.
@@ -342,7 +371,7 @@ possible."
 
 (use-package display-line-numbers
   :ensure nil
-  :hook (find-file-hook . display-line-numbers-mode)
+  :hook (find-file . display-line-numbers-mode)
   :init
   ;; I’m a baby and I need this
   (setq display-line-numbers 'relative))
@@ -381,7 +410,9 @@ possible."
   (("s-h" . windmove-left)
    ("s-l" . windmove-right)
    ("s-j" . windmove-down)
-   ("s-k" . windmove-up)))
+   ("s-n" . windmove-down)
+   ("s-k" . windmove-up)
+   ("s-p" . windmove-up)))
 
 (use-package ace-window
   :bind (("s-w" . ace-window)
@@ -410,6 +441,7 @@ possible."
 (use-package highlight-numbers
   :demand t
   :hook ((prog-mode . highlight-numbers-mode)
+         (emacs-lisp-mode . highlight-numbers-mode) ;; <- doesn’t enable here?
          (conf-mode . highlight-numbers-mode))
   :config
   (setq highlight-numbers-generic-regexp "\\_<[[:digit:]]+\\(?:\\.[0-9]*\\)?\\_>"))
@@ -510,10 +542,11 @@ possible."
                    ("*package update results*"        :size 0.2 :align 'below :autoclose t)
                    ("*Package-Lint*"                  :size 0.4 :align 'below :autoclose t)
                    ("^\\*macro expansion\\**"         :regexp t :size 0.4 :align 'below)
-                   ("\\*[Wo]*Man.*\\*"                :regexp t :select t :align 'below :autoclose t)
+                   ("^\\*[Wo]*Man.*\\*"                :regexp t :select t :align 'below :autoclose t)
                    ("*Calendar*"                      :select t :size 0.3 :align 'below)
                    ("^\\*Ibuffer\\*$"                 :regexp t :ignore t)
                    ("^\\*image-dired"                 :regexp t :size 0.8 :select t)
+                   ("^\\*F\\(?:d\\|ind\\)\\*$"        :regexp t :ignore t)
                    ("*Org Links*"                     :select nil :size 0.2)
                    ("^ ?\\*\\(?:Agenda Com\\|Calendar\\|Org Export Dispatcher\\)"
                     :regexp t :align 'bottom :size 0.25)
@@ -548,7 +581,7 @@ possible."
 (use-package doom-themes
   :hook (org-load-hook . doom-themes-org-config))
 
-(use-package nano-themes
+(use-package nano-theme
   :hook (after-init . nano-dark))
 
 (provide 'ui-ux)

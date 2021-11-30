@@ -1,11 +1,38 @@
 ;;; termy.el --- Terminal/Shell packages -*- lexical-binding: t; -*-
 ;;
-;; Copyright (C) 2021 Alec
-;;
-;; Created: February 07, 2021
-;;
+;; Copyright (C) 2021 Alec Stewart
+
+;; Author: Alec Stewart <alec-stewart@protonmail.com>
+;; URL: https://github.com/alecStewart1/dotemacs
+;; Keywords: emacs .emacs.d dotemacs
+
 ;; This file is not part of GNU Emacs.
-;;
+
+;; This is free and unencumbered software released into the public domain.
+
+;; Anyone is free to copy, modify, publish, use, compile, sell, or
+;; distribute this software, either in source code form or as a compiled
+;; binary, for any purpose, commercial or non-commercial, and by any
+;; means.
+
+;; In jurisdictions that recognize copyright laws, the author or authors
+;; of this software dedicate any and all copyright interest in the
+;; software to the public domain. We make this dedication for the benefit
+;; of the public at large and to the detriment of our heirs and
+;; successors. We intend this dedication to be an overt act of
+;; relinquishment in perpetuity of all present and future rights to this
+;; software under copyright law.
+
+;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+;; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+;; IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+;; OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+;; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+;; OTHER DEALINGS IN THE SOFTWARE.
+
+;; For more information, please refer to <http://unlicense.org/>
+
 ;;; Commentary:
 ;;
 ;;  Mainly just for EShell and VTerm.
@@ -209,6 +236,22 @@ Once the eshell process is killed, the previous frame layout is restored."
   :commands (eshell eshell-toggle eshell-frame)
   :defines eshell-prompt-function
   :functions eshell/alias
+  :custom
+  (eshell-banner-message
+     '(format "%s %s\n"
+         (propertize (format " %s " (string-trim (buffer-name)))
+                     'face 'mode-line-highlight)
+         (propertize (current-time-string)
+                     'face 'font-lock-keyword-face)))
+  (eshell-scroll-to-bottom-on-input 'all)
+  (eshell-scroll-to-bottom-on-output 'all)
+  (eshell-kill-processes-on-exit t)
+  (eshell-hist-ignoredups t)
+  (eshell-input-filter (lambda (input) (not (string-match-p "\\`\\s-+" input))))
+  (eshell-prompt-regexp "^.* ~> ")
+  (eshell-glob-case-insensitive t)
+  (eshell-error-if-no-glob t)
+  (eshell-term-name "xterm-256color")
   :config
   ;; At the moment, Company is causing issues in Eshell
   (company-mode -1)
@@ -236,23 +279,7 @@ Once the eshell process is killed, the previous frame layout is restored."
     (define-key eshell-mode-map (kbd "C-s") #'eshell:search-history)
     (define-key eshell-mode-map (kbd "C-l") (lambda () (interactive)
                                               (eshell/clear-scrollback)
-                                              (eshell-emit-prompt))))
-  :custom
-  (eshell-banner-message
-     '(format "%s %s\n"
-         (propertize (format " %s " (string-trim (buffer-name)))
-                     'face 'mode-line-highlight)
-         (propertize (current-time-string)
-                     'face 'font-lock-keyword-face)))
-  (eshell-scroll-to-bottom-on-input 'all)
-  (eshell-scroll-to-bottom-on-output 'all)
-  (eshell-kill-processes-on-exit t)
-  (eshell-hist-ignoredups t)
-  (eshell-input-filter (lambda (input) (not (string-match-p "\\`\\s-+" input))))
-  (eshell-prompt-regexp "^.* ~> ")
-  (eshell-glob-case-insensitive t)
-  (eshell-error-if-no-glob t)
-  (eshell-term-name "xterm-256color"))
+                                              (eshell-emit-prompt)))))
 
 ;;;; Esh-Modules
 ;;;;
