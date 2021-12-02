@@ -285,12 +285,10 @@
 ;;;; Don’t know if I like these
 
 (use-package easy-kill
-  :unless (package-installed-p 'meow)
   :bind (([remap kill-ring-save] . easy-kill)
          ([remap mark-sexp] . easy-mark)))
 
 (use-package easy-kill-extras
-  :unless (package-installed-p 'meow)
   :after easy-kill
   :config
   (require 'extra-things)

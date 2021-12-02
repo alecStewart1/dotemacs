@@ -48,6 +48,7 @@
 ;;; Code:
 
 (require 'lib)
+(require 'mode-local)
 (require 'thingatpt)
 
 ;;; Packages
@@ -330,13 +331,27 @@
   :config
   (add-hook 'embark-collect-mode-hook #'consult-preview-at-point-mode))
 
+;;;; Abbrev
+
+(use-package abbrev
+  :ensure nil
+  :bind ("<C-tab>" . expand-abbrev))
+
 ;;;; Dabbrev
 ;;;;
 
 (use-package dabbrev
   :ensure nil
-  :bind (("M-/" . dabbrev-completion)
-         ("C-M-/" . dabbrev-expand)))
+  :bind (("C-M-/" . dabbrev-completion)
+         ;;("C-M-/" . dabbrev-expand)
+         ))
+
+;;;; Hippie Expand
+;;;;
+;;;; TODO need to adjust this
+
+(use-package hippie-exp
+  :bind ("M-/" . hippie-expand))
 
 ;;;; Company
 ;;;; TODO may still make use of but use with Cape
@@ -412,9 +427,9 @@
 ;;   :bind (:map corfu-map
 ;;          ("TAB" . corfu-next)
 ;;          ("S-TAB" . corfu-previous))
-;;   :config
-;;   (require 'corfu-history)
-;;   (add-hook 'corfu--mode-hook 'corfu-histroy-mode)
+;;   ;:config
+;;   ;(require 'corfu-history)
+;;   ;(add-hook 'corfu--mode-hook 'corfu-histroy-mode)
 ;;   :custom
 ;;   (corfu-cycle t)
 ;;   (corfu-auto t)
@@ -426,14 +441,26 @@
 ;;;; https://github.com/minad/cape#company-adapter
 
 ;; (use-package cape
-;;   :bind (())
+;;   :bind ("C-c p p" . completion-at-point)
 ;;   :preface
-;;   ;; TODO
-;;   (defvar cape:mega-capf (cape-capf-buster (cape-super-capf #’cape-dabbrev #’cape-keywords #’cape-file))
-;;;   "A ‘cape-super-capf’ that’s similar to most simpler Company configurations.")
-;;   (defvar cape:mega-company-capf (mapcar #’cape-company-to-capf
-;;                                    (list #’company-capf #’company-dabberv-code #’company-keywords #’company-files #’company-dabbrev))
-;;    "A Cap CAPF that uses a lot of commonly use Company backends."))
+;;   (defvar cape:mega-capf (list
+;;                           (cape-super-capf #'cape-abbrev #'cape-dabbrev #'cape-keywords #'cape-symbol #'cape-file))
+;;     "A ‘cape-super-capf’ that’s similar to most simpler Company configurations.")
+
+;;   (defvar cape:mega-company-capf (mapcar #'cape-company-to-capf
+;;                                          (list #'company-capf #'company-abbrev #'company-dabberv-code #'company-keywords #'company-files #'company-dabbrev))
+;;     "A Cape CAPF that uses a lot of commonly use Company backends.")
+
+;;   (defvar cape:mega-writing-capf (list (cape-super-capf #'cape-abbrev #'cape-dabbrev #'cape-ispell #'cape-dict))
+;;     "A ‘cape-super-capf’ for modes for writing")
+;;   :init
+;;   (setq-mode-local emacs-lisp-mode
+;;    completion-at-point-functions
+;;    (list
+;;     (cape-capf-buster
+;;      (cape-super-capf #'cape-abbrev #'cape-dabbrev #'cape-keyword #'cape-symbol #'cape-file)))))
+
+
 
 (provide 'completion)
 ;;; completion.el ends here

@@ -115,6 +115,7 @@
 (require 'programming)
 (require 'writing)
 (require 'app)
+;(require 'modal)
 
 ;;; Load the dumb ‘custom-file’
 ;;;

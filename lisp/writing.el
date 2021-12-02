@@ -529,6 +529,11 @@ Made for `org-tab-first-hook' in evil-mode."
 
     (add-hook 'org-tab-first-hook #'org:indent-maybe)
 
+    ;; Global Keys
+    (global-set-key (kbd "C-c c") #'org-capture)
+    (global-set-key (kbd "C-c a") #'org-agenda)
+
+    ;; Org-Mode keys
     (define-key org-mode-map (kbd "TAB") #'org-cycle)
     (define-key org-mode-map (kbd "<tab>") #'org-cycle)
     (define-key org-mode-map (kbd "RET") #'org:return-dwim)
@@ -557,12 +562,12 @@ Made for `org-tab-first-hook' in evil-mode."
   (add-hook 'org-mode-local-vars-hook #'eldoc-mode)
   (add-hook 'org-mode-hook #'orgtbl-mode)
 
-  ;; TODO
-  (snippets:file-snip block 'org
-                      "Block type: "
-                      ?\n "#+begin_" str
-                      ?\n _ ?\n
-                      "#+end_" str ?\n))
+  ;; TODO more snippets
+  (mode-snippet org-block org-mode
+    "Block type: "
+    ?\n "#+begin_" str
+    ?\n _ ?\n
+    "#+end_" str ?\n))
 
 (use-package org-crypt
   :ensure nil

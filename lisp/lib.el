@@ -40,6 +40,7 @@
 ;;; Code:
 
 ;;(require 'dash)
+(require 'abbrev)
 
 ;;; Useful variables and constants
 ;;;
@@ -244,7 +245,7 @@ Returns nil if not in a project."
 ;; Thank you reddit user b3n:
 ;; https://old.reddit.com/r/emacs/comments/ml4wql/weekly_tipstricketc_thread/gtkc524/
 ;;;###autoload
-(defmacro snippets:global-snip (name &rest skeleton)
+(defmacro global-snippet (name &rest skeleton)
   "Create a global \"snippet\" with NAME and SKELETON.
 NAME must be valid in the Emacs Lisp naming convention.
 
@@ -255,9 +256,10 @@ create something similar to a code/writing snippet system, like that of
 `YASnippet'. Keep in mind that all abbreviations created are put in the
 `global-abbrev-table' under the named passed to this macro. That may or
 may not be something you want, depending on your uses.
-If you're looking to only define an abbrev for a specific file/mode, see
-`snippets:file-snip'."
-  (declare (debug t))
+If you're looking to only define an abbrev for a specific mode, see
+`mode-snippet’."
+  (declare (debug t)
+           (indent defun))
   (let* ((snip-name (symbol-name `,name))
          (func-name (intern (concat snip-name "-skel"))))
     `(progn
@@ -267,47 +269,45 @@ If you're looking to only define an abbrev for a specific file/mode, see
        (define-abbrev global-abbrev-table ,snip-name
          "" ',func-name))))
 
-;;; WARNING only works with singular modes, at the moment.
 ;;;###autoload
-(defmacro snippets:file-snip (name mode &rest skeleton)
+(defmacro mode-snippet (name mode &rest skeleton)
   "Create a MODES specific \"snippet\" with NAME and SKELETON.
 NAME must be valid in the Emacs Lisp naming convention.
 
-MODE must be a valid feature or file
-(something acceptable by `eval-after-load').
-
-MODE can be a list of features or files
-(again, something acceptable by `eval-after-load').
+MODE must be a valid major or minor mode that
 
 SKELETON must be a body that is valid to `Skeleton''s internal language.
 This macro makes use of `define-skeleton' and `define-abbrev' in order to
 create something similar to a code/writing snippet system, like that of
 `YASnippet'.
 
-Keep in mind that all abbreviations created are put in the `local-abbrev-table'
-under the named (MODE) passed to this macro. That may or may not be something
-you want, depending on your uses. If you're looking to only define an abbrev
-globally, see `snippets:global-snip'."
-  (declare (debug t))
+Keep in mind that all abbreviations created are put in the abbrev table of
+MODE you passed to this macro. That may or may not be something you want,
+depending on your uses. If you're looking to only define an abbrev globally,
+see `snippets:global-snip'."
+  (declare (debug t)
+           (indent defun))
   ;; TODO need to figure out how to work with lists better
   (let* ((snip-name (symbol-name `,name))
          (func-name (intern (concat snip-name "-skel")))
-         (mode-str (format "%s" `,mode)))
-    `(cond ((symbolp ,mode)
-            (define-skeleton ,func-name
-              ,(format "%s %s %s." snip-name "skeleton. Defined in" mode-str)
-              ,@skeleton)
-            (eval-after-load ,mode
-              (define-abbrev local-abbrev-table ,snip-name
-                "" ',func-name)))
-           ((listp ,mode)
-            (define-skeleton ,func-name
-              ,(format "%s %s %s %s." snip-name "skeleton. Defined in" mode-str  "modes/features")
-              ,@skeleton)
-            (dolist (m ,mode)
-              (eval-after-load 'm
-                (define-abbrev local-abbrev-table ,snip-name
-                  "" ',func-name)))))))
+         (var-str (concat (symbol-name mode) "-abbrev-table"))
+         (abbrev-table (intern-soft var-str)))
+    `(progn
+       (define-skeleton ,func-name
+          ,(format "%s %s %s %s." snip-name "skeleton. Defined in" var-str "abbreviaton table.")
+          ,@skeleton)
+       (define-abbrev ,abbrev-table ,snip-name
+         "" ',func-name))))
+
+;; (define-abbrev emacs-lisp-mode-abbrev-table "defun" ""
+;;   'emacs-lisp-defun-skel)
+
+;; (define-skeleton emacs-lisp-defun-skel
+;;   "Create a emacs defun at point"
+;;   "Function name: "
+;;   > "(defun " str " ()" ?\n
+;;   > _ ?\n
+;;   > ")")
 
 ;;; Macros
 ;;;

@@ -400,13 +400,21 @@ ALIASES is a flat list of alias -> command pairs. e.g.
 
 ;;;; VTerm
 ;;;;
+;;;; Colors are a little jank
 
 (use-package vterm
   :when (bound-and-true-p module-file-suffix)
   :commands vterm vterm-mode
-  :preface (setq vterm-install t)
+  :hook (vterm-mode . hide-mode-line-mode)
+  :preface
+  (setq vterm-install t)
+  :init
+  (when noninteractive
+    (advice-add #'vterm-module-compile :override #'ignore)
+    (provide 'vterm-module))
   :config
-  (setq vterm-kill-buffer-on-exit t)
+  (setq vterm-kill-buffer-on-exit t
+        vterm-max-scrollback 5000)
   (setq confirm-kill-processes nil)
   (setq hscroll-margin 0))
 
