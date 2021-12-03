@@ -94,13 +94,19 @@
   (defun org:setup-agenda ()
     (setq org-agenda-files (list org-directory))
     (setq-default
+     org-agenda-deadline-faces
+     '((1.0001 . error)
+       (1.0 . org-warning)
+       (0.5 . org-upcoming-deadline)
+       (0.0 . org-upcoming-distant-deadline))
      org-agenda-window-setup 'current-window
      org-agenda-skip-unavailable-files t
      org-agenda-span 10
      org-agenda-start-on-weekday nil
      org-agenda-start-day "-3d"
      org-agenda-files '("~/Documents/Org/agenda.org"
-                        "~/Documents/Org/Notes/personal-fitness.org")))
+                        "~/Documents/Org/Notes/personal-fitness.org")
+     org-agenda-inhibit-startup t))
 
   (defun org:setup-appearance ()
     (setq org-indirect-buffer-display 'current-window
@@ -109,19 +115,21 @@
           org-entities-user
           '(("flat" "\\flat" nil "" "" "266D" "")
             ("sharp" "\\sharp" nil "" "" "266F" ""))
+          org-fontify-done-headline t
           org-fontify-quote-and-verse-blocks t
           org-fontify-whole-heading-line t
           org-hide-emphasis-markers t
           org-footnote-auto-label t
           org-hide-leading-stars t
           org-image-actual-width nil
+          org-imenu-depth 6
           org-priority-faces
           '((?A . error)
             (?B . warning)
             (?C . success))
           org-startup-indented t
           org-startup-truncated nil
-          org-startup-folded 'content
+          org-startup-folded nil
           org-tags-column 0
           org-use-sub-superscripts '{}
           org-log-into-drawer t
@@ -147,6 +155,7 @@
              "STRT(s)"
              "WAIT(w)"
              "HOLD(h)"
+             "IDEA(i)"
              "MAYBE(m)"
              "CHECK(c)"
              "TO-READ(r)"
@@ -182,10 +191,11 @@
     (setq org-src-preserve-indentation t
           org-src-fontify-natively t
           org-src-tab-acts-natively t
-          org-src-window-setup 'current-window
+          org-src-window-setup 'other-window
           org-edit-src-content-indentation 0
           org-edit-src-persistent-message nil
           org-confirm-babel-evaluate nil
+          org-babel-lisp-eval-fn #'sly-eval
           org-link-elisp-confirm-function nil)
 
     ;; (eval-after-load 'ob
@@ -562,12 +572,22 @@ Made for `org-tab-first-hook' in evil-mode."
   (add-hook 'org-mode-local-vars-hook #'eldoc-mode)
   (add-hook 'org-mode-hook #'orgtbl-mode)
 
-  ;; TODO more snippets
-  (mode-snippet org-block org-mode
+  ;; TODO this don’t work
+  ;; (mode-snippet org-block org-mode
+  ;;   "Block type: "
+  ;;   ?\n "#+begin_" str
+  ;;   ?\n _ ?\n
+  ;;   "#+end_" str ?\n)
+
+  ;; TODO but this do
+  (define-skeleton org-block-skeleton
+    "Skeleton for Org-Mode to create special blocks.
+The #+begin_ .. #+end_ blocks"
     "Block type: "
     ?\n "#+begin_" str
-    ?\n _ ?\n
-    "#+end_" str ?\n))
+    ?n _ ?\n
+    "#+end_" str ?\n)
+  (define-key org-mode-map (kbd "C-c b") #'org-block-skeleton))
 
 (use-package org-crypt
   :ensure nil
