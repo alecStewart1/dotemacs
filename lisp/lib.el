@@ -107,6 +107,18 @@ at the values with which this function was called."
     (apply fn (append pre-args args))))
 
 ;;;###autoload
+(defun simple-call-process (command &rest args)
+  "From Doom Emacs.
+Execute COMMAND with ARGS synchronously.
+Returns (STATUS . OUTPUT) when it is done, where STATUS is the returned error
+code of the process and OUTPUT is its stdout output."
+  (with-temp-buffer
+    (cons (or (apply #'call-process command nil t nil (remq nil args))
+              -1)
+          (string-trim (buffer-string)))))
+
+
+;;;###autoload
 (defun get-buffer-mode (buf)
   "Get `major-mode' of BUF."
   (with-current-buffer buf

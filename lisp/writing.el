@@ -409,6 +409,18 @@ With numerical argument N, show content up to level N."
   (defun org:setup-smartparens ()
     (provide 'smartparens-org))
 
+
+  (defun org:element-descendant-of (type element)
+    "Return non-nil if ELEMENT is a descendant of TYPE.
+TYPE should be an element type, like `item' or `paragraph'.
+ELEMENT should be a list like that returned by `org-element-context'.
+
+Taken from: https://github.com/alphapapa/unpackaged.el/blob/master/unpackaged.el"
+    ;; MAYBE: Use `org-element-lineage'.
+    (when-let* ((parent (org-element-property :parent element)))
+      (or (eq type (car parent))
+          (org:element-descendant-of type parent))))
+
   (defun org:return-dwim (&optional default)
     "A helpful replacement for `org-return'.  With prefix, call `org-return'.
 On headings, move point to position after entry content.  In
@@ -465,7 +477,7 @@ Taken from: https://github.com/alphapapa/unpackaged.el/blob/master/unpackaged.el
                   (and (eq 'item (car context))
                        (not (eq (org-element-property :contents-begin context)
                                 (org-element-property :contents-end context))))
-                  (unpackaged/org-element-descendant-of 'item context))  ; Element in list item, e.g. a link
+                  (org:element-descendant-of 'item context))  ; Element in list item, e.g. a link
               ;; Non-empty item: Add new item.
               (org-insert-item)
             ;; Empty item: Close the list.

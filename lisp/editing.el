@@ -280,6 +280,19 @@
   :bind (("M-z" . avy-zap-to-char-dwim)
          ("M-Z" . avy-zap-up-to-char-dwim)))
 
+;;;; Better-Jump
+;;;;
+
+(use-package better-jumper
+  :hook (pre-command . better-jumper-mode)
+  :preface
+  ;; REVIEW Suppress byte-compiler warning spawning a *Compile-Log* buffer at
+  ;; startup. This can be removed once gilbertw1/better-jumper#2 is merged.
+  (defvar better-jumper-local-mode nil)
+  :init
+  (global-set-key [remap xref-go-back] #'better-jumper-jump-backward)
+  (global-set-key [remap xref-go-forward] #'better-jumper-jump-forward))
+
 ;;;; Easy-Kill
 ;;;;
 ;;;; Don’t know if I like these

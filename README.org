@@ -29,6 +29,8 @@ found in Emacs.
 * TODO Things I'd like to do
 
 - [ ] My own code formatter
+- [ ] Add in a bunch of more sensible keys and such
+- [ ] Use Emacs in a productive way
 - [ ] Actually implement the splash screen
 - [ ] Add in more sources for consult
 - [ ] Refactor some of the Doom functions/helpers using builtin functionality

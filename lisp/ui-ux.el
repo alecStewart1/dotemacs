@@ -372,9 +372,9 @@ possible."
 (use-package display-line-numbers
   :ensure nil
   :hook (find-file . display-line-numbers-mode)
-  :init
+  :config
   ;; I’m a baby and I need this
-  (setq display-line-numbers 'relative))
+  (setq-default display-line-numbers 'relative))
 
 ;;;; Highlight Line
 ;;;;

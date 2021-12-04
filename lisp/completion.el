@@ -120,6 +120,37 @@
   (interactive)
   (consult-line (thing-at-point 'symbol)))
 
+
+(defvar vertico:find-file-in--history nil)
+;;;###autoload
+(defun vertico:find-file-in (&optional dir initial)
+    "Jump to file under DIR (recursive).
+If INITIAL is non-nil, use as initial input."
+  (interactive)
+  (require 'consult)
+  (let* ((default-directory (or dir default-directory))
+         (prompt-dir (consult--directory-prompt "Find" default-directory))
+         (cmd (split-string-and-unquote consult-find-args " ")))
+    (find-file
+     (consult--read
+      (split-string (cdr (apply #'simple-call-process cmd)) "\n" t)
+      :prompt default-directory
+      :sort nil
+      :initial (if initial (shell-quote-argument initial))
+      :add-history (thing-at-point 'filename)
+      :category 'file
+      :history '(:input vertico:find-file-in--history)))))
+
+(defun vertico:find-file-in-emacsd ()
+  "Find a file in ‘user-emacs-directory’."
+  (interactive)
+  (vertico:find-file-in user-emacs-directory))
+
+(defun vertico:find-file-in-project-root ()
+  "Find a file in the ‘projectile-project-root’."
+  (interactive)
+  (vertico-find-file-in (projectile:get-project-root)))
+
 (use-package vertico
   :hook (after-init . vertico-mode)
   :functions vertico--exhibit
@@ -147,7 +178,6 @@
   :defer t
   :general
   ;; Remappings
-  ([remap recentf-open-files]            #'consult-recent-file)
   ([remap switch-to-buffer]              #'consult-buffer)
   ([remap switch-to-buffer-other-window] #'consult-buffer-other-window)
   ([remap switch-to-buffer-other-frame]  #'consult-buffer-other-frame)
@@ -174,12 +204,13 @@
   ("M-g I"   #'consult-project-imenu)
   ;; Searching
   ("M-s L" #'consult-line)
+  ("M-s s" #'vertico:search-symbol-at-point)
   ("M-s k" #'consult-keep-lines)
   ("M-s u" #'consult-focus-lines)
   ("M-s m" #'consult-multi-occur)
   ;; Grep and Find
-  ("M-s g" #'consult-ripgrep)
-  ("M-s f" #'consult-find)
+  ("M-s g"   #'consult-ripgrep)
+  ("M-s f"   #'consult-find)
   ;; Histories
   ("C-c h" #'consult-history)
   ;; Modes
@@ -220,7 +251,7 @@
         consult-async-input-debounce 0.1
         consult-project-root-function #'projectile:get-project-root
         consult-find-args (concat
-                           (format "%s --color=never -i -H -E .git --regex %s"
+                           (format "%s -i -H -E .git --regex %s"
                                    consult:find-program
                                    (if windows-nt-p "--path-separator=/" ""))))
   :config
