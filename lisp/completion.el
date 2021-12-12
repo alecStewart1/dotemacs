@@ -146,6 +146,11 @@ If INITIAL is non-nil, use as initial input."
   (interactive)
   (vertico:find-file-in user-emacs-directory))
 
+(defun vertico:find-file-in-org-dir ()
+  "Find a file in ‘org-directory’."
+  (interactive)
+  (vertico:find-file-in org-directory))
+
 (defun vertico:find-file-in-project-root ()
   "Find a file in the ‘projectile-project-root’."
   (interactive)
@@ -385,6 +390,7 @@ If INITIAL is non-nil, use as initial input."
   :bind ("M-/" . hippie-expand))
 
 ;;;; Company
+;;;;
 ;;;; TODO may still make use of but use with Cape
 ;;;; https://github.com/minad/cape#company-adapter
 
@@ -455,12 +461,6 @@ If INITIAL is non-nil, use as initial input."
 
 ;; (use-package corfu
 ;;   :hook (pre-command . corfu-global-mode)
-;;   :bind (:map corfu-map
-;;          ("TAB" . corfu-next)
-;;          ("S-TAB" . corfu-previous))
-;;   ;:config
-;;   ;(require 'corfu-history)
-;;   ;(add-hook 'corfu--mode-hook 'corfu-histroy-mode)
 ;;   :custom
 ;;   (corfu-cycle t)
 ;;   (corfu-auto t)
@@ -468,11 +468,13 @@ If INITIAL is non-nil, use as initial input."
 ;;   (corfu-scroll-margin 6))
 
 ;;;; Cape
+;;;;
 ;;;; TODO may use in the future, with Corfu and using some Company backends
 ;;;; https://github.com/minad/cape#company-adapter
+;;;; Does need a bit more tweaking
 
 ;; (use-package cape
-;;   :bind ("C-c p p" . completion-at-point)
+;;   :bind ("TAB" . completion-at-point)
 ;;   :preface
 ;;   (defvar cape:mega-capf (list
 ;;                           (cape-super-capf #'cape-abbrev #'cape-dabbrev #'cape-keywords #'cape-symbol #'cape-file))
@@ -482,14 +484,14 @@ If INITIAL is non-nil, use as initial input."
 ;;                                          (list #'company-capf #'company-abbrev #'company-dabberv-code #'company-keywords #'company-files #'company-dabbrev))
 ;;     "A Cape CAPF that uses a lot of commonly use Company backends.")
 
-;;   (defvar cape:mega-writing-capf (list (cape-super-capf #'cape-abbrev #'cape-dabbrev #'cape-ispell #'cape-dict))
+;;   (defvar cape:mega-writing-capf (list (cape-capf-buster (cape-super-capf #'cape-abbrev #'cape-dabbrev #'cape-ispell #'cape-dict)))
 ;;     "A ‘cape-super-capf’ for modes for writing")
 ;;   :init
 ;;   (setq-mode-local emacs-lisp-mode
-;;    completion-at-point-functions
-;;    (list
-;;     (cape-capf-buster
-;;      (cape-super-capf #'cape-abbrev #'cape-dabbrev #'cape-keyword #'cape-symbol #'cape-file)))))
+;;                    completion-at-point-functions
+;;                    (list
+;;                     (cape-capf-buster
+;;                      (cape-super-capf #'cape-abbrev #'cape-dabbrev #'cape-keyword #'cape-symbol #'cape-file)))))
 
 
 

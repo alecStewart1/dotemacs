@@ -85,7 +85,7 @@
       ;; Also Org ELPA is going to be closed on further releases of Org
       package-archives
       (let ((proto (if gnutls-verify-error "https" "http")))
-        `(("gnu"   . ,(concat proto "://elpa.gnu.org/packages/"))
+        `(;;("gnu"   . ,(concat proto "://elpa.gnu.org/packages/")) may not actually need this with NonGNU ELPA
           ("melpa" . ,(concat proto "://melpa.org/packages/"))
 					("nongnu" . ,(concat proto "://elpa.nongnu.org/nongnu/")))))
 

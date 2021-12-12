@@ -236,7 +236,7 @@
 (use-package rmsbolt
   :after (:any c-mode c++-mode objc-mode emacs-lisp-mode common-lisp-mode python-mode java-mode))
 
-;;;;; Tree-Sitter gives use pretty colors
+;;;;; Tree-Sitter gives use pretty colors and structural editing
 ;;;;;
 
 (use-package tree-sitter

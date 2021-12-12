@@ -427,7 +427,7 @@
   (require 'smartparens-config)
   ;; Overlays are too distracting and not terribly helpful. show-parens does
   ;; this for us already (and is faster), so...
-  (with-eval-after-load 'meow
+  (with-eval-after-load 'evil
     ;; But if someone does want overlays enabled, evil users will be stricken
     ;; with an off-by-one issue where smartparens assumes you're outside the
     ;; pair when you're really at the last character in insert mode. We must

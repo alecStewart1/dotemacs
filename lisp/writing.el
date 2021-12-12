@@ -659,6 +659,22 @@ The #+begin_ .. #+end_ blocks"
             (org-pdftools-open (replace-regexp-in-string regexp "" link))
             t))))))
 
+;;;; For when we use Evil
+;;;;
+
+(use-package evil-org
+  :when (and
+         (package-installed-p 'evil)
+         (package-installed-p 'org))
+  :hook (org-mode . evil-org-mode)
+  :hook (org-capture-mode . evil-insert-state)
+  :preface
+  (defvar evil-org-retain-visual-state-on-shift t)
+  (defvar evil-org-special-o/O '(table-row))
+  (defvar evil-org-use-additional-insert t)
+  :config
+  (add-hook 'evil-org-mode-hook #'evil-normalize-keymaps))
+
 ;;;; LaTeX
 ;;;;
 
