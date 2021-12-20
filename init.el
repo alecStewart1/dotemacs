@@ -105,6 +105,7 @@
 
 (require 'lib)
 (require 'packing)
+;(require 'modal)
 (require 'defaults)
 (require 'ui-ux)
 (require 'emacsy)
@@ -115,7 +116,6 @@
 (require 'programming)
 (require 'writing)
 (require 'app)
-;(require 'modal)
 
 ;;; Load the dumb ‘custom-file’
 ;;;

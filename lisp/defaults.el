@@ -83,6 +83,8 @@
   (advice-add 'completing-read-multiple :filter-args #'minibuffer:crm-indicator)
   :config
   (setq-default
+   native-comp-deferred-compilation nil ;; this can be unwanted
+   comp-speed 2
    ediff-window-setup-function 'ediff-setup-windows-plain
    ; silence compression messages
    jka-compr-verbose           nil
@@ -241,6 +243,16 @@
   (byte-compile-verbose        nil)
   (byte-compile-warnings       '(not free-vars unresolved noruntime lexical make-local))
   (async-byte-compile-log-file (concat my-etc-dir "async-bytecomp.log")))
+
+(use-package comp
+  :ensure nil
+  :init
+  (setq-default
+   native-comp-compiler-options '("-O2" "-mtune=native"))
+  :config
+  (mapc (apply-partially #'add-to-list 'native-comp-deferred-compilation-deny-list)
+        (let ((local-dir-re (concat "\\`" (regexp-quote my-local-dir))))
+          (list (concat local-dir-re ".*/with-editor\\.el\\’")))))
 
 (use-package pcache
   :ensure nil

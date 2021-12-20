@@ -179,6 +179,18 @@
 (defvar evil-want-abbrev-expand-on-insert-exit nil)
 (defvar evil-respect-visual-line-mode nil)
 
+;;;;; Leader keymap and General "definer" for leader keys
+;;;;;
+
+(defvar evil:leader-map (make-sparse-keymap "Evil Leader Keymap")
+  "The keymap for leader keys for Evil.")
+
+(general-create-definer evil:leader-def
+  :states '(normal visual insert emacs)
+  :prefix "SPC"
+  :non-normal-prefix "M-SPC"
+  :prefix-keymap 'evil:leader-map)
+
 ;;;;; Functions for keys
 ;;;;;
 
@@ -192,12 +204,13 @@
 
 ;;;###autoload
 (defun evil:shift-left ()
+  "vnorempa > >gv"
   (interactive)
   (call-interactively #'evil-shift-left)
   (evil-normal-state)
   (evil-visual-restore))
 
-;;;;;; A Better Escape
+;;;;;; A better escape
 ;;;;;;
 
 (defvar evil:escape-hook nil)
@@ -229,9 +242,10 @@
         evil-mode-line-format 'nil
         ;; more vim-like behavior
         evil-symbol-word-search t
+        ;; TODO
         ;; if the current state is obvious from the cursor's color/shape, then
         ;; we won't need superfluous indicators to do it instead.
-        evil-default-cursor '+evil-default-cursor-fn
+        ;;evil-default-cursor '+evil-default-cursor-fn
         evil-normal-state-cursor 'box
         evil-insert-state-cursor 'bar
         evil-visual-state-cursor 'hollow
@@ -247,7 +261,7 @@
 
   (setq-mode-local magit-mode
                    evil-ex-hl-update-delay 0.25)
-    (setq-mode-local so-long-minor-mode
+  (setq-mode-local so-long-minor-mode
                    evil-ex-hl-update-delay 0.25)
   :config
   (global-set-key [remap keyboard-quit] #'evil:escape)
@@ -316,10 +330,96 @@
     :around '(evil-fill evil-fill-and-move)
     (letf! (defun fill-region (from to &optional justify nosqueeze to-eop)
              (funcall fill-region from to justify t to-eop))
-      (apply fn args))))
+      (apply fn args)))
 
-;;;;;; A Bunch of Ex Commands
+  ;; Forward declare these so that ex completion works, even if the autoloaded
+  ;; functions aren't loaded yet.
+  (evil-add-command-properties 'evil:align :ex-arg 'regexp-match)
+  (evil-add-command-properties 'evil:ralign :ex-arg 'regexp-match)
+
+  ;; Lazy load this stuff
+  (delq! 'evil-ex features)
+  (add-transient-hook! 'evil-ex (provide 'evil-ex)))
+
+;;;;;; A Bunch of Ex Command Stuff
 ;;;;;;
+
+
+;;;;;;; The following allow for using regex
+;;;;;;; patterns with evil-ex commands
+
+(defvar evil:flag nil)
+
+(defun evil:ex-match-init (name &optional face update-hook)
+  (with-current-buffer evil-ex-current-buffer
+    (cond
+     ((eq evil:flag 'start)
+      (evil-ex-make-hl name
+        :face (or face 'evil-ex-lazy-highlight)
+        :update-hook (or update-hook #'evil-ex-pattern-update-ex-info))
+      (setq evil:flag 'update))
+
+     ((eq evil:flag 'stop)
+      (evil-ex-delete-hl name)))))
+
+(defun evil:ex-buffer-match (arg &optional hl-name flags beg end)
+  (when (and (eq evil:flag 'update)
+             evil-ex-substitute-highlight-all
+             (not (zerop (length arg))))
+    (condition-case lossage
+        (let* ((pattern (evil-ex-make-substitute-pattern
+                         arg
+                         (or flags (list))))
+               (range (or (evil-copy-range evil-ex-range)
+                          (evil-range (or beg (line-beginning-position))
+                                      (or end (line-end-position))
+                                      'line
+                                      :expanded t))))
+          (evil-expand-range range)
+          (evil-ex-hl-set-region hl-name
+                                 (max (evil-range-beginning range) (window-start))
+                                 (min (evil-range-end range) (window-end)))
+          (evil-ex-hl-change hl-name pattern))
+      (end-of-file
+       (evil-ex-pattern-update-ex-info nil "incomplete replacement"))
+      (user-error
+       (evil-ex-pattern-update-ex-info nil (format "?%s" lossage))))))
+
+;;;###autoload
+(defun evil-ex-regexp-match (flag &optional arg invert)
+  (let ((hl-name 'evil-ex-buffer-match)
+        (evil:flag flag))
+    (with-selected-window (minibuffer-selected-window)
+      (evil:ex-match-init hl-name)
+      (cl-destructuring-bind (&optional arg flags)
+          (evil-delimited-arguments arg 2)
+        (let ((evil-ex-substitute-global
+               (if invert
+                   (not evil-ex-substitute-global)
+                 evil-ex-substitute-global)))
+          (evil:ex-buffer-match
+           arg hl-name (string-to-list flags)))))))
+
+(evil-ex-define-argument-type regexp-match
+                              :runner (lambda (flag &optional arg) (+evil-ex-regexp-match flag arg 'inverted)))
+(evil-ex-define-argument-type regexp-global-match
+                              :runner +evil-ex-regexp-match)
+
+(defun evil:regexp-match-args (arg)
+  (when (evil-ex-p)
+    (cl-destructuring-bind (&optional arg flags)
+        (evil-delimited-arguments arg 2)
+      (list arg (string-to-list flags)))))
+
+;; Other commands can make use of this
+(evil-define-interactive-code "<//>"
+  :ex-arg regexp-match
+  (evil:regexp-match-args evil-ex-argument))
+
+;; The above with bang
+(evil-define-interactive-code "<//!>"
+  :ex-arg regexp-global-match
+  (evil:regexp-match-args evil-ex-argument))
 
 ;;;###autoload (autoload 'evil:cd "lisp/modal" nil t)
 (evil-define-command evil:cd (&optional path)
@@ -396,6 +496,34 @@ g   Repeat alignment on all matches in each line"
 ;;;;;; Vim-like Plugins
 ;;;;;;
 
+(use-package evil-escape
+  :commands evil-escape
+  :hook (pre-command . evil-escape-mode)
+  :init
+  (setq evil-escape-excluded-states '(normal visual multiedit emacs motion)
+        evil-escape-excluded-major-modes '(treemacs-mode vterm-mode)
+        evil-escape-key-sequence "jk"
+        evil-escape-delay 0.15)
+  (evil-define-key* '(insert replace visual operator) 'global "\C-g" #'evil-escape)
+  :config
+  ;; `evil-escape' in the minibuffer is more disruptive than helpful. That is,
+  ;; unless we have `evil-collection-setup-minibuffer' enabled, in which case we
+  ;; want the same behavior in insert mode as we do in normal buffers.
+  (add-hook! 'evil-escape-inhibit-functions
+    (defun evil:inhibit-escape-in-minibuffer ()
+      (and (minibufferp)
+           (or (not (bound-and-true-p evil-collection-setup-minibuffer))
+               (evil-normal-state-p))))))
+
+(use-package evil-matchit
+  :commands evilmi-jump-items evilmi-select-items evilmi-delete-items)
+
+(use-package evil-numbers
+  :general
+  (:states 'normal
+   "C-c +" #'evil-numbers/inc-at-pt
+   "C-c -" #'evil-numbers/dec-at-pt))
+
 (use-package evil-easymotion
   :after evil
   :commands evilem-create evilem-default-keybindings
@@ -421,25 +549,6 @@ g   Repeat alignment on all matches in each line"
   (evilem-make-motion evilem-motion-backward-WORD-begin #'evil-backward-WORD-begin :scope 'visible)
   (evilem-make-motion evilem-motion-backward-word-end #'evil-backward-word-end :scope 'visible)
   (evilem-make-motion evilem-motion-backward-WORD-end #'evil-backward-WORD-end :scope 'visible))
-
-(use-package evil-escape
-  :commands evil-escape
-  :hook (pre-command . evil-escape-mode)
-  :init
-  (setq evil-escape-excluded-states '(normal visual multiedit emacs motion)
-        evil-escape-excluded-major-modes '(treemacs-mode vterm-mode)
-        evil-escape-key-sequence "jk"
-        evil-escape-delay 0.15)
-  (evil-define-key* '(insert replace visual operator) 'global "\C-g" #'evil-escape)
-  :config
-  ;; `evil-escape' in the minibuffer is more disruptive than helpful. That is,
-  ;; unless we have `evil-collection-setup-minibuffer' enabled, in which case we
-  ;; want the same behavior in insert mode as we do in normal buffers.
-  (add-hook! 'evil-escape-inhibit-functions
-    (defun evil:inhibit-escape-in-minibuffer ()
-      (and (minibufferp)
-           (or (not (bound-and-true-p evil-collection-setup-minibuffer))
-               (evil-normal-state-p))))))
 
 (use-package evil-exchange
   :commands evil-exchange

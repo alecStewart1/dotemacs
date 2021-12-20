@@ -99,13 +99,20 @@
        (1.0 . org-warning)
        (0.5 . org-upcoming-deadline)
        (0.0 . org-upcoming-distant-deadline))
+     org-agenda-fontify-priorities t
      org-agenda-window-setup 'current-window
      org-agenda-skip-unavailable-files t
+     org-agenda-skip-scheduled-if-deadline-is-shown t
+     org-agenda-skip-scheduled-if-done t
+     org-agenda-skip-deadline-if-done t
      org-agenda-span 10
      org-agenda-start-on-weekday nil
      org-agenda-start-day "-3d"
-     org-agenda-files '("~/Documents/Org/agenda.org"
-                        "~/Documents/Org/Notes/personal-fitness.org")
+     org-agenda-files '("~/Documents/Org/GTD/work.org"
+                        "~/Documents/Org/GTD/finances.org"
+                        "~/Documents/Org/GTD/reading.org"
+                        "~/Documents/Org/GTD/fitness.org"
+                        "~/Documents/Org/GTD/misc.org")
      org-agenda-inhibit-startup t))
 
   (defun org:setup-appearance ()
@@ -663,6 +670,7 @@ The #+begin_ .. #+end_ blocks"
 ;;;;
 
 (use-package evil-org
+  :ensure nil
   :when (and
          (package-installed-p 'evil)
          (package-installed-p 'org))
