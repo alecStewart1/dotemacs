@@ -43,6 +43,38 @@
 (require 'lib)
 (require 'ui-ux)
 
+;;; Useful advice
+;;;
+;;; Some pulled from this thread:
+;;; https://old.reddit.com/r/emacs/comments/rlli0u/whats_your_favorite_defadvice/
+
+(define-advice kill-ring-save (:before (&rest _) copy-line-dwim)
+  "Copy single line when there is no region active."
+  (interactive
+   (if mark-active (list (region-beginning) (region-end))
+     (message "Single line copied")
+     (list (line-beginning-position)
+           (line-beginning-position 2)))))
+
+(define-advice kill-region (:before (&rest _) kill-line-dwin)
+  "Kill single line when there is no region active."
+  (interactive
+   (if mark-active (list (region-beginning) (region-end))
+     (list (line-beginning-position)
+           (line-beginning-position 2)))))
+
+(defadvice backward-kill-word (around delete-pair activate)
+  (if (eq (char-syntax (char-before)) ?\()
+      (progn
+        (backward-char 1)
+        (save-excursion
+          (forward-sexp 1)
+          (delete-char -1))
+        (forward-char 1)
+        (append-next-kill)
+        (kill-backward-chars 1))
+    ad-do-it))
+
 ;;; Some variables we'll use later
 ;;;
 
@@ -85,7 +117,6 @@
   :ensure nil
   :diminish
   :hook (after-init . recentf-mode)
-
   :commands recentf-open-files
   :custom
   (recentf-filename-handlers
@@ -551,7 +582,7 @@ an extension, try to guess one."
 ;;;;
 
 (use-package objed
-  :bind ("M-SPC" . objed-activate)
+  ;; :bind ("M-SPC" . objed-activate)
   :preface
   (defvar objed:extra-face-remaps nil)
   :config
@@ -572,7 +603,8 @@ an extension, try to guess one."
         (face-remap-remove-relative remap))
       (setq objed:extra-face-remaps nil)))
 
-  (objed-mode +1))
+  ;(objed-mode +1)
+  )
 
 ;;;; Scratch-Palette
 ;;;;

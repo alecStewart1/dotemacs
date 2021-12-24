@@ -578,6 +578,17 @@ possible."
 ;;;; Themes
 ;;;;
 
+;;;;; Cleanly load themes
+;;;;;
+;;;;; Taken from here: https://old.reddit.com/r/emacs/comments/rlli0u/whats_your_favorite_defadvice/
+
+(define-advice load-theme (:before (&rest _args) cleanly-load-themes)
+  "Disable all active themes and /then/ load the new theme."
+  (mapc #'disable-theme custom-enabled-themes))
+
+;;;;; Theme packages
+;;;;;
+
 (use-package doom-themes
   :hook (org-load-hook . doom-themes-org-config))
 

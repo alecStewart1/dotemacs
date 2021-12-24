@@ -50,6 +50,7 @@
 (require 'lib)
 (require 'mode-local)
 (require 'thingatpt)
+(require 'general)
 
 ;;; Packages
 ;;;
@@ -154,7 +155,7 @@ If INITIAL is non-nil, use as initial input."
 (defun vertico:find-file-in-project-root ()
   "Find a file in the ‘projectile-project-root’."
   (interactive)
-  (vertico-find-file-in (projectile:get-project-root)))
+  (vertico:find-file-in (projectile:get-project-root)))
 
 (use-package vertico
   :hook (after-init . vertico-mode)
@@ -192,6 +193,7 @@ If INITIAL is non-nil, use as initial input."
   ([remap repeat-complex-command]        #'consult-complex-command)
   ([remap man]                           #'consult-man)
   ([remap imenu]                         #'consult-imenu)
+  ([remap goto-line]                     #'consult-goto-line)
   ;; Editing
   ("C-x C-k C-r" #'consult-kmacro)
   ;; Register
@@ -201,7 +203,6 @@ If INITIAL is non-nil, use as initial input."
   ("M-g e"   #'consult-error)
   ("M-g M-e" #'consult-compile-error)
   ("M-g f"   #'consult-flymake)
-  ("M-g g"   #'consult-goto-line)
   ("M-g o"   #'consult-outline)
   ("M-g m"   #'consult-mark)
   ("M-g k"   #'consult-global-mark)
@@ -243,22 +244,21 @@ If INITIAL is non-nil, use as initial input."
   (advice-add #'register-preview :override #'consult-register-window)
   (advice-add #'multi-occur :override #'consult-multi-occur)
 
-  (setq prefix-help-command #'embark-prefix-help-command)
-
-  (setq register-preview-delay 0
-        register-preview-function #'consult-register-preview
-        consult-preview-key '(:debounce 0.2 any)
-        consult-narrow-key "<"
-        consult-line-numbers-widen t
-        consult-async-min-input 2
-        consult-async-refresh-delay 0.15
-        consult-async-input-throttle 0.2
-        consult-async-input-debounce 0.1
-        consult-project-root-function #'projectile:get-project-root
-        consult-find-args (concat
-                           (format "%s -i -H -E .git --regex %s"
-                                   consult:find-program
-                                   (if windows-nt-p "--path-separator=/" ""))))
+  (general-setq prefix-help-command #'embark-prefix-help-command
+                register-preview-delay 0
+                register-preview-function #'consult-register-preview
+                consult-preview-key '(:debounce 0.2 any)
+                consult-narrow-key "<"
+                consult-line-numbers-widen t
+                consult-async-min-input 2
+                consult-async-refresh-delay 0.15
+                consult-async-input-throttle 0.2
+                consult-async-input-debounce 0.1
+                consult-project-root-function #'projectile:get-project-root
+                consult-find-args (concat
+                                   (format "%s -i -H -E .git --regex %s"
+                                           consult:find-program
+                                           (if windows-nt-p "--path-separator=/" ""))))
   :config
   (defadvice! consult:recent-file-fix (&rest _args)
     "`consult-recent-file' needs to have `recentf-mode' on to work correctly"
@@ -408,12 +408,18 @@ If INITIAL is non-nil, use as initial input."
   :config
   (add-hook 'global-company-mode-hook #'company-tng-mode)
   (add-to-list 'company-frontends 'company-tng-frontend)
-  
-  (when (package-installed-p 'evil)
-    (add-hook 'company-mode-hook #'evil-normalize-keymaps)
-    (advice-add 'company-begin-backend :before
-                (defun company:abort-previous (&rest _)
-                  (company-abort))))
+
+    ;; (when (and (package-installed-p 'evil)
+    ;;            (bound-and-true-p evil-mode))
+    ;;   (add-hook 'company-mode-hook #'evil-normalize-keymaps)
+    ;;   (add-hook! 'evil-normal-state-entry-hook
+    ;;     (defun company:abort ()
+    ;;         (when company-candidates
+    ;;           (company-abort))))
+    ;;   (defadvice! company:abort-previous (&rest _)
+    ;;     :before #'company-begin-backend
+    ;;     (company-abort))
+    ;;)
 
   ;; TODO this breaks some other modes
   (defadvice! saner-completion-styles-for-company-capf (orig-fn &rest args)
