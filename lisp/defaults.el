@@ -265,6 +265,7 @@
 
 (use-package simple
   :ensure nil
+  :hook ((org-mode prog-mode text-mode) . auto-fill-mode)
   :custom
   (idle-update-delay                   1.2)
   (track-eol                           t)
@@ -422,6 +423,7 @@
   (delete-old-versions                   t)
   (backup-by-copying                     t)
   (version-control                       t)
+  (delete-old-versions                   t)
   (kept-old-versions                     5)
   (kept-new-versions                     5)
   :config
@@ -549,6 +551,10 @@ the form."
   :custom
   (bookmark-default-file (concat my-etc-dir "bookmarks"))
   (bookmark-save-flag    t))
+
+(use-package grep
+  :ensure nil
+  :defer t)
 
 (use-package url
   :ensure nil

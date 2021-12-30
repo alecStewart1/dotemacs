@@ -42,6 +42,7 @@
 
 (require 'lib)
 (require 'ui-ux)
+(require 'general)
 
 ;;; Useful advice
 ;;;
@@ -94,10 +95,10 @@
   :diminish
   :hook ((focus-in after-save) . auto-revert-buffers!)
   :init
-  (setq auto-revert-verbose t
-        auto-revert-use-notify nil
-        auto-revert-stop-on-user-input nil
-        revert-without-query (list "."))
+  (general-setq auto-revert-verbose t
+                auto-revert-use-notify nil
+                auto-revert-stop-on-user-input nil
+                revert-without-query (list "."))
   :config
   (defun auto-revert-buffer! ()
     "Auto revert current buffer, if necessary."
@@ -116,7 +117,7 @@
 (use-package recentf
   :ensure nil
   :diminish
-  :hook (after-init . recentf-mode)
+  ;:hook (after-init . recentf-mode)
   :commands recentf-open-files
   :custom
   (recentf-filename-handlers
@@ -305,7 +306,11 @@
   (avy-all-windows-alt t)
   (avy-background t)
   (avy-style 'pre)
-  (avy-single-candidate-jump nil))
+  (avy-single-candidate-jump nil)
+  :config
+  (emacs:leader-def "g c" #'avy-goto-char)
+  (emacs:leader-def "g w" #'avy-goto-word-0)
+  (emacs:leader-def "g l" #'avy-goto-line))
 
 (use-package avy-zap
   :bind (("M-z" . avy-zap-to-char-dwim)
@@ -320,46 +325,49 @@
   ;; REVIEW Suppress byte-compiler warning spawning a *Compile-Log* buffer at
   ;; startup. This can be removed once gilbertw1/better-jumper#2 is merged.
   (defvar better-jumper-local-mode nil)
-  :init
+  :config
   (global-set-key [remap xref-go-back] #'better-jumper-jump-backward)
-  (global-set-key [remap xref-go-forward] #'better-jumper-jump-forward))
+  (global-set-key [remap xref-go-forward] #'better-jumper-jump-forward)
+  (emacs:leader-def "j s" #'better-jumper-set-jump)
+  (emacs:leader-def "j j" #'better-jumper-jump-forward)
+  (emacs:leader-def "j k" #'better-jumper-jump-backward))
 
 ;;;; Easy-Kill
 ;;;;
 ;;;; Don’t know if I like these
 
-(use-package easy-kill
-  :bind (([remap kill-ring-save] . easy-kill)
-         ([remap mark-sexp] . easy-mark)))
+;; (use-package easy-kill
+;;   :bind (([remap kill-ring-save] . easy-kill)
+;;          ([remap mark-sexp] . easy-mark)))
 
-(use-package easy-kill-extras
-  :after easy-kill
-  :config
-  (require 'extra-things)
-  (global-set-key [remap mark-word] #'easy-mark-word)
-  (define-key easy-kill-base-map (kbd "o") #'easy-kill-er-expand)
-  (define-key easy-kill-base-map (kbd "i") #'easy-kill-er-unexpand)
-  (add-to-list 'easy-kill-alist '(?W  WORD " ") t)
-  (add-to-list 'easy-kill-alist '(?\' squoted-string "") t)
-  (add-to-list 'easy-kill-alist '(?\" dquoted-string "") t)
-  (add-to-list 'easy-kill-alist '(?\` bquoted-string "") t)
-  (add-to-list 'easy-kill-alist '(?q  quoted-string "") t)
-  (add-to-list 'easy-kill-alist '(?Q  quoted-string-universal "") t)
-  (add-to-list 'easy-kill-alist '(?\) parentheses-pair-content "\n") t)
-  (add-to-list 'easy-kill-alist '(?\( parentheses-pair "\n") t)
-  (add-to-list 'easy-kill-alist '(?\] brackets-pair-content "\n") t)
-  (add-to-list 'easy-kill-alist '(?\[ brackets-pair "\n") t)
-  (add-to-list 'easy-kill-alist '(?}  curlies-pair-content "\n") t)
-  (add-to-list 'easy-kill-alist '(?{  curlies-pair "\n") t)
-  (add-to-list 'easy-kill-alist '(?^ backward-line-edge "") t)
-  (add-to-list 'easy-kill-alist '(?$ forward-line-edge "") t)
-  (add-to-list 'easy-kill-alist '(?b buffer "") t)
-  (add-to-list 'easy-kill-alist '(?< buffer-before-point "") t)
-  (add-to-list 'easy-kill-alist '(?> buffer-after-point "") t)
-  (add-to-list 'easy-kill-alist '(?f string-to-char-forward "") t)
-  (add-to-list 'easy-kill-alist '(?F string-up-to-char-forward "") t)
-  (add-to-list 'easy-kill-alist '(?t string-to-char-backward "") t)
-  (add-to-list 'easy-kill-alist '(?T string-up-to-char-backward "") t))
+;; (use-package easy-kill-extras
+;;   :after easy-kill
+;;   :config
+;;   (require 'extra-things)
+;;   (global-set-key [remap mark-word] #'easy-mark-word)
+;;   (define-key easy-kill-base-map (kbd "o") #'easy-kill-er-expand)
+;;   (define-key easy-kill-base-map (kbd "i") #'easy-kill-er-unexpand)
+;;   (add-to-list 'easy-kill-alist '(?W  WORD " ") t)
+;;   (add-to-list 'easy-kill-alist '(?\' squoted-string "") t)
+;;   (add-to-list 'easy-kill-alist '(?\" dquoted-string "") t)
+;;   (add-to-list 'easy-kill-alist '(?\` bquoted-string "") t)
+;;   (add-to-list 'easy-kill-alist '(?q  quoted-string "") t)
+;;   (add-to-list 'easy-kill-alist '(?Q  quoted-string-universal "") t)
+;;   (add-to-list 'easy-kill-alist '(?\) parentheses-pair-content "\n") t)
+;;   (add-to-list 'easy-kill-alist '(?\( parentheses-pair "\n") t)
+;;   (add-to-list 'easy-kill-alist '(?\] brackets-pair-content "\n") t)
+;;   (add-to-list 'easy-kill-alist '(?\[ brackets-pair "\n") t)
+;;   (add-to-list 'easy-kill-alist '(?}  curlies-pair-content "\n") t)
+;;   (add-to-list 'easy-kill-alist '(?{  curlies-pair "\n") t)
+;;   (add-to-list 'easy-kill-alist '(?^ backward-line-edge "") t)
+;;   (add-to-list 'easy-kill-alist '(?$ forward-line-edge "") t)
+;;   (add-to-list 'easy-kill-alist '(?b buffer "") t)
+;;   (add-to-list 'easy-kill-alist '(?< buffer-before-point "") t)
+;;   (add-to-list 'easy-kill-alist '(?> buffer-after-point "") t)
+;;   (add-to-list 'easy-kill-alist '(?f string-to-char-forward "") t)
+;;   (add-to-list 'easy-kill-alist '(?F string-up-to-char-forward "") t)
+;;   (add-to-list 'easy-kill-alist '(?t string-to-char-backward "") t)
+;;   (add-to-list 'easy-kill-alist '(?T string-up-to-char-backward "") t))
 
 ;;;; DTRT Indent
 ;;;;

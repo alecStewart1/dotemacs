@@ -123,7 +123,13 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
   :bind
   (("C-?" . help-command)
    (:map mode-specific-map
-    ("h" . help-command))))
+    ("h" . help-command)))
+  :custom
+  (help-window-select t))
+
+(use-package help-fns
+  :ensure nil
+  :bind ("C-h K" . describe-keymap))
 
 (use-package helpful
   ;; a better *help* buffer
@@ -255,7 +261,7 @@ possible."
   (show-paren-style 'parenthesis)
   (show-paren-delay 0.03)
   (show-paren-highlight-openparen t)
-  (show-paren-when-point-inside-paren t)
+  ;(show-paren-when-point-inside-paren t)
   (show-paren-when-point-in-periphery t))
 
 ;;;; Pulse
@@ -320,6 +326,14 @@ possible."
       (apply orig-fn args)
       (setq end (point))
       (pulse-momentary-highlight-region begin end)))
+
+  (defadvice! pulse:kill-ring-save (orig-fn &rest args)
+    :around #'kill-ring-save
+    (let (begin end)
+      (setq begin (region-beginning))
+      (apply orig-fn args)
+      (setq end (point))
+      (pulse-momentary-highlight-region begin end)))
   :custom-face
   (pulse-highlight-start-face ((t (:inherit region))))
   (pulse-highlight-face ((t (:inherit region)))))
@@ -372,9 +386,12 @@ possible."
 (use-package display-line-numbers
   :ensure nil
   :hook (find-file . display-line-numbers-mode)
-  :config
+  :init
   ;; I’m a baby and I need this
-  (setq-default display-line-numbers 'relative))
+  (setq-default
+   display-line-numbers-grow-only t
+   display-line-numbers 'visual
+   display-line-numbers-width 2))
 
 ;;;; Highlight Line
 ;;;;

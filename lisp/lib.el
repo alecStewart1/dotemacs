@@ -76,10 +76,22 @@
 
 (defvar transient-counter 0)
 
+;;; The Emacs "Leader" Key and Keymap
+;;;
+
+;;;###autoload
+(defvar ctrl-c-map (make-sparse-keymap)
+  "The keymap for generic key combinations prefixed with Ctrl-c.")
+
+(with-eval-after-load 'general 
+  (general-create-definer emacs:leader-def
+    :prefix "C-c"
+    :keymap 'ctrl-c-map))
+
 ;;; Errors
 
-(define-error 'my-config-error "Error with my config")
-(define-error 'my-hook-error "An error with a hook of mine" 'my-config-error)
+;(define-error 'my-config-error "Error with my config")
+;(define-error 'my-hook-error "An error with a hook of mine" 'my-config-error)
 
 ;;; Functions
 ;;;
@@ -159,9 +171,6 @@ scratch buffer. See `fallback-buffer-name' to change this."
   (let (buffer-list-update-hook)
     (get-buffer-create fallback-buffer-name)))
 
-(defun buffer-temp-p (buf)
-  "Returns non-nil if BUF is temporary."
-  (equal (substring (buffer-name buf) 0 1) " "))
 
 (defun resolve-hook-forms (hooks)
   (declare (pure t) (side-effect-free t))

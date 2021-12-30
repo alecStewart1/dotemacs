@@ -50,28 +50,35 @@
 (use-package dired
   :ensure nil
   :commands dired-jump
+  :hook (dired-mode . dired-hide-details-mode)
   :init
-  (setq image-dired-dir                    (concat my-cache-dir "image-dired/")
-        image-dired-db-file                (concat image-dired-dir "db.el")
-        image-dired-gallery-dir            (concat image-dired-dir "gallery/")
-        image-dired-temp-image-file        (concat image-dired-dir "temp-image")
-        image-dired-temp-rotate-image-file (concat image-dired-dir "temp-rotate-image")
-        image-dired-thumb-size             150)
+  (general-setq image-dired-dir                    (concat my-cache-dir "image-dired/")
+                image-dired-db-file                (concat image-dired-dir "db.el")
+                image-dired-gallery-dir            (concat image-dired-dir "gallery/")
+                image-dired-temp-image-file        (concat image-dired-dir "temp-image")
+                image-dired-temp-rotate-image-file (concat image-dired-dir "temp-rotate-image")
+                image-dired-thumb-size             150)
   :custom
   ; don't prompt to revert; just do it
   (dired-auto-revert-buffer t)
+
   ; don't pass --dired to ls
   (dired-use-ls-dired nil)
+
   ; suggest a target for moving/copying intelligently
   (dired-dwim-target t)
   (dired-hide-details-hide-symlink-targets nil)
   (dired-garbage-files-regexp "\\.idx\\|\\.run\\.xml$\\|\\.bbl$\\|\\.bcf$\\|.blg$\\|-blx.bib$\\|.nav$\\|.snm$\\|.out$\\|.synctex.gz$\\|\\(?:\\.\\(?:aux\\|bak\\|dvi\\|log\\|orig\\|rej\\|toc\\|pyg\\)\\)\\'")
+
   ; Always copy/delete recursively
   (dired-recursive-copies 'always)
   (dired-recursive-deletes 'top)
 
   ;; Ask whether destination dirs should get created when copying/removing files.
   (dired-create-destination-dirs 'ask)
+
+  ;; Let’s not have loads of dired buffers open.
+  (dired-kill-when-opening-new-dired-buffer t)
   :config
   (put 'dired-find-alternate-file 'disabled nil)
 

@@ -62,7 +62,7 @@
   :init
   (setq orderless-matching-styles
         '(orderless-literal orderless-strict-leading-initialism orderless-prefixes)
-        orderless-component-separator "[ &]"
+        orderless-component-separator 'orderless-escapable-split-on-space
         completion-styles '(orderless)
         completion-category-defaults nil
         completion-category-overrides
@@ -121,7 +121,6 @@
   (interactive)
   (consult-line (thing-at-point 'symbol)))
 
-
 (defvar vertico:find-file-in--history nil)
 ;;;###autoload
 (defun vertico:find-file-in (&optional dir initial)
@@ -157,6 +156,13 @@ If INITIAL is non-nil, use as initial input."
   (interactive)
   (vertico:find-file-in (projectile:get-project-root)))
 
+;;;###autoload
+(defun vertico:embark-magit-status (file)
+  "From Doom Emacs.
+Run ‘magit-status’ on repo containing the embark target."
+  (interactive "GFile: ")
+  (magit-status (locate-dominating-file file ".git")))
+
 (use-package vertico
   :hook (after-init . vertico-mode)
   :functions vertico--exhibit
@@ -166,16 +172,20 @@ If INITIAL is non-nil, use as initial input."
               (lambda (&rest _)
                 (setq-local completion-auto-help nil
                             completion-show-inline-help nil)))
-  :config
-  (define-key vertico-map (kbd "?") #'minibuffer-completion-help)
-  (define-key vertico-map (kbd "M-RET") #'minibuffer-force-complete-and-exist)
-  (define-key vertico-map (kbd "M-TAB") #'minibuffer-complete)
-
-  (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy)
   :custom
   (vertico-resize nil)
   (vertico-count 16)
-  (vertico-cycle t))
+  (vertico-cycle t)
+  :config
+  ;; Hooks
+  (add-hook 'rfn-eshadow-update-overlay-hook #'vertico-directory-tidy)
+  (add-hook 'minibuffer-setup-hook #'vertico-repeat-save)
+
+  ;; Keys
+  (define-key vertico-map (kbd "<backspace>") #'vertico-directory-delete-char)
+  (define-key vertico-map (kbd "?") #'minibuffer-completion-help)
+  (define-key vertico-map (kbd "M-RET") #'minibuffer-force-complete-and-exist)
+  (define-key vertico-map (kbd "M-TAB") #'minibuffer-complete))
 
 ;;;;; Consult
 ;;;;;
@@ -199,37 +209,12 @@ If INITIAL is non-nil, use as initial input."
   ;; Register
   ("C-x r C-r" #'consult-register)
   ("C-x r C-s" #'consult-register-store)
-  ;; Navigation
-  ("M-g e"   #'consult-error)
-  ("M-g M-e" #'consult-compile-error)
-  ("M-g f"   #'consult-flymake)
-  ("M-g o"   #'consult-outline)
-  ("M-g m"   #'consult-mark)
-  ("M-g k"   #'consult-global-mark)
-  ("M-g i"   #'consult-imenu)
-  ("M-g I"   #'consult-project-imenu)
-  ;; Searching
-  ("M-s L" #'consult-line)
-  ("M-s s" #'vertico:search-symbol-at-point)
-  ("M-s k" #'consult-keep-lines)
-  ("M-s u" #'consult-focus-lines)
-  ("M-s m" #'consult-multi-occur)
-  ;; Grep and Find
-  ("M-s g"   #'consult-ripgrep)
-  ("M-s f"   #'consult-find)
   ;; Histories
   ("C-c h" #'consult-history)
-  ;; Modes
-  ;;("M-SPC m m"   #'consult-minor-mode-menu)
-  ;;("M-SPC m M-m" #'consult-mode-command)
   ;; Isearch
   (:keymaps 'consult-crm-map
    "TAB"                       #'vertico:crm-select
    "RET"                       #'vertico:crm-exit)
-  ("M-s e"                     #'consult-isearch)
-  (:keymaps 'isearch-mode-map
-   [remap isearch-edit-string] #'consult-isearch
-   "M-s l"                     #'consult-line)
   ;; Misc.
   ([remap apropos] #'consult-apropos)
   :preface
@@ -297,6 +282,51 @@ If INITIAL is non-nil, use as initial input."
    :preview-key (list (kbd "C-SPC") (kbd "M-.")
                       :debounce 1 'any)))
 
+;;;;;; Keybindings
+;;;;;;
+
+;;;;;;; Files
+;;;;;;;
+
+(emacs:leader-def "f f" #'find-file)
+(emacs:leader-def "f r" #'consult-recent-file)
+(emacs:leader-def "f c" #'vertico:find-file-in-emacsd)
+(emacs:leader-def "f o" #'vertico:find-file-in-org-dir)
+(emacs:leader-def "f p" #'vertico:find-file-in-project-root)
+
+;;;;;;; Buffers
+;;;;;;;
+
+(emacs:leader-def "b b" #'switch-to-buffer)
+(emacs:leader-def "b w" #'switch-to-buffer-other-window)
+(emacs:leader-def "b f" #'switch-to-buffer-other-frame)
+(emacs:leader-def "b i" #'ibufer)
+
+;;;;;;; Goto
+;;;;;;;
+
+(emacs:leader-def "g m" #'consult-mark)
+(emacs:leader-def "g k" #'consult-global-mark)
+(emacs:leader-def "g o" #'consult-outline)
+(emacs:leader-def "g i" #'consult-imenu)
+(emacs:leader-def "g I" #'consult-imenu-multi)
+(emacs:leader-def "g e" #'consult-error)
+(emacs:leader-def "g E" #'consult-compile-error)
+
+;;;;;;; Searching
+;;;;;;;
+
+(emacs:leader-def "s l" #'consult-line)
+(emacs:leader-def "s s" #'vertico:search-symbol-at-point)
+(emacs:leader-def "s k" #'consult-keep-lines)
+(emacs:leader-def "s u" #'consult-focus-lines)
+(emacs:leader-def "s m" #'consult-multi-occur)
+(emacs:leader-def "s g" #'consult-ripgrep)
+(emacs:leader-def "s f" #'consult-find)
+
+;;;;;; Switch Directories in the Minibuffer
+;;;;;;
+
 (use-package consult-dir
   :after (consult)
   :bind (([remap list-directory] . consult-dir)
@@ -304,8 +334,13 @@ If INITIAL is non-nil, use as initial input."
          ("C-x C-d" . consult-dir)
          ("C-x C-j" . consult-dir-jump-file)))
 
+;;;;;; Interface with Flycheck
+;;;;;;
+
 (use-package consult-flycheck
-  :when (package-installed-p 'flycheck)
+  :when (and
+         (package-installed-p 'flycheck)
+         (bound-and-true-p flycheck-mode))
   :after (consult flycheck))
 
 ;;;;; Marginalia
@@ -351,7 +386,9 @@ If INITIAL is non-nil, use as initial input."
 
   ;(set-face-attribute 'embark-verbose-indicator-title nil :height 1.0)
   :config
-  (setq embark-indicator #'embark-verbose-indicator
+  (setq embark-indicator '(embark-highlight-indicator
+                           embark-isearch-highlight-indicator
+                           embark-verbose-indicator)
         embark-verbose-indicator-display-action
         '(display-buffer-at-bottom (window-height . fit-window-to-buffer)))
   (add-to-list 'display-buffer-alist
@@ -360,7 +397,9 @@ If INITIAL is non-nil, use as initial input."
                  (window-parameters (mode-line-format . none))))
 
   (add-hook 'embark-post-action-hook #'embark-collect--update-linked)
-  (add-hook 'embark-collect-post-revert-hook #'embark:resize-collect-window))
+  (add-hook 'embark-collect-post-revert-hook #'embark:resize-collect-window)
+
+  (define-key embark-file-map "g" #'vertico:embark-magit-staus))
 
 (use-package embark-consult
   :after (embark consult)
@@ -498,8 +537,6 @@ If INITIAL is non-nil, use as initial input."
 ;;                    (list
 ;;                     (cape-capf-buster
 ;;                      (cape-super-capf #'cape-abbrev #'cape-dabbrev #'cape-keyword #'cape-symbol #'cape-file)))))
-
-
 
 (provide 'completion)
 ;;; completion.el ends here

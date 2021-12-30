@@ -41,6 +41,7 @@
 
 (require 'mode-local)
 (require 'lib)
+(require 'general)
 
 ;;;; Spellin' Good
 ;;;;
@@ -116,7 +117,7 @@
      org-agenda-inhibit-startup t))
 
   (defun org:setup-appearance ()
-    (setq org-indirect-buffer-display 'current-window
+    (general-setq org-indirect-buffer-display 'current-window
           org-eldoc-breadcrumb-separator " -> "
           org-enforce-todo-dependencies t
           org-entities-user
@@ -142,7 +143,7 @@
           org-log-into-drawer t
           org-log-done 'time)
 
-    (setq org-refile-targets
+    (general-setq org-refile-targets
           '((nil :maxlevel 3)
             (org-agenda-files :maxlevel 3))
           org-refile-use-outline-path 'file
@@ -155,38 +156,38 @@
       (custom-declare-face 'org--todo-project '((t (:inherit (bold font-lock-doc-face org-todo)))) "")
       (custom-declare-face 'org--todo-onhold  '((t (:inherit (bold warning org-todo)))) ""))
 
-    (setq org-todo-keywords
-          '((sequence
-             "TODO(t)"
-             "PROJ(p)"
-             "STRT(s)"
-             "WAIT(w)"
-             "HOLD(h)"
-             "IDEA(i)"
-             "MAYBE(m)"
-             "CHECK(c)"
-             "TO-READ(r)"
-             "|"
-             "DONE(d)"
-             "KILL(k)"
-             "READ(R)")
-            (sequence
-             "[ ](T)"
-             "[-](S)"
-             "[?](W)"
-             "|"
-             "[X](D)"))
-          org-todo-keyword-faces
-          '(("[-]"     . org--todo-active)
-            ("STRT"    . org--todo-active)
-            ("[?]"     . org--todo-onhold)
-            ("WAIT"    . org--todo-onhold)
-            ("HOLD"    . org--todo-onhold)
-            ("MAYBE"   . org--todo-onhold)
-            ("CHECK"   . org--todo-onhold)
-            ("TO-READ" . org-todo)
-            ("READ"    . org-done)
-            ("PROJ"    . org--todo-project)))
+    (general-setq org-todo-keywords
+                  '((sequence
+                     "TODO(t)"
+                     "PROJ(p)"
+                     "STRT(s)"
+                     "WAIT(w)"
+                     "HOLD(h)"
+                     "IDEA(i)"
+                     "MAYBE(m)"
+                     "CHECK(c)"
+                     "TO-READ(r)"
+                     "|"
+                     "DONE(d)"
+                     "KILL(k)"
+                     "READ(R)")
+                    (sequence
+                     "[ ](T)"
+                     "[-](S)"
+                     "[?](W)"
+                     "|"
+                     "[X](D)"))
+                  org-todo-keyword-faces
+                  '(("[-]"     . org--todo-active)
+                    ("STRT"    . org--todo-active)
+                    ("[?]"     . org--todo-onhold)
+                    ("WAIT"    . org--todo-onhold)
+                    ("HOLD"    . org--todo-onhold)
+                    ("MAYBE"   . org--todo-onhold)
+                    ("CHECK"   . org--todo-onhold)
+                    ("TO-READ" . org-todo)
+                    ("READ"    . org-done)
+                    ("PROJ"    . org--todo-project)))
 
     (defadvice! org-eldoc:display-lin (&rest _)
       "TODO"
@@ -195,15 +196,15 @@
         (format "Link: %s" link))))
 
   (defun org:setup-babel ()
-    (setq org-src-preserve-indentation t
-          org-src-fontify-natively t
-          org-src-tab-acts-natively t
-          org-src-window-setup 'other-window
-          org-edit-src-content-indentation 0
-          org-edit-src-persistent-message nil
-          org-confirm-babel-evaluate nil
-          org-babel-lisp-eval-fn #'sly-eval
-          org-link-elisp-confirm-function nil)
+    (general-setq org-src-preserve-indentation t
+                  org-src-fontify-natively t
+                  org-src-tab-acts-natively t
+                  org-src-window-setup 'other-window
+                  org-edit-src-content-indentation 0
+                  org-edit-src-persistent-message nil
+                  org-confirm-babel-evaluate nil
+                  org-babel-lisp-eval-fn #'sly-eval
+                  org-link-elisp-confirm-function nil)
 
     ;; (eval-after-load 'ob
     ;;   (add-to-list 'org-babel-default-lob-header-args '(:sync)))
@@ -235,9 +236,11 @@
             (expand-file-name (symbol-value file) org-directory)
           file))
 
-      (if (package-installed-p 'evil)
+      (if (and (package-installed-p 'evil)
+               (bound-and-true-p evil-mode))
           (add-hook 'org-capture-mode-hook #'evil-insert-state))
-      (if (package-installed-p 'meow)
+      (if (and (package-installed-p 'meow)
+               (bound-and-true-p meow-mode))
           (add-hook 'org-capture-mode-hook #'meow-insert-mode))
 
       (setq org-capture-templates
@@ -310,10 +313,10 @@
     )
 
   (defun org:setup-export ()
-    (setq org-export-with-smart-quotes t
-          org-html-validation-link nil
-          org-latex-prefer-user-labels t
-          org-export-with-toc nil)
+    (general-setq org-export-with-smart-quotes t
+                  org-html-validation-link nil
+                  org-latex-prefer-user-labels t
+                  org-export-with-toc nil)
     (add-to-list 'org-export-backends '(md odt))
 
     (defadvice! org-export:dont-trigger-save-hooks-on-export (orig-fn &rest args)
@@ -559,8 +562,8 @@ Made for `org-tab-first-hook' in evil-mode."
     (add-hook 'org-tab-first-hook #'org:indent-maybe)
 
     ;; Global Keys
-    (global-set-key (kbd "C-c c") #'org-capture)
-    (global-set-key (kbd "C-c a") #'org-agenda)
+    (emacs:leader-def "c" #'org-capture)
+    (emacs:leader-def "a" #'org-agenda)
 
     ;; Org-Mode keys
     (define-key org-mode-map (kbd "TAB") #'org-cycle)
@@ -669,19 +672,19 @@ The #+begin_ .. #+end_ blocks"
 ;;;; For when we use Evil
 ;;;;
 
-(use-package evil-org
-  :ensure nil
-  :when (and
-         (package-installed-p 'evil)
-         (package-installed-p 'org))
-  :hook (org-mode . evil-org-mode)
-  :hook (org-capture-mode . evil-insert-state)
-  :preface
-  (defvar evil-org-retain-visual-state-on-shift t)
-  (defvar evil-org-special-o/O '(table-row))
-  (defvar evil-org-use-additional-insert t)
-  :config
-  (add-hook 'evil-org-mode-hook #'evil-normalize-keymaps))
+;; (use-package evil-org
+;;   :when (and
+;;          (package-installed-p 'evil)
+;;          (bound-and-true-p evil-mode)
+;;          (package-installed-p 'org))
+;;   :hook (org-mode . evil-org-mode)
+;;   :hook (org-capture-mode . evil-insert-state)
+;;   :preface
+;;   (defvar evil-org-retain-visual-state-on-shift t)
+;;   (defvar evil-org-special-o/O '(table-row))
+;;   (defvar evil-org-use-additional-insert t)
+;;   :config
+;;   (add-hook 'evil-org-mode-hook #'evil-normalize-keymaps))
 
 ;;;; LaTeX
 ;;;;

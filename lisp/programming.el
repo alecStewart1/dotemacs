@@ -632,9 +632,10 @@ Also took this from Doom Emacs"
 (use-package ielm
   :ensure nil
   :commands ielm ielm-send-input inferior-emacs-lisp-mode
+  :config
+  (setq-local scroll-margin 0)
   ;; Adapted from http://www.modernemacs.com/post/comint-highlighting/ to add
   ;; syntax highlighting to ielm REPLs.
-  :config
   (setq ielm-font-lock-keywords
         (append '(("\\(^\\*\\*\\*[^*]+\\*\\*\\*\\)\\(.*$\\)"
                    (1 font-lock-comment-face)
@@ -1424,6 +1425,7 @@ nimsuggest isn't installed."
   :mode "wp-content/themes/.+/.+\\.php\\'"
   :mode "templates/.+\\.php\\'"
   :mode "\\.vue\\'"
+  :hook (web-mode . sgml-electric-tag-pair-mode)
   :init
   ;; If the user has installed `vue-mode' then, by appending this to
   ;; `auto-mode-alist' rather than prepending it, its autoload will have
