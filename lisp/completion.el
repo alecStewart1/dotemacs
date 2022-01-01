@@ -426,117 +426,128 @@ Run ‘magit-status’ on repo containing the embark target."
 ;;;; TODO need to adjust this
 
 (use-package hippie-exp
-  :bind ("M-/" . hippie-expand))
+  :bind ("M-/" . hippie-expand)
+  :custom
+  (hippie-expand-try-functions-list
+   '(try-expand-list
+     try-expand-line
+     try-expand-dabbrev
+     try-expand-dabbrev-all-buffers
+     try-expand-dabbrev-from-kill
+     try-expand-all-abbrevs
+     try-complete-lisp-symbol-partially
+     try-complete-lisp-symbol
+     try-complete-file-name-partially
+     try-complete-file-name)))
 
 ;;;; Company
 ;;;;
 ;;;; TODO may still make use of but use with Cape
 ;;;; https://github.com/minad/cape#company-adapter
 
-(use-package company
-  :diminish
-  :commands (company-complete-common
-             company-complete-common-or-cycle
-             company-manual-begin
-             company-grab-line
-             company-cancel)
-  :functions (company-dabbrev-ignore-case company-dabbrev-downcase)
-  :hook (pre-command . global-company-mode)
-  :preface
-  (put 'company-backends 'permanent-local-hook t)
-  :config
-  (add-hook 'global-company-mode-hook #'company-tng-mode)
-  (add-to-list 'company-frontends 'company-tng-frontend)
+;; (use-package company
+;;   :diminish
+;;   :commands (company-complete-common
+;;              company-complete-common-or-cycle
+;;              company-manual-begin
+;;              company-grab-line
+;;              company-cancel)
+;;   :functions (company-dabbrev-ignore-case company-dabbrev-downcase)
+;;   :hook (pre-command . global-company-mode)
+;;   :preface
+;;   (put 'company-backends 'permanent-local-hook t)
+;;   :config
+;;   (add-hook 'global-company-mode-hook #'company-tng-mode)
+;;   (add-to-list 'company-frontends 'company-tng-frontend)
 
-    ;; (when (and (package-installed-p 'evil)
-    ;;            (bound-and-true-p evil-mode))
-    ;;   (add-hook 'company-mode-hook #'evil-normalize-keymaps)
-    ;;   (add-hook! 'evil-normal-state-entry-hook
-    ;;     (defun company:abort ()
-    ;;         (when company-candidates
-    ;;           (company-abort))))
-    ;;   (defadvice! company:abort-previous (&rest _)
-    ;;     :before #'company-begin-backend
-    ;;     (company-abort))
-    ;;)
+;;   ;; TODO this breaks some other modes
+;;   (defadvice! saner-completion-styles-for-company-capf (orig-fn &rest args)
+;;     "Orderless doesn’t exactly make Company’s completion all
+;;    that sane. We simply change the ‘completion-styles’ to the
+;;   saner options."
+;;     :around #'company-capf
+;;     (let ((completion-styles '(basic partial-completion)))
+;;       (apply orig-fn args)))
 
-  ;; TODO this breaks some other modes
-  (defadvice! saner-completion-styles-for-company-capf (orig-fn &rest args)
-    "Orderless doesn’t exactly make Company’s completion all
-   that sane. We simply change the ‘completion-styles’ to the
-  saner options."
-    :around #'company-capf
-    (let ((completion-styles '(basic partial-completion)))
-      (apply orig-fn args)))
+;;   ;;(add-hook 'after-change-major-mode-hook #'company--maybe-init-backend 'append)
 
-  ;;(add-hook 'after-change-major-mode-hook #'company--maybe-init-backend 'append)
+;;   (eval-after-load 'eldoc
+;;     (eldoc-add-command 'company-complete-selection
+;;                        'company-complete-common
+;;                        'company-capf
+;;                        'company-abort))
+;;   :custom
+;;   (company-minimum-prefix-length 1)
+;;   (company-idle-delay 0.2)
+;;   (company-idle-delay 0.2)
+;;   (company-echo-delay (if (display-graphic-p) nil 0))
+;;   (company-tooltip-idle-delay 0.2)
+;;   (company-tooltip-limit 14)
+;;   (company-tooltip-align-annotations t)
+;;   (company-require-match 'never)
+;;   (company-global-modes '(not erc-mode message-mode help-mode gud-mode vterm-mode))
+;;   (company-frontends '(company-pseudo-tooltip-frontend
+;;                        company-echo-metadata-frontend))
+;;   ;;(company-backends '(company-capf))
+;;   (company-auto-comit nil)
+;;   (company-dabbrev-other-buffers nil)
+;;   (company-dabbrev-ignore-case nil)
+;;   (company-dabbrev-downcase nil)
+;;   (company-dabbrev-minimum-length 2))
 
-  (eval-after-load 'eldoc
-    (eldoc-add-command 'company-complete-selection
-                       'company-complete-common
-                       'company-capf
-                       'company-abort))
-  :custom
-  (company-minimum-prefix-length 1)
-  (company-idle-delay 0.2)
-  (company-idle-delay 0.2)
-  (company-echo-delay (if (display-graphic-p) nil 0))
-  (company-tooltip-idle-delay 0.2)
-  (company-tooltip-limit 14)
-  (company-tooltip-align-annotations t)
-  (company-require-match 'never)
-  (company-global-modes '(not erc-mode message-mode help-mode gud-mode vterm-mode))
-  (company-frontends '(company-pseudo-tooltip-frontend
-                       company-echo-metadata-frontend))
-  ;;(company-backends '(company-capf))
-  (company-auto-comit nil)
-  (company-dabbrev-other-buffers nil)
-  (company-dabbrev-ignore-case nil)
-  (company-dabbrev-downcase nil)
-  (company-dabbrev-minimum-length 2))
-
-(use-package company-dict
-  :defer t
-  :after company
-  :config
-  (setq company-dict-dir (expand-file-name "dicts" my-etc-dir)))
+;; (use-package company-dict
+;;   :defer t
+;;   :after company
+;;   :config
+;;   (setq company-dict-dir (expand-file-name "dicts" my-etc-dir)))
 
 ;;;; Corfu
-;;;; TODO may use in the future
+;;;;
 
-;; (use-package corfu
-;;   :hook (pre-command . corfu-global-mode)
-;;   :custom
-;;   (corfu-cycle t)
-;;   (corfu-auto t)
-;;   (corfu-preselect-first nil)
-;;   (corfu-scroll-margin 6))
+(use-package corfu
+  :hook (after-init . corfu-global-mode)
+  :bind (:map corfu-map
+         ("TAB" . corfu-next)
+         ([tab] . corfu-next)
+         ("S-TAB" . corfu-previous)
+         ([backtab] . corfu-previous))
+  :custom
+  (corfu-cycle t)
+  (corfu-auto t)
+  (corfu-auto-delay 0.05)
+  (corfu-quit-no-match 0.5)
+  (corfu-preselect-first nil)
+  (corfu-scroll-margin 6))
 
 ;;;; Cape
 ;;;;
-;;;; TODO may use in the future, with Corfu and using some Company backends
-;;;; https://github.com/minad/cape#company-adapter
-;;;; Does need a bit more tweaking
 
-;; (use-package cape
-;;   :bind ("TAB" . completion-at-point)
-;;   :preface
-;;   (defvar cape:mega-capf (list
-;;                           (cape-super-capf #'cape-abbrev #'cape-dabbrev #'cape-keywords #'cape-symbol #'cape-file))
-;;     "A ‘cape-super-capf’ that’s similar to most simpler Company configurations.")
+(use-package cape
+  :after corfu
+  :preface
+  (defvar cape:mega-capf (list
+                          (cape-capf-buster
+                           (cape-super-capf #'cape-dabbrev
+                                            #'cape-keyword
+                                            #'cape-symbol
+                                            #'cape-file)))
+    "A ‘cape-super-capf’ that’s similar to most simpler Company configurations.
+The defacto cape to use for coding when none is particularly available.")
 
-;;   (defvar cape:mega-company-capf (mapcar #'cape-company-to-capf
-;;                                          (list #'company-capf #'company-abbrev #'company-dabberv-code #'company-keywords #'company-files #'company-dabbrev))
-;;     "A Cape CAPF that uses a lot of commonly use Company backends.")
-
-;;   (defvar cape:mega-writing-capf (list (cape-capf-buster (cape-super-capf #'cape-abbrev #'cape-dabbrev #'cape-ispell #'cape-dict)))
-;;     "A ‘cape-super-capf’ for modes for writing")
-;;   :init
-;;   (setq-mode-local emacs-lisp-mode
-;;                    completion-at-point-functions
-;;                    (list
-;;                     (cape-capf-buster
-;;                      (cape-super-capf #'cape-abbrev #'cape-dabbrev #'cape-keyword #'cape-symbol #'cape-file)))))
+  (defvar cape:mega-writing-capf (list
+                                  (cape-capf-buster
+                                   (cape-super-capf #'cape-abbrev
+                                                    #'cape-dabbrev
+                                                    #'cape-ispell
+                                                    #'cape-dict)))
+    "A ‘cape-super-capf’ for modes for writing.
+The defacto cape to use for writing when there is none available.")
+  :init
+  (setq-mode-local prog-mode
+                   completion-at-point-functions cape:mega-capf)
+  :custom
+  (cape-dict-file (expand-file-name "~/.local/share/dict/words"))
+  (cape-dabbrev-min-length 2))
 
 (provide 'completion)
 ;;; completion.el ends here

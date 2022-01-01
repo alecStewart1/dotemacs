@@ -53,6 +53,7 @@
 (require 'mode-local)
 ;(require 'ht)
 (require 'dash)
+(require 'general)
 
 ;;; TODO Personal Code
 ;;;
@@ -692,6 +693,14 @@ Also took this from Doom Emacs"
   (defvar sly-contribs '(sly-fancy))
   (defvar inferior-lisp-program (concat (executable-find "ros") " -L sbcl-bin -l ~/.sbclrc -Q run"))
 
+  (defvar cape:sly-cape (list
+                         (cape-capf-buster
+                          (cape-super-capf #'sly-complete-symbol
+                                           #'sly-complete-filename-maybe
+                                           #'cape-dabbrev
+                                           #'cape-keyword
+                                           #'cape-symbol
+                                           #'cape-file))))
   :init
   (setq sly-contribs '(sly-fancy))
   ;;(add-hook 'lisp-mode-hook #'rainbow-delimiters-mode)
@@ -1469,12 +1478,33 @@ nimsuggest isn't installed."
   (lsp-mode . (lambda ()
                 (add-hook 'before-save-hook #'lsp-format-buffer t t)
                 (add-hook 'before-save-hook #'lsp-organize-imports t t)))
+  (lsp-completion-mode . lsp:setup-completion)
   :preface
-  (defvar lsp-company-backends 'company-capf)
-  (defvar lsp--deferred-shutdown-timer nil)
+  (defvar cape:lsp-capf )
+
+  (defun lsp:orderless-dispatch-flex-1st (_pattern index _total)
+    (and (eq index 0) 'orderless-flex))
+
+  (defun lsp:setup-completion ()
+    (setf (alist-get 'styles
+                     (alist-get 'lsp-capf
+                                completion-category-defaults))
+          '(orderless partial-completion)))
   :init
-  (setq lsp-session-file (concat my-etc-dir "lsp-seesion")
-        lsp-server-install-dir (concat my-etc-dir "lsp/"))
+  (general-setq lsp-session-file (concat my-etc-dir "lsp-seesion")
+                lsp-server-install-dir (concat my-etc-dir "lsp/"))
+
+  (add-hook 'orderless-style-dispatchers #'lsp:orderless-dispatch-flex-1st
+            nil
+            'local)
+
+  (setq-local completion-at-point-functions (list
+                                             (cape-capf-buster
+                                              (cape-super-capf #'lsp-completion-at-point
+                                                               #'cape-dabbrev
+                                                               #'cape-keyword
+                                                               #'cape-symbol
+                                                               #'cape-file))))
   :config
   (defadvice! lsp:respect-user-defined-checkers (orig-fn &rest args)
     :around #'lsp-diagnostics-flycheck-enable
@@ -1525,6 +1555,7 @@ nimsuggest isn't installed."
                    (remove lsp-company-backends
                            (remq 'company-capf company-backends)))))))
   :custom
+  (lsp-completion-provider :none) ; we use Corfu instead
   (lsp-keep-workspace-alive nil)
   (lsp-intelephense-storage-path (concat my-cache-dir "lsp-intelephense/"))
   (lsp-clients-emmy-lua-jar-path (concat lsp-server-install-dir "EmmyLua-LS-all.jar"))

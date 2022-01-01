@@ -46,9 +46,11 @@
 ;;;
 
 ;;;###autoload
-(defconst emacs27-p    (> emacs-major-version 26))
+(defconst emacs27-p    (= emacs-major-version 27))
 ;;;###autoload
-(defconst emacs28-p    (> emacs-major-version 27))
+(defconst emacs28-p    (= emacs-major-version 28))
+;;;###autoload
+(defconst emacs29-p    (= emacs-major-version 29))
 ;;;###autoload
 (defconst nativecomp-p (if (fboundp 'native-comp-available-p) (native-comp-available-p)))
 ;;;###autoload
@@ -56,7 +58,7 @@
 ;;;###autoload
 (defconst macos-p      (eq system-type 'darwin))
 ;;;###autoload
-(defconst bsd-p        (or macos-p (eq system-type 'berkeley-unix)))
+(defconst bsd-p        (eq system-type 'berkeley-unix))
 ;;;###autoload
 (defconst cygwin-p     (eq system-type 'cygwin))
 ;;;###autoload

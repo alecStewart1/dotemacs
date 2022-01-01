@@ -258,11 +258,11 @@ possible."
   :hook (after-init . show-paren-mode)
   :custom
   ;;(blink-matching-paren t)
-  (show-paren-style 'parenthesis)
+  (show-paren-style t)
   (show-paren-delay 0.03)
   (show-paren-highlight-openparen t)
   ;(show-paren-when-point-inside-paren t)
-  (show-paren-when-point-in-periphery t))
+  (show-paren-when-point-in-periphery nil))
 
 ;;;; Pulse
 ;;;;
@@ -385,13 +385,11 @@ possible."
 
 (use-package display-line-numbers
   :ensure nil
-  :hook (find-file . display-line-numbers-mode)
-  :init
-  ;; I’m a baby and I need this
-  (setq-default
-   display-line-numbers-grow-only t
-   display-line-numbers 'visual
-   display-line-numbers-width 2))
+  :hook (find-file . global-display-line-numbers-mode)
+  :custom
+  (display-line-numbers-type 'visual)
+  (display-line-numbers-width 2)
+  (display-line-numbers-grow-only t))
 
 ;;;; Highlight Line
 ;;;;
@@ -412,7 +410,7 @@ possible."
   (nano-modeline-position 'bottom))
 
 (use-package hide-mode-line
-  :hook (((completion-list-mode completion-in-region-mode) . hide-mode-line-mode)))
+  :hook (completion-list-mode . hide-mode-line-mode))
 
 (use-package minions
   :config
@@ -559,7 +557,7 @@ possible."
                    ("*package update results*"        :size 0.2 :align 'below :autoclose t)
                    ("*Package-Lint*"                  :size 0.4 :align 'below :autoclose t)
                    ("^\\*macro expansion\\**"         :regexp t :size 0.4 :align 'below)
-                   ("^\\*[Wo]*Man.*\\*"                :regexp t :select t :align 'below :autoclose t)
+                   ("^\\*[Wo]*Man.*\\*"               :regexp t :select t :align 'below :autoclose t)
                    ("*Calendar*"                      :select t :size 0.3 :align 'below)
                    ("^\\*Ibuffer\\*$"                 :regexp t :ignore t)
                    ("^\\*image-dired"                 :regexp t :size 0.8 :select t)
@@ -610,7 +608,9 @@ possible."
   :hook (org-load-hook . doom-themes-org-config))
 
 (use-package nano-theme
-  :hook (after-init . nano-dark))
+  ;:hook (after-init . nano-dark)
+  :config
+  (load-theme 'nano-dark t))
 
 (provide 'ui-ux)
 ;;; ui-ux.el ends here

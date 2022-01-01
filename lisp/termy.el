@@ -253,9 +253,6 @@ Once the eshell process is killed, the previous frame layout is restored."
   (eshell-error-if-no-glob t)
   (eshell-term-name "xterm-256color")
   :config
-  ;; At the moment, Company is causing issues in Eshell
-  (company-mode -1)
-
   (add-hook! 'eshell-mode-hook
     (lambda ()
       (set-window-fringes nil 0 0)
@@ -270,9 +267,6 @@ Once the eshell process is killed, the previous frame layout is restored."
   (advice-add #'eshell-write-aliases-list :override #'ignore)
 
   (with-eval-after-load 'esh-mode
-    (setq-local company-backends '(company-keywords
-                                   company-files))
-    (define-key eshell-mode-map [remap eshell-pcomplete] #'completion-at-point)
     (define-key eshell-mode-map (kbd "C-j") #'eshell-next-matching-input-from-input)
     (define-key eshell-mode-map (kbd "C-k") #'eshell-previous-matching-input-from-input)
     (define-key eshell-mode-map (kbd "C-e") #'end-of-line)
@@ -296,12 +290,12 @@ Once the eshell process is killed, the previous frame layout is restored."
 (use-package em-smart
   :ensure nil
   :defer t
-  :config
-  (eshell-smart-initialize)
   :custom
   (eshell-where-to-jump 'begin)
   (eshell-review-quick-commands nil)
-  (eshell-smart-space-goes-to-end t))
+  (eshell-smart-space-goes-to-end t)
+  :config
+  (eshell-smart-initialize))
 
 ;;;; Alias stuff
 ;;;;
@@ -330,40 +324,14 @@ Once the eshell process is killed, the previous frame layout is restored."
       ("gg" "magit-status")
       ("pass" "gopass $*")
       ("clear" "clear-scrollback")))
-
-  (defvar eshell:default-aliases nil)
   :config
   (advice-add #'eshell-write-aliases-list :override #'ignore)
 
   (defalias 'eshell/more #'eshell/less)
   
-  (setq eshell:default-aliases eshell-command-aliases-list
-        eshell-command-aliases-list
+  (setq eshell-command-aliases-list
         (append eshell-command-aliases-list
-                eshell:my-aliases))
-
-
-  (defun set-eshell-alias! (&rest aliases)
-    "Define aliases for eshell.
-ALIASES is a flat list of alias -> command pairs. e.g.
-  (set-eshell-alias!
-    \"hi\"  \"echo hello world\"
-    \"bye\" \"echo goodbye world\")"
-    (or (cl-evenp (length aliases))
-        (signal 'wrong-number-of-arguments (list 'even (length aliases))))
-    (with-eval-after-load 'em-alias
-      (while aliases
-        (let ((alias (pop aliases))
-              (command (pop aliases)))
-          (if-let* ((oldval (assoc alias eshell:my-aliases)))
-              (setcdr oldval (list command))
-            (push (list alias command) eshell:my-aliases))))
-      (when (boundp 'eshell-command-aliases-list)
-        (if eshell:default-aliases
-            (setq eshell-command-aliases-list
-                  (append eshell:default-aliases
-                          eshell:my-aliases))
-          (setq eshell-command-aliases-list eshell:my-aliases))))))
+                eshell:my-aliases)))
 
 (use-package em-xtra
   :ensure nil

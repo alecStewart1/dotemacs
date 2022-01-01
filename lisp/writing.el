@@ -591,6 +591,8 @@ Made for `org-tab-first-hook' in evil-mode."
   (org-archive-subtree-save-file-p t)
   (org-id-locations-file-relative t)
   :config
+  (setq-mode-local org-mode
+                   completion-at-point-functions cape:mega-writing-capf)
   (add-hook 'org-mode-local-vars-hook #'eldoc-mode)
   (add-hook 'org-mode-hook #'orgtbl-mode)
 
@@ -827,16 +829,6 @@ The #+begin_ .. #+end_ blocks"
   :init
   (with-eval-after-load 'org-src
     (add-to-list 'org-src-lang-modes '("md" . markdown)))
-  :config
-  (advice-add #'markdown-match-generic-metadata :override (lambda (&rest _)
-                                                            (ignore (goto-char (point-max)))))
-  (sp-local-pair '(markdown-mode gfm-mode) "`" "`"
-                 :unless '(:add sp-point-before-word-p sp-point-before-same-p))
-
-  ;; Don't trigger autofill in code blocks (see `auto-fill-mode')
-  (setq-mode-local markdown-mode
-                   fill-nobreak-predicate (cons #'markdown-code-block-at-point-p
-                                                fill-nobreak-predicate))
   :custom
   (markdown-enable-math t)
   (markdown-enable-wiki-links t)
@@ -857,7 +849,18 @@ The #+begin_ .. #+end_ blocks"
                                           "<style> body { box-sizing: border-box; max-width: 740px; width: 100%; margin: 40px auto; padding: 0 10px; } </style>"
                                           "<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>"
                                           "<script src='https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/highlight.min.js'></script>"
-                                          "<script>document.addEventListener('DOMContentLoaded', () => { document.body.classList.add('markdown-body'); document.querySelectorAll('pre[lang] > code').forEach((code) => { code.classList.add(code.parentElement.lang); }); document.querySelectorAll('pre > code').forEach((code) => { hljs.highlightBlock(code); }); });</script>")))
+                                          "<script>document.addEventListener('DOMContentLoaded', () => { document.body.classList.add('markdown-body'); document.querySelectorAll('pre[lang] > code').forEach((code) => { code.classList.add(code.parentElement.lang); }); document.querySelectorAll('pre > code').forEach((code) => { hljs.highlightBlock(code); }); });</script>"))
+  :config
+  (advice-add #'markdown-match-generic-metadata :override (lambda (&rest _)
+                                                            (ignore (goto-char (point-max)))))
+  (sp-local-pair '(markdown-mode gfm-mode) "`" "`"
+                 :unless '(:add sp-point-before-word-p sp-point-before-same-p))
+
+  ;; Don't trigger autofill in code blocks (see `auto-fill-mode')
+  (setq-mode-local markdown-mode
+                   fill-nobreak-predicate (cons #'markdown-code-block-at-point-p
+                                                fill-nobreak-predicate)
+                   completion-at-point-functions cape:mega-writing-capf))
 
 ;;;; Literate Calc
 ;;;;

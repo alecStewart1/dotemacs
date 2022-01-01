@@ -122,9 +122,9 @@
   "Make fringe larger in magit."
   (and (display-graphic-p)
        (derived-mode-p 'magit-mode)
-       magit:finge-size
+       magit:fringe-size
        (let ((left  (or (car-safe magit:fringe-size) magit:fringe-size))
-             (right (or (car-safe magit:frinfe-size) magit:fringe-size)))
+             (right (or (car-safe magit:fringe-size) magit:fringe-size)))
          (set-window-fringes nil left right))))
 
 ;;;###autoload
@@ -151,6 +151,7 @@
   (magit-commit (list "-m" msg)))
 
 (use-package magit
+  :defer t
   :commands magit-file-delete
   :custom
   (magit-auto-revert-mode nil)
@@ -184,7 +185,9 @@
         #'magit:enlarge-fringe))
 
   (add-hook 'magit-status-mode-hook #'magit:optimize-process-calls)
-  (add-hook 'magit-diff-visit-file-hook #'magit:reveal-point-if-invisible))
+  (add-hook 'magit-diff-visit-file-hook #'magit:reveal-point-if-invisible)
+
+  (define-key magit-status-mode-map (kbd "q") #'magit-mode-quit-window))
 
 ;;;; Github Review
 ;;;;

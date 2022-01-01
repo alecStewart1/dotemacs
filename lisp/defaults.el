@@ -81,6 +81,117 @@
                       bidi-paragraph-direction 'left-to-right)))
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
   (advice-add 'completing-read-multiple :filter-args #'minibuffer:crm-indicator)
+    :custom
+  ;; Startup
+  (inhibit-startup-screen            t)
+  (inhibit-startup-message           t)
+  (inhibit-startup-echo-area-message t)
+  (inhibit-startup-echo-area-message user-login-name)
+  (inhibit-default-init              t)
+  (initial-major-mode                'fundamental-mode)
+  (initial-scratch-message           nil)
+
+  ;; Scrolling
+  (hscroll-margin 1)
+  (hscroll-step 1)
+  (scroll-conservatively 10000)
+  (scroll-up-aggressively  0.01)
+  (scroll-down-aggressively 0.01)
+  (fast-but-imprecise-scrolling t)
+  (auto-window-vscroll nil)
+  (scroll-margin 0)
+  (scroll-preserve-screen-position t)
+
+  ;; Cursor and Mouse
+  (visible-cursor nil)
+  (x-stretch-cursor nil)
+  (cursor-in-non-selected-windows nil)
+  (mouse-wheel-scroll-amount '(5 ((shift) . 2)))
+  (mouse-wheel-progressive-speed nil)
+  (mouse-yank-at-point t)
+
+  ;; Window, frame, minibuffer
+  (display-line-numbers-width 3)
+  (enable-recursive-minibuffers t)
+  (frame-inhibit-implied-resize t)
+  (fringe-indicator-alist
+   (delq (assq 'continuation fringe-indicator-alist)
+         fringe-indicator-alist))
+  (highlight-nonselected-windows nil)
+  (indicate-buffer-boundaries nil)
+  (indicate-empty-lines nil)
+  (max-mini-window-height 0.15)
+  (resize-mini-windows 'grow-only)
+  (window-resize-pixelwise t)
+  (frame-resize-pixelwise t)
+  (minibuffer-prompt-properties
+   '(read-only t intangible t cursor-intangible t face minibuffer-prompt))
+  (frame-title-format '("%b - Emacs"))
+  (icon-title-format frame-title-format)
+
+  ;; Don't use some GUI stuff
+  (use-file-dialog nil)
+  (use-dialog-box nil)
+  (x-gtk-use-system-tooltips nil)
+
+  ;; No noise, pls
+  (ring-bell-function #'ignore)
+  (visible-bell nil)
+
+  ;; Keystrokes
+  (echo-keystrokes 0.02)
+
+  ;; Text
+  (x-underline-at-descent-line t)
+  (truncate-lines t)
+  (truncate-partial-width-windows 50)
+  (sentence-end-double-space nil)
+
+  ;; Fill and wrap
+  (fill-column 80)
+  (word-wrap t)
+  (adaptive-fill-regexp "[ t]+|[ t]*([0-9]+.|*+)[ t]*")
+  (adaptive-fill-first-line-regexp "^* *$")
+
+  ;; Whitespace
+  (show-trailing-whitespace nil)
+
+  ;; UTF-8, pls
+  (locale-coding-system 'utf-8)
+
+  ;; No tabs, only spaces
+  (indent-tabs-mode nil)
+  (tab-width 4)
+
+  ;; Autosave
+  (auto-save-list-file-prefix (concat my-cache-dir "autosave/"))
+  (auto-save-include-big-deletions t)
+  (auto-save-file-name-transformers
+   (list (list "\\`/[^/]*:\\([^/]*/\\)*\\([^/]*\\)\\'"
+     ;; Prefix tramp autosaves to prevent conflicts with local ones
+               (concat auto-save-list-file-prefix "tramp-\\2") t)
+         (list ".*" auto-save-list-file-prefix t)))
+
+  ;; Don't clutter my Emacs directory
+  (shared-game-score-directory        (concat my-etc-dir "shared-game-score/"))
+  (gamegrid-user-score-file-directory (concat my-etc-dir "games/"))
+  (request-storage-directory          (concat my-cache-dir "request/"))
+
+  ;; Misc.
+  (apropos-do-all  t)
+  (image-animate-loop  t)
+  (show-help-function  nil)
+  (history-length  500)
+  (debug-on-quit  nil)
+  (debug-on-error  nil)
+  (delete-by-moving-to-trash  t)
+  (create-lockfiles  nil)
+  (autoload-compute-prefixes  nil)
+  (load-prefer-newer  t)
+  (mode-line-default-help-echo nil)
+  (custom-unlispify-menu-entries nil)
+  (custom-unlispify-tag-names nil)
+  (read-process-output-max (* 2 1024 1024))
   :config
   (setq-default
    native-comp-deferred-compilation nil ;; this can be unwanted
@@ -121,117 +232,36 @@
     (setenv "PAGER" "cat"))
   (eval-after-load 'term
     (setq hscroll-margin 0))
-  :custom
-  ;; Startup
-  (inhibit-startup-screen            t)
-  (inhibit-startup-message           t)
-  (inhibit-startup-echo-area-message t)
-  (inhibit-startup-echo-area-message user-login-name)
-  (inhibit-default-init              t)
-  (initial-major-mode                'fundamental-mode)
-  (initial-scratch-message           nil)
 
-  ;; Scrolling
-  (hscroll-margin 1)
-  (hscroll-step 1)
-  (scroll-conservatively 10000)
-  (scroll-up-aggressively  0.01)
-  (scroll-down-aggressively 0.01)
-  (fast-but-imprecise-scrolling t)
-  (auto-window-vscroll nil)
-  (scroll-margin 0)
-  (scroll-preserve-screen-position t)
+  ;; MacOS stuff
+  (when macos-p
+    (setq locate-command "mdfind"
+          ns-use-native-fullscreen nil
+          ns-pop-up-frames nil
+          mac-redisplay-dont-reset-vscroll t
+          mac-mouse-wheel-smoothscroll nil)
 
-  ;; Cursor and Mouse
-  (visible-cursor nil)
-  (x-stretch-cursor nil)
-  (cursor-in-non-selected-windows nil)
-  (mouse-wheel-scroll-amount '(5 ((shift) . 2)))
-  (mouse-wheel-progressive-speed nil)
-  (mouse-yank-at-point t)
-  
-  ;; Window, frame, minibuffer
-  (display-line-numbers-width 3)
-  (enable-recursive-minibuffers t)
-  (frame-inhibit-implied-resize t)
-  (fringe-indicator-alist
-   (delq (assq 'continuation fringe-indicator-alist)
-         fringe-indicator-alist))
-  (highlight-nonselected-windows nil)
-  (indicate-buffer-boundaries nil)
-  (indicate-empty-lines nil)
-  (max-mini-window-height 0.15)
-  (resize-mini-windows 'grow-only)
-  (window-resize-pixelwise t)
-  (frame-resize-pixelwise t)
-  (minibuffer-prompt-properties
-   '(read-only t intangible t cursor-intangible t face minibuffer-prompt))
-  (frame-title-format '("%b - Emacs"))
-  (icon-title-format frame-title-format)
+    (and (or (daemonp)
+             (display-graphic-p))
+         (require 'ns-auto-titlebar nil t)
+         (ns-auto-titlebar-mode +1))
 
-  ;; Don't use some GUI stuff
-  (use-file-dialog nil)
-  (use-dialog-box nil)
-  (x-gtk-use-system-tooltips nil)
+    ;; From Doom Emacs:
+    ;; https://github.com/hlissner/doom-emacs/blob/af7c1d79bd63d78410aafc410d52ee5c1109ec26/modules/os/macos/config.el#L37
+    ;; HACK On MacOS, disabling the menu bar makes MacOS treat Emacs as a
+    ;;      non-application window -- which means it doesn't automatically capture
+    ;;      focus when it is started, among other things, so enable the menu-bar for
+    ;;      GUI frames, but keep it disabled in terminal frames because there it
+    ;;      activates an ugly, in-frame menu bar.
+    (add-hook! '(window-setup-hook after-make-frame-functions)
+      (defun macos:init-menu-bar-in-gui-frames (&optional frame)
+        "Re-enable menu-bar-lines in GUI frames."
+        (when-let (frame (or frame (selected-frame)))
+          (when (display-graphic-p frame)
+            (set-frame-parameter frame 'menu-bar-lines 1)))))
 
-  ;; No noise, pls
-  (ring-bell-function #'ignore)
-  (visible-bell nil)
-
-  ;; Keystrokes
-  (echo-keystrokes 0.02)
-
-  ;; Text
-  (x-underline-at-descent-line t)
-  (truncate-lines t)
-  (truncate-partial-width-windows 50)
-  (sentence-end-double-space nil)
-  
-  ;; Fill and wrap
-  (fill-column 80)
-  (word-wrap t)
-  (adaptive-fill-regexp "[ t]+|[ t]*([0-9]+.|*+)[ t]*")
-  (adaptive-fill-first-line-regexp "^* *$")
-  
-  ;; Whitespace
-  (show-trailing-whitespace nil)
-
-  ;; UTF-8, pls
-  (locale-coding-system 'utf-8)
-
-  ;; No tabs, only spaces
-  (indent-tabs-mode nil)
-  (tab-width 4)
-
-  ;; Autosave
-  (auto-save-list-file-prefix (concat my-cache-dir "autosave/"))
-  (auto-save-include-big-deletions t)
-  (auto-save-file-name-transformers
-   (list (list "\\`/[^/]*:\\([^/]*/\\)*\\([^/]*\\)\\'"
-     ;; Prefix tramp autosaves to prevent conflicts with local ones
-               (concat auto-save-list-file-prefix "tramp-\\2") t)
-         (list ".*" auto-save-list-file-prefix t)))
-
-  ;; Don't clutter my Emacs directory
-  (shared-game-score-directory        (concat my-etc-dir "shared-game-score/"))
-  (gamegrid-user-score-file-directory (concat my-etc-dir "games/"))
-  (request-storage-directory          (concat my-cache-dir "request/"))
-
-  ;; Misc.
-  (apropos-do-all  t)
-  (image-animate-loop  t)
-  (show-help-function  nil)
-  (history-length  500)
-  (debug-on-quit  nil)
-  (debug-on-error  nil)
-  (delete-by-moving-to-trash  t)
-  (create-lockfiles  nil)
-  (autoload-compute-prefixes  nil)
-  (load-prefer-newer  t)
-  (mode-line-default-help-echo nil)
-  (custom-unlispify-menu-entries nil)
-  (custom-unlispify-tag-names nil)
-  (read-process-output-max (* 2 1024 1024)))
+    (with-eval-after-load 'auth-source
+      (pushnew! auth-sources 'macos-keychain-internet 'macos-keychain-generic))))
 
 ;;;; Compiling things
 ;;;;
