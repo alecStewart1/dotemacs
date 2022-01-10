@@ -290,7 +290,7 @@ If you're looking to only define an abbrev for a specific mode, see
          ,(concat snip-name " skeleton")
          ,@skeleton)
        (define-abbrev global-abbrev-table ,snip-name
-         "" ',func-name))))
+         "" ',func-name :system t))))
 
 ;;;###autoload
 (defmacro mode-snippet (name mode &rest skeleton)
@@ -320,7 +320,7 @@ see `snippets:global-snip'."
           ,(format "%s %s %s %s." snip-name "skeleton. Defined in" var-str "abbreviaton table.")
           ,@skeleton)
        (define-abbrev ,abbrev-table ,snip-name
-         "" ',func-name))))
+         "" ',func-name :system t))))
 
 ;; (define-abbrev emacs-lisp-mode-abbrev-table "defun" ""
 ;;   'emacs-lisp-defun-skel)

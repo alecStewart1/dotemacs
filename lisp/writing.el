@@ -112,6 +112,7 @@
      org-agenda-files '("~/Documents/Org/GTD/work.org"
                         "~/Documents/Org/GTD/finances.org"
                         "~/Documents/Org/GTD/reading.org"
+                        "~/Documents/Org/GTD/open-source.org"
                         "~/Documents/Org/GTD/fitness.org"
                         "~/Documents/Org/GTD/misc.org")
      org-agenda-inhibit-startup t))
@@ -263,7 +264,7 @@
         :after org-capture
         :config
         (setq org-capture-templates (append org-capture-templates
-                                            '(("c" "Cookbook" entry (file "~/Documents/org/cookbook.org")
+                                            '(("c" "Cookbook" entry (file "~/Documents/Org/cookbook.org")
                                                "%(org-chef-get-recipe-from-url)"
                                                :empty-lines 1)
                                               ("m" "Manual Cookbook" entry (file "~/Documents/Org/cookbook.org")
@@ -596,22 +597,11 @@ Made for `org-tab-first-hook' in evil-mode."
   (add-hook 'org-mode-local-vars-hook #'eldoc-mode)
   (add-hook 'org-mode-hook #'orgtbl-mode)
 
-  ;; TODO this don’t work
-  ;; (mode-snippet org-block org-mode
-  ;;   "Block type: "
-  ;;   ?\n "#+begin_" str
-  ;;   ?\n _ ?\n
-  ;;   "#+end_" str ?\n)
-
-  ;; TODO but this do
-  (define-skeleton org-block-skeleton
-    "Skeleton for Org-Mode to create special blocks.
-The #+begin_ .. #+end_ blocks"
+  (mode-snippet oblock org-mode
     "Block type: "
-    ?\n "#+begin_" str
-    ?n _ ?\n
-    "#+end_" str ?\n)
-  (define-key org-mode-map (kbd "C-c b") #'org-block-skeleton))
+    > "#+begin_" str " " @ _ ?\n
+    > @ - ?\n
+    > "#+end_" str ?\n))
 
 (use-package org-crypt
   :ensure nil

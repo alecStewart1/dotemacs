@@ -50,7 +50,6 @@
 (use-package dired
   :ensure nil
   :commands dired-jump
-  :hook (dired-mode . dired-hide-details-mode)
   :init
   (general-setq image-dired-dir                    (concat my-cache-dir "image-dired/")
                 image-dired-db-file                (concat image-dired-dir "db.el")

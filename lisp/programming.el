@@ -62,6 +62,7 @@
 ;;;; Formatting Code
 ;;;; TODO - fix pcase shadowing matches, create format region
 
+
 ;;;###autoload
 ;; (defvar format:formatter-command-hash (ht ('cs     "clang-format")
 ;;                                           ('py     "black")
@@ -178,14 +179,6 @@
 
 ;;;; Utilities
 ;;;;
-
-;;;;; Let’s first set ‘company-backends’
-;;;;;
-
-(setq-mode-local prog-mode
-                 company-backends '(company-capf
-                                    (company-dabbrev-code company-keywords company-files)
-                                    company-dabbrev))
 
 ;;;;; Compiling things
 ;;;;;
@@ -604,6 +597,13 @@ Also took this from Doom Emacs"
   (put 'add-function 'lisp-indent-function 2)
   (put 'advice-add   'lisp-indent-function 2)
   (put 'plist-put    'lisp-indent-function 2)
+
+  (mode-snippet defun emacs-lisp-mode
+    "Function name: "
+    > "(defun " str " (" @ - ")" ?\n
+    > "\"" @ _ "\"" ?\n
+    > @ _ ")" ?\n)
+
 
   (defadvice! elisp-mode:append-val-to-eldoc (orig-fn sym)
     "Display variable value next to documentation in eldoc."

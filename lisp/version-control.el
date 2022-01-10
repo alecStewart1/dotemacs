@@ -1,3 +1,4 @@
+
 ;;; version-control.el --- Version Control in Emacs -*- lexical-binding: t; -*-
 ;;
 ;; Copyright (C) 2021 Alec Stewart
@@ -114,6 +115,36 @@
 ;;;; Magit
 ;;;;
 
+(defvar magit:stale-p nil)
+
+(defun magit:revert-buffer (buffer)
+  (with-current-buffer buffer
+    (kill-local-variable 'magit:stale-p)
+    (when buffer-file-name
+      (if (buffer-modified-p (current-buffer))
+          (when (bound-and-true-p vc-mode)
+            (vc-refresh-state)
+            (force-mode-line-update))
+        (revert-buffer t t t)))))
+
+;;;###autoload
+(defun magit:mark-stale-buffers ()
+  "Revert all visible buffers and mark buried buffers as stale.
+Stale buffers are reverted when they are switched to, assuming they haven't been
+modified."
+  (dolist (buffer (buffer-list))
+    (when (buffer-live-p buffer)
+      (if (get-buffer-window buffer)
+          (magit:revert-buffer buffer)
+        (with-current-buffer buffer
+          (setq-local magit:stale-p t))))))
+
+;;;###autoload
+(defun magit:revert-buffer-maybe ()
+  "Update `vc' and `git-gutter' if out of date."
+  (when magit:stale-p
+    (magit:revert-buffer (current-buffer))))
+
 ;;;###autoload
 (defvar magit:fringe-size 14)
 
@@ -165,9 +196,10 @@
   (transient-default-level 5)
   (transient-display-buffer-action '(display-buffer-below-selected))
   :config
-  (defadvice! magit:rever-repo-buffers-deferred (&rest _)
+  (defadvice! magit:revert-repo-buffers-deferred (&rest _)
     :after '(magit-checkout magit-branch-and-checkout)
-    (projectile-invalidate-cache nil))
+    (projectile-invalidate-cache nil)
+    (magit:mark-stale-buffers))
 
   (add-hook 'magit-process-mode-hook #'goto-address-mode)
   (add-hook 'magit-popup-mode-hook #'hide-mode-line-mode)
@@ -192,8 +224,13 @@
 ;;;; Github Review
 ;;;;
 
-(use-package github-review
-  :after magit)
+(use-package code-review
+  :after magit
+  ;; :config
+  ;; (transient-append-suffix 'magit-merge "i"
+  ;;   '("y" "Review pull request")
+  ;;   )
+  )
 
 ;;;; TODOs for Magit
 ;;;;

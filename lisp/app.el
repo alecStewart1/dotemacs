@@ -41,6 +41,7 @@
 
 (require 'mode-local)
 (require 'lib)
+(require 'general)
 
 ;;;; Builtin Packages
 
@@ -70,8 +71,8 @@
 (use-package emms
   :defer t
   :init
-  (setq emms-directory (concat my-etc-dir "emms")
-        emms-cache-file (concat my-cache-dir "emms"))
+  (general-setq emms-directory (concat my-etc-dir "emms")
+                emms-cache-file (concat my-cache-dir "emms"))
   :config
   (emms-all)
   (emms-default-players))
@@ -130,6 +131,7 @@
     (put-text-property start (point) 'face '(:underline nil))))
 
 (use-package elfeed
+  :defer t
   :commands elfeed
   :config
   (make-directory elfeed-db-directory t)
@@ -164,7 +166,7 @@
 (use-package elfeed-org
   :after elfeed
   :preface
-  (setq rmh-elfeed-org-files (list "elfeed.org"))
+  (general-setq rmh-elfeed-org-files (list "elfeed.org"))
   :config
   (elfeed-org)
   (defadvice! elfeed-org:skip-missing-files (&rest _)

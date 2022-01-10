@@ -194,21 +194,24 @@
   (read-process-output-max (* 2 1024 1024))
   :config
   (setq-default
-   native-comp-deferred-compilation nil ;; this can be unwanted
-   comp-speed 2
-   ediff-window-setup-function 'ediff-setup-windows-plain
-   ; silence compression messages
-   jka-compr-verbose           nil
-   ; don't ping things that look like domain names
-   ffap-machine-p-known        'reject
-   vc-follow-symlinks           t
-   tabify-regexp                "^\t* [ \t]+")
+   native-comp-deferred-compilation nil ; this can be unwanted
+   comp-speed                       2
+   ediff-window-setup-function      'ediff-setup-windows-plain
+   jka-compr-verbose                nil    ; silence compression messages
+   ffap-machine-p-known            'reject ; don't ping things that look like domain names
+   vc-follow-symlinks              t
+   tabify-regexp                   "^\t* [ \t]+"
+   abbrev-mode                     t)
 
+  ;; Abbreviations
   (setq abbrev-file-name (concat my-local-dir "abbrev.el")
-        save-abbrevs     'silent ; God, stop asking.
-        server-auth-dir  (concat my-cache-dir "server/"))
+        save-abbrevs     'silent) ; God, stop asking.
 
+  ;; Don’t let the mouse clash with the cursor.
   (mouse-avoidance-mode 'exile)
+
+  ;; Authentication server directory
+  (setq server-auth-dir  (concat my-cache-dir "server/"))
 
   ;; Unicode, pls
   (when (fboundp 'set-charset-priority)

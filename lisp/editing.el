@@ -591,6 +591,7 @@ an extension, try to guess one."
 
 (use-package objed
   ;; :bind ("M-SPC" . objed-activate)
+  :defer t
   :preface
   (defvar objed:extra-face-remaps nil)
   :config

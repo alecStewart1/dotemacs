@@ -23,6 +23,7 @@ elpa/
 eln-cache/
 network-security.data
 semanticdb
+forge-database.sqlite
 eshell/
 server/
 smex-items

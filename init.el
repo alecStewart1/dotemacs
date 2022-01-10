@@ -45,7 +45,7 @@
 ;;;; Dreaded garbage collection
 ;;;;
 
-(setq gc-cons-threshold most-positive-fixnum
+(setq gc-cons-threshold (* 8 1024 1024)
       gc-cons-percentage 0.5)
 (add-hook 'emacs-startup-hook
           (lambda ()

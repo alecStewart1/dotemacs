@@ -191,7 +191,6 @@ Run ‘magit-status’ on repo containing the embark target."
 ;;;;;
 
 (use-package consult
-  :defer t
   :general
   ;; Remappings
   ([remap switch-to-buffer]              #'consult-buffer)
@@ -218,9 +217,9 @@ Run ‘magit-status’ on repo containing the embark target."
   ;; Misc.
   ([remap apropos] #'consult-apropos)
   :preface
+  (defvar consult:find-program (cl-find-if #'executable-find (list "fdfind"
+                                                                   "fd")))
   :init
-  (defvar consult:find-program (cl-find-if #'executable-find (list "fdfind" "fd")))
-
   (with-eval-after-load 'projectile
     (autoload 'projectile-project-root "projectile")
     (setq consult-project-root-function #'projectile:get-project-root))
@@ -445,6 +444,14 @@ Run ‘magit-status’ on repo containing the embark target."
 ;;;; TODO may still make use of but use with Cape
 ;;;; https://github.com/minad/cape#company-adapter
 
+;;;;; Let’s first set ‘company-backends’
+;;;;;
+
+;; (setq-mode-local prog-mode
+;;                  company-backends '(company-capf
+;;                                     (company-dabbrev-code company-keywords company-files)
+;;                                     company-dabbrev))
+
 ;; (use-package company
 ;;   :diminish
 ;;   :commands (company-complete-common
@@ -509,13 +516,16 @@ Run ‘magit-status’ on repo containing the embark target."
   :bind (:map corfu-map
          ("TAB" . corfu-next)
          ([tab] . corfu-next)
+         ("C-n" . corfu-next)
          ("S-TAB" . corfu-previous)
-         ([backtab] . corfu-previous))
+         ([backtab] . corfu-previous)
+         ("C-p" . corfu-previous))
   :custom
   (corfu-cycle t)
   (corfu-auto t)
   (corfu-auto-delay 0.05)
   (corfu-quit-no-match 0.5)
+  (corfu-quit-at-boundary t)
   (corfu-preselect-first nil)
   (corfu-scroll-margin 6))
 
@@ -542,12 +552,12 @@ The defacto cape to use for coding when none is particularly available.")
                                                     #'cape-dict)))
     "A ‘cape-super-capf’ for modes for writing.
 The defacto cape to use for writing when there is none available.")
-  :init
-  (setq-mode-local prog-mode
-                   completion-at-point-functions cape:mega-capf)
   :custom
   (cape-dict-file (expand-file-name "~/.local/share/dict/words"))
-  (cape-dabbrev-min-length 2))
+  (cape-dabbrev-min-length 2)
+  :config
+  (setq-mode-local prog-mode
+                   completion-at-point-functions cape:mega-capf))
 
 (provide 'completion)
 ;;; completion.el ends here

@@ -52,9 +52,9 @@
            (featurep 'native-compile))
   ;; We're going for distance, we're going for speed
   (setq-default
-   native-comp-compiler-options '("-O2" "-mtune=native")
+   native-comp-compiler-options '("-O2" "-mtune=native" "-pipe")
    native-comp-deferred-compilation nil   
-	 comp-deferred-compilation t
+   comp-deferred-compilation t
    comp-speed 2
    package-native-compile t)
 
@@ -65,8 +65,8 @@
     ;; HACK Disable native-compilation for some troublesome packages
     (mapc (apply-partially #'add-to-list 'native-comp-deferred-compilation-deny-list)
           (let ((local-dir-re (concat "\\`" (regexp-quote my-local-dir))))
-            (list 
-						  ;;(concat local-dir-re ".*/evil-collection-vterm\\.el\\'")
+            (list
+             ;;(concat local-dir-re ".*/evil-collection-vterm\\.el\\'")
               (concat local-dir-re ".*/with-editor\\.el\\'"))))))
 
 ;;; Some settings
