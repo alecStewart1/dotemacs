@@ -45,6 +45,9 @@
 ;;; Useful variables and constants
 ;;;
 
+;;;; Useful predicates
+;;;;
+
 ;;;###autoload
 (defconst emacs27-p    (= emacs-major-version 27))
 ;;;###autoload
@@ -64,7 +67,21 @@
 ;;;###autoload
 (defconst windows-nt-p (memq system-type '(cygwin windows-nt ms-dos)))
 
-;; We actually need this here
+;;;; For fonts
+;;;;
+
+;;;###autoload
+(defconst my-default-font "IBM Plex Mono")
+;;;###autoload
+(defconst my-default-variable-font "IBM Plex Sans")
+;;;###autoload
+(defconst my-default-font-size 100)
+;;;###autoload
+(defconst my-default-variable-font-size 100)
+
+;;;; Emacs directory stuff to keep ‘user-emacs-directory’ clean
+;;;;
+
 (when (and windows-nt-p (null (getenv "HOME")))
   (setenv "HOME" (getenv "USERPROFILE")))
 
@@ -75,8 +92,6 @@
 (defconst my-etc-dir (concat (expand-file-name my-local-dir) "etc/"))
 
 (defconst my-cache-dir (concat my-local-dir "cache/"))
-
-(defvar transient-counter 0)
 
 ;;; The Emacs "Leader" Key and Keymap
 ;;;
@@ -130,7 +145,6 @@ code of the process and OUTPUT is its stdout output."
     (cons (or (apply #'call-process command nil t nil (remq nil args))
               -1)
           (string-trim (buffer-string)))))
-
 
 ;;;###autoload
 (defun get-buffer-mode (buf)
@@ -335,6 +349,7 @@ see `snippets:global-snip'."
 ;;; Macros
 ;;;
 
+(defvar transient-counter 0)
 ;;;###autoload
 (defmacro add-transient-hook! (hook-or-function &rest forms)
   "From Doom Emacs.

@@ -120,6 +120,7 @@
   ;:hook (after-init . recentf-mode)
   :commands recentf-open-files
   :custom
+  (recentf-keep '(file-remote-p file-readable-p))
   (recentf-filename-handlers
    '(substring-no-properties    ; strip out lingering text properties
      recent-file-truename       ; resolve symlinks of local files
@@ -149,7 +150,9 @@
       "Add dired directory to recentf file list."
       (recentf-add-file default-directory)))
 
-  (add-hook 'kill-emacs-hook #'recentf-cleanup))
+  (add-hook 'kill-emacs-hook (lambda ()
+                               (recentf-save-list)
+                               (recentf-cleanup))))
 
 ;;;; Saveplace
 ;;;;
@@ -160,7 +163,7 @@
   :hook (after-init . save-place-mode)
   :init
   (setq save-place-file (concat my-cache-dir "saveplace")
-        save-place-limit 100)
+        save-place-limit 200)
   :config
   (advice-add 'save-place-find-file-hook :after-while
    (lambda (&rest _)
@@ -242,6 +245,7 @@
 (use-package hideshow
   :ensure nil
   :diminish hs-minor-mode
+  :hook (prog-mode . hs-minor-mode)
   :bind (:map hs-minor-mode-map
          ("C-`" . hs-toggle-hiding)))
 
@@ -407,33 +411,6 @@
                                   (error-message-string e))
                          (message "")))))
         (funcall orig-fn arg)))))
-
-;;;; Aggressive Indent
-;;;; This is a bit TOO aggressive.
-
-;; (use-package aggressive-indent
-;;   :diminish
-;;   :hook ((after-init-hook . global-aggressive-indent-mode)
-;;          ;; FIXME: Disable in big files due to the performance issues
-;;          ;; https://github.com/Malabarba/aggressive-indent-mode/issues/73
-;;          (find-file-hook . (lambda ()
-;;                              (if (> (buffer-size) (* 3000 80))
-;;                                  (aggressive-indent-mode -1)))))
-;;   :config
-;;   ;; Disable in some modes
-;;   (dolist (mode '(asm-mode web-mode html-mode css-mode prolog-inferior-mode))
-;;     (push mode aggressive-indent-excluded-modes))
-
-;;   ;; Disable in some commands
-;;   (add-to-list 'aggressive-indent-protected-commands #'delete-trailing-whitespace t)
-
-;;   ;; Be slightly less aggressive in C/C++/C#/Java/Go/Swift
-;;   (add-to-list
-;;    'aggressive-indent-dont-indent-if
-;;    '(and (derived-mode-p 'c-mode 'c++-mode 'csharp-mode
-;;                          'java-mode)
-;;          (null (string-match "\\([;{}]\\|\\b\\(if\\|for\\|while\\)\\b\\)"
-;;                              (thing-at-point 'line))))))
 
 ;;;; Adaptive-Wrap
 ;;;;

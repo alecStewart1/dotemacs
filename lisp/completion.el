@@ -61,7 +61,7 @@
 (use-package orderless
   :init
   (setq orderless-matching-styles
-        '(orderless-literal orderless-strict-leading-initialism orderless-prefixes)
+        '(orderless-literal orderless-initialism orderless-prefixes)
         orderless-component-separator 'orderless-escapable-split-on-space
         completion-styles '(orderless)
         completion-category-defaults nil

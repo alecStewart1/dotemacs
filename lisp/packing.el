@@ -81,9 +81,10 @@
       ;; Also Org ELPA is going to be closed on further releases of Org
       package-archives
       (let ((proto (if gnutls-verify-error "https" "http")))
-        `(;;("gnu"   . ,(concat proto "://elpa.gnu.org/packages/")) may not actually need this with NonGNU ELPA
+         ;; may not actually need this with NonGNU ELPA, except for corfu.
+        `(("gnu"   . ,(concat proto "://elpa.gnu.org/packages/"))
           ("melpa" . ,(concat proto "://melpa.org/packages/"))
-					("nongnu" . ,(concat proto "://elpa.nongnu.org/nongnu/")))))
+	  ("nongnu" . ,(concat proto "://elpa.nongnu.org/nongnu/")))))
 
 (advice-add #'package--ensure-init-file :override #'ignore)
 

@@ -112,6 +112,22 @@ https://github.com/rougier/nano-emacs/blob/master/nano-splash.el"
       ("k" "Out" text-scale-decrease)]])
   (global-set-key (kbd "<f2>") #'zoom-transient))
 
+;;; Setting Fonts
+;;;
+
+(set-face-attribute 'default nil
+                    :font my-default-font
+                    :height my-default-font-size)
+
+(set-face-attribute 'fixed-pitch nil
+                    :font my-default-font
+                    :height my-default-font-size)
+
+(set-face-attribute 'variable-pitch nil
+                    :font my-default-variable-font
+                    :height my-default-variable-font-size
+                    :weight 'regular)
+
 ;;; Packages
 ;;;
 
@@ -389,7 +405,13 @@ possible."
   :custom
   (display-line-numbers-type 'visual)
   (display-line-numbers-width 2)
-  (display-line-numbers-grow-only t))
+  (display-line-numbers-grow-only t)
+  :config
+  (dolist (mode '(shell-mode-hook
+                  eshell-mode-hook
+                  vterm-mode-hook
+                  treemacs-mode-hook))
+    (add-hook mode (lambda () (display-line-numbers-mode -1)))))
 
 ;;;; Highlight Line
 ;;;;
@@ -402,12 +424,12 @@ possible."
 
 ;;;; Modeline
 
-(use-package nano-modeline
-  :diminish nano-modeline-mode
-  :init
-  (nano-modeline-mode)
-  :custom
-  (nano-modeline-position 'bottom))
+;(use-package nano-modeline
+  ;:diminish nano-modeline-mode
+  ;:init
+  ;(nano-modeline-mode)
+  ;:custom
+  ;(nano-modeline-position 'bottom))
 
 (use-package hide-mode-line
   :hook (completion-list-mode . hide-mode-line-mode))

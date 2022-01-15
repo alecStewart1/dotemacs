@@ -55,6 +55,7 @@
 
 (use-package org
   :ensure org-contrib
+  ;:commands (org-agenda org-capture)
   :preface
   (defvar org-directory nil)
   (defvar org-attach-id-dir nil)
@@ -119,36 +120,38 @@
 
   (defun org:setup-appearance ()
     (general-setq org-indirect-buffer-display 'current-window
-          org-eldoc-breadcrumb-separator " -> "
-          org-enforce-todo-dependencies t
-          org-entities-user
-          '(("flat" "\\flat" nil "" "" "266D" "")
-            ("sharp" "\\sharp" nil "" "" "266F" ""))
-          org-fontify-done-headline t
-          org-fontify-quote-and-verse-blocks t
-          org-fontify-whole-heading-line t
-          org-hide-emphasis-markers t
-          org-footnote-auto-label t
-          org-hide-leading-stars t
-          org-image-actual-width nil
-          org-imenu-depth 6
-          org-priority-faces
-          '((?A . error)
-            (?B . warning)
-            (?C . success))
-          org-startup-indented t
-          org-startup-truncated nil
-          org-startup-folded nil
-          org-tags-column 0
-          org-use-sub-superscripts '{}
-          org-log-into-drawer t
-          org-log-done 'time)
+                  org-eldoc-breadcrumb-separator " -> "
+                  org-enforce-todo-dependencies t
+                  org-entities-user
+                  '(("flat" "\\flat" nil "" "" "266D" "")
+                    ("sharp" "\\sharp" nil "" "" "266F" ""))
+                  org-fontify-done-headline t
+                  org-fontify-quote-and-verse-blocks t
+                  org-fontify-whole-heading-line t
+                  org-hide-emphasis-markers t
+                  org-footnote-auto-label t
+                  org-hide-leading-stars t
+                  org-image-actual-width nil
+                  org-imenu-depth 6
+                  org-priority-faces
+                  '((?A . error)
+                    (?B . warning)
+                    (?C . success))
+                  org-startup-indented t
+                  org-startup-truncated nil
+                  org-startup-folded nil
+                  org-tags-column 0
+                  org-use-sub-superscripts '{}
+                  org-log-into-drawer t
+                  org-log-done 'time)
 
     (general-setq org-refile-targets
-          '((nil :maxlevel 3)
-            (org-agenda-files :maxlevel 3))
-          org-refile-use-outline-path 'file
-          org-outline-path-complete-in-steps nil)
+                  '((nil :maxlevel 3)
+                    (org-agenda-files :maxlevel 3))
+                  org-refile-use-outline-path 'file
+                  org-outline-path-complete-in-steps nil)
+
+    (advice-add 'org-refile :after 'org-save-all-org-buffers)
 
     (plist-put org-format-latex-options :scale 1.5)
 
@@ -194,7 +197,23 @@
       "TODO"
       :before-until #'org-eldoc-documentation-function
       (when-let (link (org-element-property :raw-link (org-element-context)))
-        (format "Link: %s" link))))
+        (format "Link: %s" link)))
+
+    (org-indent-mode)
+    (visual-line-mode 1)
+
+    ;; Font stuff
+    (variable-pitch-mode 1)
+
+    (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
+    (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
+    (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
+    (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-table nil    :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+    (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+    (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch))
 
   (defun org:setup-babel ()
     (general-setq org-src-preserve-indentation t
