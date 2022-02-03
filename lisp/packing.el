@@ -52,7 +52,7 @@
            (featurep 'native-compile))
   ;; We're going for distance, we're going for speed
   (setq-default
-   native-comp-compiler-options '("-O2" "-mtune=native" "-pipe")
+   native-comp-compiler-options '("-O2" "-mtune=native")
    native-comp-deferred-compilation nil   
    comp-deferred-compilation t
    comp-speed 2
@@ -169,7 +169,9 @@ do)."
 (use-package diminish)
 (use-package bind-key)
 (use-package general)
+
 (use-package ht) ;; <- this is needed in some places
+
 (use-package hydra
   :demand t
   :commands (hydra-move-splitter-up

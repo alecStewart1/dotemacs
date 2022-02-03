@@ -70,7 +70,7 @@
   (put 'downcase-region  'disabled nil)
   (put 'list-threads     'disabled nil)
 
-  (fset 'x-popup-menu #'ignore)
+  ;;(fset 'x-popup-menu #'ignore)
   (fset #'display-startup-echo-area-message #'ignore)
   (fset #'yes-or-no-p #'y-or-n-p)
   
@@ -242,7 +242,13 @@
           ns-use-native-fullscreen nil
           ns-pop-up-frames nil
           mac-redisplay-dont-reset-vscroll t
-          mac-mouse-wheel-smoothscroll nil)
+          mac-mouse-wheel-smoothscroll nil
+          mac-command-modifier      'super
+          ns-command-modifier       'super
+          mac-option-modifier       'meta
+          ns-option-modifier        'meta
+          mac-right-option-modifier 'none
+          ns-right-option-modifier  'none))
 
     (and (or (daemonp)
              (display-graphic-p))
@@ -383,8 +389,6 @@
 
 (use-package whitespace
   :ensure nil
-  ;; :hook ((find-file . whitespace-mode)
-  ;;        (dired-initial-position . whitespace-mode))
   :init
   (put 'whitespace-toggle-options 'disabled t)
   (put 'global-whitespace-toggle-options 'disabled t))

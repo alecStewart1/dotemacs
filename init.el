@@ -45,12 +45,12 @@
 ;;;; Dreaded garbage collection
 ;;;;
 
-(setq gc-cons-threshold (* 8 1024 1024)
+(setq gc-cons-threshold (* 10 1024 1024)
       gc-cons-percentage 0.5)
 (add-hook 'emacs-startup-hook
           (lambda ()
             "Recover GC values after startup."
-            (setq gc-cons-threshold 800000
+            (setq gc-cons-threshold (* 2 1024 1024)
                   gc-cons-percentage 0.1)))
 
 ;;;; Apparently this helps?
@@ -124,6 +124,7 @@
   (load custom-file 'noerror))
 
 ;;; Uh..this.
+;;;
 
 (setq load-prefer-newer noninteractive)
 

@@ -199,12 +199,7 @@
       (when-let (link (org-element-property :raw-link (org-element-context)))
         (format "Link: %s" link)))
 
-    (org-indent-mode)
-    (visual-line-mode 1)
-
     ;; Font stuff
-    (variable-pitch-mode 1)
-
     (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
     (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
     (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
@@ -597,6 +592,8 @@ Made for `org-tab-first-hook' in evil-mode."
   (add-hook! 'org-load-hook
              #'org:setup-dirs
              #'org:setup-appearance
+             #'org-indent-mode
+             #'visual-line-mode
              #'org:setup-agenda
              #'org:setup-attachments
              #'org:setup-babel
@@ -614,13 +611,16 @@ Made for `org-tab-first-hook' in evil-mode."
   (setq-mode-local org-mode
                    completion-at-point-functions cape:mega-writing-capf)
   (add-hook 'org-mode-local-vars-hook #'eldoc-mode)
-  (add-hook 'org-mode-hook #'orgtbl-mode)
 
   (mode-snippet oblock org-mode
     "Block type: "
     > "#+begin_" str " " @ _ ?\n
     > @ - ?\n
-    > "#+end_" str ?\n))
+    > "#+end_" str ?\n)
+
+  (mode-snippet ptodo org-mode
+    "Priority level [A-C]: "
+    "* TODO [#" str "] " @ -))
 
 (use-package org-crypt
   :ensure nil
@@ -705,29 +705,6 @@ Made for `org-tab-first-hook' in evil-mode."
   :mode ("\\.tex\\'" . LaTeX-mode)
   :hook ((LaTeX-mode . visual-line-mode)
          (LaTeX-mode . LaTeX-math-mode))
-  :config
-  ;; Fix #1849: allow fill-paragraph in itemize/enumerate
-  (defadvice latex:re-indent-itemize-and-enumerate
-      (around LaTeX-fill-region-as-para-do (fn &rest args) activate)
-    "TODO"
-    (let ((LaTeX-indent-environment-list
-           (append LaTeX-indent-environment-list
-                   '(("itemize"   +latex-indent-item-fn)
-                     ("enumerate" +latex-indent-item-fn)))))
-      (apply fn args)))
-
-  (defadvice latex:dont-indent-itemize-and-enumerate
-      (around LaTeX-fill-region-as-paragraph (fn &rest args) activate)
-    "TODO"
-    (let ((LaTeX-indent-environment-list LaTeX-indent-environment-list))
-      (delq! "itemize" LaTeX-indent-environment-list 'assoc)
-      (delq! "enumerate" LaTeX-indent-environment-list 'assoc)
-      (apply fn args)))
-
-  (setq-mode-local latex-mode
-                   company-backends '(company-capf
-                                      company-auctex-environments
-                                      compnay-auctex-macros))
   :custom
   (TeX-parse-self t) ; parse on load
   (TeX-auto-save t)  ; parse on save
@@ -750,7 +727,25 @@ Made for `org-tab-first-hook' in evil-mode."
                         LaTeX-section-section
                         LaTeX-section-label))
   (LaTeX-fill-break-at-separators nil)
-  (LaTeX-item-indent 0))
+  (LaTeX-item-indent 0)
+  :config
+  ;; Fix #1849: allow fill-paragraph in itemize/enumerate
+  (defadvice latex:re-indent-itemize-and-enumerate
+      (around LaTeX-fill-region-as-para-do (fn &rest args) activate)
+    "TODO"
+    (let ((LaTeX-indent-environment-list
+           (append LaTeX-indent-environment-list
+                   '(("itemize"   +latex-indent-item-fn)
+                     ("enumerate" +latex-indent-item-fn)))))
+      (apply fn args)))
+
+  (defadvice latex:dont-indent-itemize-and-enumerate
+      (around LaTeX-fill-region-as-paragraph (fn &rest args) activate)
+    "TODO"
+    (let ((LaTeX-indent-environment-list LaTeX-indent-environment-list))
+      (delq! "itemize" LaTeX-indent-environment-list 'assoc)
+      (delq! "enumerate" LaTeX-indent-environment-list 'assoc)
+      (apply fn args))))
 
 (use-package cdlatex
   :hook (LaTeX-mode . cdlatex-mode)
@@ -862,8 +857,6 @@ Made for `org-tab-first-hook' in evil-mode."
   :config
   (advice-add #'markdown-match-generic-metadata :override (lambda (&rest _)
                                                             (ignore (goto-char (point-max)))))
-  (sp-local-pair '(markdown-mode gfm-mode) "`" "`"
-                 :unless '(:add sp-point-before-word-p sp-point-before-same-p))
 
   ;; Don't trigger autofill in code blocks (see `auto-fill-mode')
   (setq-mode-local markdown-mode

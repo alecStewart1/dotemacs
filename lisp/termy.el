@@ -143,6 +143,16 @@ Once the eshell process is killed, the previous frame layout is restored."
         (eshell:run-command command buf)))
     buf))
 
+;;; Completion for EShell with Corfu + Cape
+;;;
+
+(defun eshell:setup-completion ()
+  "Setup completion for EShell with ‘corfu’ and ‘cape’."
+  (setq-mode-local eshell-mode
+                   corfu-auto nil
+                   corfu-quit-at-boundary t
+                   corfu-quit-no-match t))
+
 
 ;;; View eshell command histroy with Consult
 ;;;
@@ -246,6 +256,8 @@ Once the eshell process is killed, the previous frame layout is restored."
   (eshell-scroll-to-bottom-on-input 'all)
   (eshell-scroll-to-bottom-on-output 'all)
   (eshell-kill-processes-on-exit t)
+  (eshell-history-size 10000)
+  (eshell-buffer-maximum-lines 10000)
   (eshell-hist-ignoredups t)
   (eshell-input-filter (lambda (input) (not (string-match-p "\\`\\s-+" input))))
   (eshell-prompt-regexp "^.* ~> ")
@@ -256,12 +268,16 @@ Once the eshell process is killed, the previous frame layout is restored."
   (add-hook! 'eshell-mode-hook
     (lambda ()
       (set-window-fringes nil 0 0)
-      (set-window-margins nil 1 nil))
-    (lambda ()
+      (set-window-margins nil 1 nil)
       (visual-line-mode +1)
-      (set-display-table-slot standard-display-table 0 ?\ )))
+      (set-display-table-slot standard-display-table 0 ?\))))
 
-  (add-hook 'eshell-mode-hook #'smartparens-mode)
+  (setq-local corfu-auto nil
+              corfu-quit-at-boundary t
+              corfu-quit-no-match t)
+  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-silent)
+  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-purify)
+
   (add-hook 'eshell-mode-hook #'hide-mode-line-mode)
 
   (advice-add #'eshell-write-aliases-list :override #'ignore)

@@ -131,7 +131,6 @@
     (put-text-property start (point) 'face '(:underline nil))))
 
 (use-package elfeed
-  :defer t
   :commands elfeed
   :config
   (make-directory elfeed-db-directory t)
@@ -164,7 +163,7 @@
   (shr-max-image-proportion 0.8))
 
 (use-package elfeed-org
-  :after elfeed
+  :after (:all elfeed org)
   :preface
   (general-setq rmh-elfeed-org-files (list "elfeed.org"))
   :config

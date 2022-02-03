@@ -299,7 +299,7 @@ Run ‘magit-status’ on repo containing the embark target."
 (emacs:leader-def "b b" #'switch-to-buffer)
 (emacs:leader-def "b w" #'switch-to-buffer-other-window)
 (emacs:leader-def "b f" #'switch-to-buffer-other-frame)
-(emacs:leader-def "b i" #'ibufer)
+(emacs:leader-def "b i" #'ibuffer)
 
 ;;;;;;; Goto
 ;;;;;;;
@@ -439,75 +439,6 @@ Run ‘magit-status’ on repo containing the embark target."
      try-complete-file-name-partially
      try-complete-file-name)))
 
-;;;; Company
-;;;;
-;;;; TODO may still make use of but use with Cape
-;;;; https://github.com/minad/cape#company-adapter
-
-;;;;; Let’s first set ‘company-backends’
-;;;;;
-
-;; (setq-mode-local prog-mode
-;;                  company-backends '(company-capf
-;;                                     (company-dabbrev-code company-keywords company-files)
-;;                                     company-dabbrev))
-
-;; (use-package company
-;;   :diminish
-;;   :commands (company-complete-common
-;;              company-complete-common-or-cycle
-;;              company-manual-begin
-;;              company-grab-line
-;;              company-cancel)
-;;   :functions (company-dabbrev-ignore-case company-dabbrev-downcase)
-;;   :hook (pre-command . global-company-mode)
-;;   :preface
-;;   (put 'company-backends 'permanent-local-hook t)
-;;   :config
-;;   (add-hook 'global-company-mode-hook #'company-tng-mode)
-;;   (add-to-list 'company-frontends 'company-tng-frontend)
-
-;;   ;; TODO this breaks some other modes
-;;   (defadvice! saner-completion-styles-for-company-capf (orig-fn &rest args)
-;;     "Orderless doesn’t exactly make Company’s completion all
-;;    that sane. We simply change the ‘completion-styles’ to the
-;;   saner options."
-;;     :around #'company-capf
-;;     (let ((completion-styles '(basic partial-completion)))
-;;       (apply orig-fn args)))
-
-;;   ;;(add-hook 'after-change-major-mode-hook #'company--maybe-init-backend 'append)
-
-;;   (eval-after-load 'eldoc
-;;     (eldoc-add-command 'company-complete-selection
-;;                        'company-complete-common
-;;                        'company-capf
-;;                        'company-abort))
-;;   :custom
-;;   (company-minimum-prefix-length 1)
-;;   (company-idle-delay 0.2)
-;;   (company-idle-delay 0.2)
-;;   (company-echo-delay (if (display-graphic-p) nil 0))
-;;   (company-tooltip-idle-delay 0.2)
-;;   (company-tooltip-limit 14)
-;;   (company-tooltip-align-annotations t)
-;;   (company-require-match 'never)
-;;   (company-global-modes '(not erc-mode message-mode help-mode gud-mode vterm-mode))
-;;   (company-frontends '(company-pseudo-tooltip-frontend
-;;                        company-echo-metadata-frontend))
-;;   ;;(company-backends '(company-capf))
-;;   (company-auto-comit nil)
-;;   (company-dabbrev-other-buffers nil)
-;;   (company-dabbrev-ignore-case nil)
-;;   (company-dabbrev-downcase nil)
-;;   (company-dabbrev-minimum-length 2))
-
-;; (use-package company-dict
-;;   :defer t
-;;   :after company
-;;   :config
-;;   (setq company-dict-dir (expand-file-name "dicts" my-etc-dir)))
-
 ;;;; Corfu
 ;;;;
 
@@ -523,10 +454,11 @@ Run ‘magit-status’ on repo containing the embark target."
   :custom
   (corfu-cycle t)
   (corfu-auto t)
-  (corfu-auto-delay 0.05)
+  (corfu-auto-delay 0.25)
   (corfu-quit-no-match 0.5)
   (corfu-quit-at-boundary t)
   (corfu-preselect-first nil)
+  (corfu-preview-current t)
   (corfu-scroll-margin 6))
 
 ;;;; Cape
@@ -537,19 +469,21 @@ Run ‘magit-status’ on repo containing the embark target."
   :preface
   (defvar cape:mega-capf (list
                           (cape-capf-buster
-                           (cape-super-capf #'cape-dabbrev
-                                            #'cape-keyword
-                                            #'cape-symbol
-                                            #'cape-file)))
+                           (cape-super-capf
+                            #'cape-keyword
+                            #'cape-symbol
+                            #'cape-abbrev
+                            #'cape-dabbrev))
+                          #'cape-file)
     "A ‘cape-super-capf’ that’s similar to most simpler Company configurations.
 The defacto cape to use for coding when none is particularly available.")
 
   (defvar cape:mega-writing-capf (list
                                   (cape-capf-buster
-                                   (cape-super-capf #'cape-abbrev
+                                   (cape-super-capf #'cape-dict
+                                                    #'cape-abbrev
                                                     #'cape-dabbrev
-                                                    #'cape-ispell
-                                                    #'cape-dict)))
+                                                    #'cape-ispell)))
     "A ‘cape-super-capf’ for modes for writing.
 The defacto cape to use for writing when there is none available.")
   :custom

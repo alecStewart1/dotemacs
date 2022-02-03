@@ -205,6 +205,14 @@
   :config
   (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake))
 
+(use-package flycheck
+  :commands flycheck-list-errors flycheck-buffer
+  :hook (find-file . global-flycheck-mode)
+  :config
+  (setq flycheck-emacs-lisp-load-path 'inherit
+        flycheck-buffer-switch-check-intermediate-buffers t
+        flycheck-display-errors-delay 0.25))
+
 ;;;;; Uh...this thing
 ;;;;;
 
@@ -503,18 +511,7 @@ And if it's a function, evaluate it."
                                  (1 'sh-quoted-exec prepend))
                                 (,(regexp-opt sh-builtin-keywords 'symbols)
                                  (0 'font-lock-type-face append))))))
-  (add-hook 'sh-mode-hook #'rainbow-delimiters-mode)
-  (sp-local-pair 'sh-mode "`" "`" :unless '(sp-point-before-word-p sp-point-before-same-p)))
-
-(use-package company-shell
-  :after (company sh-script)
-  :config
-  (setq-mode-local sh-mode
-                   company-backends '(company-shell
-                                      company-capf
-                                      company-keywords
-                                      company-files))
-  (setq company-shell-delete-duplicates t))
+  (add-hook 'sh-mode-hook #'rainbow-delimiters-mode))
 
 (use-package fish-mode
   ;; :config
@@ -696,11 +693,12 @@ Also took this from Doom Emacs"
   (defvar cape:sly-cape (list
                          (cape-capf-buster
                           (cape-super-capf #'sly-complete-symbol
-                                           #'sly-complete-filename-maybe
-                                           #'cape-dabbrev
                                            #'cape-keyword
                                            #'cape-symbol
-                                           #'cape-file))))
+                                           #'cape-abbrev
+                                           #'cape-dabbrev))
+                         #'sly-complete-filename-maybe
+                         #'cape-file))
   :init
   (setq sly-contribs '(sly-fancy))
   ;;(add-hook 'lisp-mode-hook #'rainbow-delimiters-mode)
@@ -782,6 +780,17 @@ Also took this from Doom Emacs"
                    :prompt "Action: "
                    :require-match t
                    :sort nil))
+
+  ;; Completions
+  (advice-add #'sly-complete-symbol :around
+    (lambda (orig-fn)
+      (cape-wrap-properties orig-fn :exclusive 'no)))
+
+  (advice-add #'sly-complete-filename-maybe :around
+    (lambda (orig-fn)
+      (cape-wrap-properties orig-fn :exclusive 'no)))
+
+  (setq-local completion-at-point-functions cape:sly-cape)
   :custom
   (sly-mrepl-history-file-name (concat my-cache-dir "sly-mrepl-history"))
   (sly-net-coding-system 'utf-8-unix)
@@ -905,7 +914,6 @@ Also took this from Doom Emacs"
 ;;                   (bury-buffer buf)
 ;;                   buf)))))
 ;;   :config
-;;   (require 'smartparens-racket)
 ;;   (add-hook! 'racket-mode-hook
 ;;              #'rainbow-delimiters-mode
 ;;              #'highlight-quoted-mode)
@@ -931,7 +939,6 @@ Also took this from Doom Emacs"
   ;; Stolen from: https://github.com/dakra/dmacs/blob/master/init.org#java
   (defun java-lsp ()
     (setq electric-indent-inhibit nil)
-    (setq company-lsp-cache-candidates nil)
     (lsp-deferred))
   :custom
   (lsp-jt-root (concat lsp-java-server-install-dir "java-test/server/"))
@@ -949,8 +956,10 @@ Also took this from Doom Emacs"
      "-Xmx1G"
      "-XX:+UseG1GC"
      "-XX:+UseStringDeduplication"
-     ,(concat "-javaagent:" (expand-file-name "~/.m2/repository/org/projectlombok/lombok/1.18.22/lombok-1.18.22.jar"))
-     ,(concat "-Xbootclasspath/a:" (expand-file-name "~/.m2/repository/org/projectlombok/lombok/1.18.22/lombok-1.18.22.jar")))))
+     ,(concat "-javaagent:"
+              (expand-file-name "~/.m2/repository/org/projectlombok/lombok/1.18.22/lombok-1.18.22.jar"))
+     ,(concat "-Xbootclasspath/a:"
+              (expand-file-name "~/.m2/repository/org/projectlombok/lombok/1.18.22/lombok-1.18.22.jar")))))
 
 ;;;###autoload
 (defun java:run-test ()
@@ -1216,17 +1225,7 @@ nimsuggest isn't installed."
 
 (use-package elixir-mode
   :defer t
-  :init
-  (provide 'smartparens-elixir)
   :config
-  (sp-with-modes 'elixir-mode
-    (sp-local-pair "do" "end"
-                   :when '(("RET" "<evil-ret>"))
-                   :unless '(sp-in-comment-p sp-in-string-p)
-                   :post-handlers '("||\n[i]"))
-    (sp-local-pair "do " " end" :unless '(sp-in-comment-p sp-in-string-p))
-    (sp-local-pair "fn " " end" :unless '(sp-in-comment-p sp-in-string-p)))
-
   (when (package-installed-p 'lsp-mode)
     (add-hook 'elixir-mode-local-vars-hook #'lsp-deferred)
     (eval-after-load 'lsp-mode
@@ -1362,11 +1361,7 @@ nimsuggest isn't installed."
 ;;              (string= python-shell-interpreter "python"))
 ;;     (setq python-shell-interpreter "python3"))
 
-;;   (define-key python-mode-map (kbd "DEL") nil) ; interferes with smartparens
-;;   (sp-local-pair 'python-mode "'" nil
-;;                  :unless '(sp-point-before-word-p
-;;                            sp-point-after-word-p
-;;                            sp-point-before-same-p)))
+;;   (define-key python-mode-map (kbd "DEL") nil))
 
 ;; (use-package poetry
 ;;   :after python
@@ -1409,11 +1404,6 @@ nimsuggest isn't installed."
   :mode "\\.xaml\\'"
   :mode "\\.rss\\'"
   :magic "<\\?xml"
-  :config
-  (setq-mode-local nxml-mode
-                   company-backends '(company-nxml
-                                      company-capf
-                                      company-files))
   :custom
   (nxml-slash-auto-complete-flag t)
   (nxml-auto-insert-xml-declaration-flag t))
@@ -1440,7 +1430,11 @@ nimsuggest isn't installed."
   ;; `auto-mode-alist' rather than prepending it, its autoload will have
   ;; priority over this one.
   (add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode) 'append)
-
+  :custom
+  (web-mode-enable-html-entities-fontification t)
+  (web-mode-auto-close-style 1)
+  (web-mode-enable-auto-quoting nil)
+  (web-mode-enable-auto-pairing t)
   :config
   ;; 1. Remove web-mode auto pairs whose end pair starts with a latter
   ;;    (truncated autopairs like <?p and hp ?>). Smartparens handles these
@@ -1453,12 +1447,7 @@ nimsuggest isn't installed."
                      unless (string-match-p "^[a-z-]" (cdr pair))
                      collect (cons (car pair)
                                    (string-trim-right (cdr pair)
-                                                      "\\(?:>\\|]\\|}\\)+\\'")))))
-  :custom
-  (web-mode-enable-html-entities-fontification t)
-  (web-mode-auto-close-style 1)
-  (web-mode-enable-auto-quoting nil)
-  (web-mode-enable-auto-pairing t))
+                                                      "\\(?:>\\|]\\|}\\)+\\'"))))))
 
 (use-package emmet-mode
   :hook (css-mode web-mode html-mode haml-mode nxml-mode)
@@ -1480,8 +1469,6 @@ nimsuggest isn't installed."
                 (add-hook 'before-save-hook #'lsp-organize-imports t t)))
   (lsp-completion-mode . lsp:setup-completion)
   :preface
-  (defvar cape:lsp-capf )
-
   (defun lsp:orderless-dispatch-flex-1st (_pattern index _total)
     (and (eq index 0) 'orderless-flex))
 
@@ -1498,13 +1485,33 @@ nimsuggest isn't installed."
             nil
             'local)
 
+  ;; Make ‘lsp-completion-at-point’ nonexclusive
+  (advice-add #'lsp-completion-at-point :around
+    (lambda (orig-fn)
+      (cape-wrap-properties orig-fn :exclusive 'no)))
+
   (setq-local completion-at-point-functions (list
                                              (cape-capf-buster
-                                              (cape-super-capf #'lsp-completion-at-point
-                                                               #'cape-dabbrev
-                                                               #'cape-keyword
-                                                               #'cape-symbol
-                                                               #'cape-file))))
+                                              (cape-super-capf
+                                               #'lsp-completion-at-point
+                                               #'cape-keyword
+                                               #'cape-symbol
+                                               #'cape-abbrev
+                                               #'cape-dabbrev))
+                                             #'cape-file))
+  :custom
+  (lsp-completion-provider :none) ; we use Corfu instead
+  (lsp-keep-workspace-alive nil)
+  (lsp-intelephense-storage-path (concat my-cache-dir "lsp-intelephense/"))
+  (lsp-clients-emmy-lua-jar-path (concat lsp-server-install-dir "EmmyLua-LS-all.jar"))
+  (lsp-xml-jar-file              (concat lsp-server-install-dir "org.eclipse.lsp4xml-0.3.0-uber.jar"))
+  (lsp-groovy-server-file        (concat lsp-server-install-dir "groovy-language-server-all.jar"))
+  (lsp-clients-python-library-directories '("/usr/local/" "/usr/"))
+  (lsp-enable-folding nil)
+  (lsp-enable-text-document-color nil)
+  (lsp-enable-on-type-formatting nil)
+  (lsp-headerline-breadcrumb-enable nil)
+  (lsp-keymap-prefix nil)
   :config
   (defadvice! lsp:respect-user-defined-checkers (orig-fn &rest args)
     :around #'lsp-diagnostics-flycheck-enable
@@ -1544,29 +1551,7 @@ nimsuggest isn't installed."
       (when-let (path (buffer-file-name (buffer-base-buffer)))
         (if-let (root (lsp--calculate-root (lsp-session) path))
             (lsp--info "Guessed project root is %s" (abbreviate-file-name root))
-          (lsp--info "Could not guess project root.")))))
-
-  (add-hook! 'lsp-completion-mode-hook
-    (defun lsp:init-company-backends ()
-      "Remove redundant ‘company-capf’ in ‘lsp-company-backends’."
-      (when lsp-completion-mode
-        (set (make-local-variable 'company-backends)
-             (cons lsp-company-backends
-                   (remove lsp-company-backends
-                           (remq 'company-capf company-backends)))))))
-  :custom
-  (lsp-completion-provider :none) ; we use Corfu instead
-  (lsp-keep-workspace-alive nil)
-  (lsp-intelephense-storage-path (concat my-cache-dir "lsp-intelephense/"))
-  (lsp-clients-emmy-lua-jar-path (concat lsp-server-install-dir "EmmyLua-LS-all.jar"))
-  (lsp-xml-jar-file              (concat lsp-server-install-dir "org.eclipse.lsp4xml-0.3.0-uber.jar"))
-  (lsp-groovy-server-file        (concat lsp-server-install-dir "groovy-language-server-all.jar"))
-  (lsp-clients-python-library-directories '("/usr/local/" "/usr/"))
-  (lsp-enable-folding nil)
-  (lsp-enable-text-document-color nil)
-  (lsp-enable-on-type-formatting nil)
-  (lsp-headerline-breadcrumb-enable nil)
-  (lsp-keymap-prefix nil))
+          (lsp--info "Could not guess project root."))))))
 
 (use-package lsp-ui
   :custom
@@ -1589,13 +1574,13 @@ nimsuggest isn't installed."
   :init
   (with-eval-after-load 'lsp
     (require 'dap-mode))
+  :custom
+  (dap-breakpoints-file (concat my-etc-dir "dap-breakpoints"))
+  (dap-utils-extension-path (concat my-etc-dir "dap-extension/"))
   :config
   (require 'dap-ui)
   (add-hook 'dap-mode-hook #'dap-ui-mode)
   (add-hook 'dap-ui-mode-hook #'dap-ui-controls-mode)
-  :custom
-  (dap-breakpoints-file (concat my-etc-dir "dap-breakpoints"))
-  (dap-utils-extension-path (concat my-etc-dir "dap-extension/"))
   ;; :config
   ;; TODO maybe need to make use of `dap-register-debug-template'?
   ;; (eval-after-load 'nim-mode

@@ -336,15 +336,35 @@ see `snippets:global-snip'."
        (define-abbrev ,abbrev-table ,snip-name
          "" ',func-name :system t))))
 
-;; (define-abbrev emacs-lisp-mode-abbrev-table "defun" ""
-;;   'emacs-lisp-defun-skel)
+;;;;;; For moving around snippets
+;;;;;; From: https://www.emacswiki.org/emacs/SkeletonMode#h5o-15
 
-;; (define-skeleton emacs-lisp-defun-skel
-;;   "Create a emacs defun at point"
-;;   "Function name: "
-;;   > "(defun " str " ()" ?\n
-;;   > _ ?\n
-;;   > ")")
+(defvar snippet:marks nil)
+
+(add-hook 'skeleton-end-hook #'snippet:make-markers)
+
+(defun snippet:make-markers ()
+   ""
+   (while snippet:marks
+     (set-marker (pop snippet:marks) nil))
+   (setq snippet:marks
+         (mapcar 'copy-marker (reverse skeleton-positions))))
+
+(defun snippet:next-position (&optional r)
+  ""
+  (interactive "P")
+  (let ((positions (mapcar 'marker-position snippet:marks))
+        (positions (if r (reverse positions) positions))
+        (comp (if r '> '<))
+        pos)
+    (when positions
+      (if (catch 'break
+            (while (setq pos (pop positions))
+              (when (funcall comp (point) pos)
+                (throw 'break t))))
+          (goto-char pos)
+        (goto-char (marker-position
+                    (car snippet:marks)))))))
 
 ;;; Macros
 ;;;

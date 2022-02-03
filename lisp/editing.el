@@ -423,93 +423,13 @@
     (remove-hook 'text-mode-hook #'visual-line-mode)
     (add-hook 'text-mode-hook #'adaptive-wrap-prefix-mode)))
 
-;;;; Smartparens
+;;;; Puni
 ;;;;
 
-(use-package smartparens
-  :hook (find-file . smartparens-global-mode)
-  :commands sp-pair sp-local-pair sp-with-modes sp-point-in-comment sp-point-in-string
-  :custom
-  (sp-highlight-pair-overlay nil)
-  (sp-highlight-wrap-overlay nil)
-  (sp-highlight-wrap-tag-overlay nil)
-  (sp-max-prefix-length 25)
-  (sp-max-pair-length 4)
-  (sp-escape-quotes-after-insert nil)
-  :config
-  ;; smartparens recognizes `slime-mrepl-mode', but not `sly-mrepl-mode', so...
-  (add-to-list 'sp-lisp-modes 'sly-mrepl-mode)
-  ;; Load default smartparens rules for various languages
-  (require 'smartparens-config)
-  ;; Overlays are too distracting and not terribly helpful. show-parens does
-  ;; this for us already (and is faster), so...
-  (with-eval-after-load 'evil
-    ;; But if someone does want overlays enabled, evil users will be stricken
-    ;; with an off-by-one issue where smartparens assumes you're outside the
-    ;; pair when you're really at the last character in insert mode. We must
-    ;; correct this vile injustice.
-    (setq sp-show-pair-from-inside t)
-    ;; ...and stay highlighted until we've truly escaped the pair!
-    (setq sp-cancel-autoskip-on-backward-movement nil))
-
-  ;; Silence some harmless but annoying echo-area spam
-  (dolist (key '(:unmatched-expression :no-matching-tag))
-    (setf (alist-get key sp-message-alist) nil))
-
-  (add-hook! 'minibuffer-setup-hook
-    (defun smartparens:init-in-minibuffer-maybe? ()
-      "Enable `smartparens-mode' in the minibuffer, during `eval-expression',
-`pp-eval-expression' or `evil-ex'."
-      (and (memq this-command '(eval-expression pp-eval-expression evil-ex))
-           smartparens-global-mode
-           (smartparens-mode))))
-
-  ;; You're likely writing lisp in the minibuffer, therefore, disable these
-  ;; quote pairs, which lisps doesn't use for strings:
-  (sp-local-pair 'minibuffer-inactive-mode "'" nil :actions nil)
-  (sp-local-pair 'minibuffer-inactive-mode "`" nil :actions nil)
-
-  ;; Smartparens breaks evil-mode's replace state
-  ;;(defvar buffer-smartparens-mode nil)
-  ;; (add-hook! 'evil-replace-state-exit-hook
-  ;;   (defun smartparens:enable-maybe? ()
-  ;;     (when buffer-smartparens-mode
-  ;;       (turn-on-smartparens-mode)
-  ;;       (kill-local-variable 'buffer-smartparens-mode))))
-  ;; (add-hook! 'evil-replace-state-entry-hook
-  ;;   (defun smartparens:disable-maybe? ()
-  ;;     (when smartparens-mode
-  ;;       (setq-local buffer-smartparens-mode t)
-  ;;       (turn-off-smartparens-mode))))
-
-  ;; Autopair quotes more conservatively; if I'm next to a word/before another
-  ;; quote, I don't want to open a new pair or it would unbalance them.
-  (let ((unless-list '(sp-point-before-word-p
-                       sp-point-after-word-p
-                       sp-point-before-same-p)))
-    (sp-pair "'"  nil :unless unless-list)
-    (sp-pair "\"" nil :unless unless-list))
-
-  ;; Expand {|} => { | }
-  ;; Expand {|} => {
-  ;;   |
-  ;; }
-  (dolist (brace '("(" "{" "["))
-    (sp-pair brace nil
-             :post-handlers '(("||\n[i]" "RET") ("| " "SPC"))
-             ;; Don't autopair opening braces if before a word character or
-             ;; other opening brace. The rationale: it interferes with manual
-             ;; balancing of braces, and is odd form to have s-exps with no
-             ;; whitespace in between, e.g. ()()(). Insert whitespace if
-             ;; genuinely want to start a new form in the middle of a word.
-             :unless '(sp-point-before-word-p sp-point-before-same-p)))
-
-  ;; In lisps ( should open a new form if before another parenthesis
-  (sp-local-pair sp-lisp-modes "(" ")" :unless '(:rem sp-point-before-same-p))
-
-  ;; Don't do square-bracket space-expansion where it doesn't make sense to
-  (sp-local-pair '(emacs-lisp-mode org-mode markdown-mode gfm-mode)
-                 "[" nil :post-handlers '(:rem ("| " "SPC"))))
+(use-package puni
+  :defer t
+  :hook ((prog-mode sgml-mode nxml-mode eval-expression-minibuffer-setup)
+         . puni-mode))
 
 ;;;; WS-Butler
 ;;;;
