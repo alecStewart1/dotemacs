@@ -256,7 +256,7 @@ possible."
               flyspell-mode
               spell-fu-mode
               eldoc-mode
-              smartparens-mode
+              puni-mode
               highlight-numbers-mode
               better-jumper-local-mode
               ws-butler-mode
@@ -265,20 +265,6 @@ possible."
               undo-tree-mode
               highlight-indent-guides-mode
               hl-fill-column-mode)))
-
-;;;; Paren
-;;;;
-
-(use-package paren
-  :ensure nil
-  :hook (after-init . show-paren-mode)
-  :custom
-  ;;(blink-matching-paren t)
-  (show-paren-style t)
-  (show-paren-delay 0.03)
-  (show-paren-highlight-openparen t)
-  ;(show-paren-when-point-inside-paren t)
-  (show-paren-when-point-in-periphery nil))
 
 ;;;; Pulse
 ;;;;
@@ -363,7 +349,7 @@ possible."
 ;;   :ensure nil
 ;;   :diminish outline-minor-mode
 ;;   :hook (prog-mode . global-outline-minor-mode)
-;;   :init
+;;   :preface
 ;;   (define-global-minor-mode global-outline-minor-mode
 ;;     outline-minor-mode outline-minor-mode)
 ;;   :config

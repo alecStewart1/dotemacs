@@ -35,7 +35,7 @@
 
 ;;; Commentary:
 ;;
-;;
+;;  I took a lot of this from Doom Emacs.
 ;;
 ;;; Code:
 

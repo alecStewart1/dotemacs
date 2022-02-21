@@ -248,7 +248,7 @@
           mac-option-modifier       'meta
           ns-option-modifier        'meta
           mac-right-option-modifier 'none
-          ns-right-option-modifier  'none))
+          ns-right-option-modifier  'none)
 
     (and (or (daemonp)
              (display-graphic-p))

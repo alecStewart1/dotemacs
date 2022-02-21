@@ -267,7 +267,7 @@ Run ‘magit-status’ on repo containing the embark target."
   (consult-customize
    consult-ripgrep consult-git-grep consult-grep
    consult-bookmark consult-recent-file consult-xref
-   consult--source-file consult--source-project-file consult--source-bookmark
+   consult--source-recent-file consult--source-project-recent-file consult--source-bookmark
    :preview-key (list (kbd "C-SPC") (kbd "M-.")))
 
   (consult-customize

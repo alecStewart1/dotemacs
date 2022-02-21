@@ -329,7 +329,7 @@ Once the eshell process is killed, the previous frame layout is restored."
       ("rg" "rg --color=always $*")
       ("l"  "ls -lh $*")
       ("ll" "ls -lah $*")
-      ("la" "ls -aAFh $*")
+      ("la" "ls -laAFh $*")
       (".." "cd ..")
       ("cdp" "cd-to-project")
       ("mkdir" "mkdir -p $*")
