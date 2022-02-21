@@ -428,7 +428,7 @@
 
 (use-package puni
   :defer t
-  :hook ((prog-mode sgml-mode nxml-mode eval-expression-minibuffer-setup)
+  :hook ((prog-mode lisp-mode emacs-lisp-mode sgml-mode nxml-mode eval-expression-minibuffer-setup)
          . puni-mode))
 
 ;;;; WS-Butler

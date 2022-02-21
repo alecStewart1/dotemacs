@@ -26,6 +26,7 @@ semanticdb
 forge-database.sqlite
 eshell/
 server/
+emms/
 smex-items
 tramp
 var/

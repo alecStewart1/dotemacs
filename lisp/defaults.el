@@ -94,6 +94,7 @@
   ;; Scrolling
   (hscroll-margin 1)
   (hscroll-step 1)
+  (scroll-step 1)
   (scroll-conservatively 10000)
   (scroll-up-aggressively  0.01)
   (scroll-down-aggressively 0.01)
@@ -207,6 +208,13 @@
   (setq abbrev-file-name (concat my-local-dir "abbrev.el")
         save-abbrevs     'silent) ; God, stop asking.
 
+  ;; Nicer scrolling
+  (when emacs29-p
+    (pixel-scroll-precision-mode +1)
+    (setq pixel-scroll-precision-large-scroll-height 40.0
+          pixel-scroll-precision-interpolation-factor 30
+          pixel-scroll-precision-use-momentum t))
+
   ;; Don’t let the mouse clash with the cursor.
   (mouse-avoidance-mode 'exile)
 
@@ -248,7 +256,9 @@
           mac-option-modifier       'meta
           ns-option-modifier        'meta
           mac-right-option-modifier 'none
-          ns-right-option-modifier  'none)
+          ns-right-option-modifier  'none
+          exec-path (append exec-path '("/usr/local/bin")))
+    (setenv "PATH" (concat (getenv "PATH") ":/usr/local/bin"))
 
     (and (or (daemonp)
              (display-graphic-p))

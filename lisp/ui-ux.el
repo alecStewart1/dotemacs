@@ -225,7 +225,7 @@ possible."
 
 (use-package so-long
   :ensure nil
-  :diminish
+  :delight
   :hook ((find-file . global-so-long-mode)
          (dired-initial-position . global-so-long-mode)
          (org-mode . so-long-minor-mode)
@@ -410,12 +410,7 @@ possible."
 
 ;;;; Modeline
 
-;(use-package nano-modeline
-  ;:diminish nano-modeline-mode
-  ;:init
-  ;(nano-modeline-mode)
-  ;:custom
-  ;(nano-modeline-position 'bottom))
+(setq mode-line-format nil) ;; for now, I don’t need to use it.
 
 (use-package hide-mode-line
   :hook (completion-list-mode . hide-mode-line-mode))

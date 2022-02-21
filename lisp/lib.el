@@ -39,7 +39,6 @@
 ;;
 ;;; Code:
 
-;;(require 'dash)
 (require 'abbrev)
 
 ;;; Useful variables and constants
@@ -75,9 +74,9 @@
 ;;;###autoload
 (defconst my-default-variable-font "IBM Plex Sans")
 ;;;###autoload
-(defconst my-default-font-size 100)
+(defconst my-default-font-size (if macos-p 110 100))
 ;;;###autoload
-(defconst my-default-variable-font-size 100)
+(defconst my-default-variable-font-size (if macos-p 110 100))
 
 ;;;; Emacs directory stuff to keep ‘user-emacs-directory’ clean
 ;;;;
@@ -104,11 +103,6 @@
   (general-create-definer emacs:leader-def
     :prefix "C-c"
     :keymap 'ctrl-c-map))
-
-;;; Errors
-
-;(define-error 'my-config-error "Error with my config")
-;(define-error 'my-hook-error "An error with a hook of mine" 'my-config-error)
 
 ;;; Functions
 ;;;
