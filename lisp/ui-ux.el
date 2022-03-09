@@ -403,14 +403,14 @@ possible."
 ;;;;
 ;;;; I hate this
 
+(setq-default mode-line-format '((vc-mode vc-mode) " %b " " %n " " %f:%+ " " %l "))
+
 (use-package hl-line
   :ensure nil
   :disabled t
   :commands hl-line-mode global-hl-line-mode)
 
 ;;;; Modeline
-
-(setq mode-line-format nil) ;; for now, I don’t need to use it.
 
 (use-package hide-mode-line
   :hook (completion-list-mode . hide-mode-line-mode))
@@ -593,6 +593,44 @@ possible."
                    ("^\\*git-gutter.+\\*$"             :regexp t :size 15 :noselect t)))
   (shackle-select-reused-windows t))
 
+;;;; Treemacs
+;;;;
+
+(use-package treemacs
+  :defer t
+  :init
+  (setq treemacs-follow-after-init t
+        treemacs-is-never-other-window t
+        treemacs-sorting 'alphabetic-case-insensitive
+        treemacs-persist-file (concat my-cache-dir "treemacs-persist")
+        treemacs-last-error-persist-file (concat my-cache-dir
+                                                 "treemacs-last-error-persist"))
+  :config
+  (treemacs-follow-mode -1))
+
+(use-package treemacs-projectile
+  :after treemacs)
+
+(use-package treemacs-magit
+  :after treemacs magit)
+
+(use-package lsp-treemacs
+  :after (treemacs lsp))
+
+;;;; Minimap
+;;;;
+
+(use-package demap
+  :preface
+  (defun demap:track-window-update ()
+    "Keep the minimap tracking the windows in the current frame."
+    (and (demap-track-w-mode-update-p-func-default)
+         (get-buffer-window)))
+  :custom
+  (demap-minimap-window-side 'right)
+  (demap-minimap-window-width 15)
+  (demap-track-window-mode-update-p-func #'demap:track-window-update))
+
 ;;;; Themes
 ;;;;
 
@@ -608,12 +646,15 @@ possible."
 ;;;;;
 
 (use-package doom-themes
-  :hook (org-load-hook . doom-themes-org-config))
+  :hook (org-load-hook . doom-themes-org-config)
+  :config
+  (load-theme 'doom-gruvbox t))
 
 (use-package nano-theme
   ;:hook (after-init . nano-dark)
-  :config
-  (load-theme 'nano-dark t))
+  ;;:config
+  ;;(load-theme 'nano-dark t)
+  )
 
 (provide 'ui-ux)
 ;;; ui-ux.el ends here

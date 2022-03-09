@@ -95,6 +95,7 @@
   (hscroll-margin 1)
   (hscroll-step 1)
   (scroll-step 1)
+  (redisplay-dont-pause t)
   (scroll-conservatively 10000)
   (scroll-up-aggressively  0.01)
   (scroll-down-aggressively 0.01)
@@ -102,6 +103,7 @@
   (auto-window-vscroll nil)
   (scroll-margin 0)
   (scroll-preserve-screen-position t)
+  (jit-lock-defer-time 0)
 
   ;; Cursor and Mouse
   (visible-cursor nil)

@@ -74,9 +74,9 @@
 ;;;###autoload
 (defconst my-default-variable-font "IBM Plex Sans")
 ;;;###autoload
-(defconst my-default-font-size (if macos-p 110 100))
+(defconst my-default-font-size (if macos-p 120 100))
 ;;;###autoload
-(defconst my-default-variable-font-size (if macos-p 110 100))
+(defconst my-default-variable-font-size (if macos-p 120 100))
 
 ;;;; Emacs directory stuff to keep ‘user-emacs-directory’ clean
 ;;;;
