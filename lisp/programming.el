@@ -596,8 +596,8 @@ Also took this from Doom Emacs"
   (put 'plist-put    'lisp-indent-function 2)
 
   (mode-snippet defun emacs-lisp-mode
-    "Function name: "
-    > "(defun " str " (" @ - ")" ?\n
+    nil
+    > "(defun " @ - " (" @ _ ")" ?\n
     > "\"" @ _ "\"" ?\n
     > @ _ ")" ?\n)
 
@@ -1595,7 +1595,7 @@ nimsuggest isn't installed."
   (add-hook 'dockerfile-mode-local-vars-hook #'lsp-deferred))
 
 (use-package docker
-  :bind ("C-c d" . docker))
+  :defer t)
 
 (provide 'programming)
 ;;; programming.el ends here

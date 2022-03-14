@@ -44,38 +44,6 @@
 (require 'ui-ux)
 (require 'general)
 
-;;; Useful advice
-;;;
-;;; Some pulled from this thread:
-;;; https://old.reddit.com/r/emacs/comments/rlli0u/whats_your_favorite_defadvice/
-
-(define-advice kill-ring-save (:before (&rest _) copy-line-dwim)
-  "Copy single line when there is no region active."
-  (interactive
-   (if mark-active (list (region-beginning) (region-end))
-     (message "Single line copied")
-     (list (line-beginning-position)
-           (line-beginning-position 2)))))
-
-(define-advice kill-region (:before (&rest _) kill-line-dwin)
-  "Kill single line when there is no region active."
-  (interactive
-   (if mark-active (list (region-beginning) (region-end))
-     (list (line-beginning-position)
-           (line-beginning-position 2)))))
-
-(defadvice backward-kill-word (around delete-pair activate)
-  (if (eq (char-syntax (char-before)) ?\()
-      (progn
-        (backward-char 1)
-        (save-excursion
-          (forward-sexp 1)
-          (delete-char -1))
-        (forward-char 1)
-        (append-next-kill)
-        (kill-backward-chars 1))
-    ad-do-it))
-
 ;;; Some variables we'll use later
 ;;;
 
@@ -83,6 +51,14 @@
   '(fundamental-mode pascal-mode so-long-mode))
 
 (defvar-local editing:inhibit-indent-detection nil)
+
+;;; Keys
+;;;
+
+
+(keymap-global-unset "C-o")
+(keymap-global-set "C-o" #'smart-open-line)
+(keymap-global-set "C-S-o" #'smart-open-line-above)
 
 ;;; Packages
 ;;;
@@ -429,7 +405,10 @@
 (use-package puni
   :defer t
   :hook ((prog-mode lisp-mode emacs-lisp-mode sgml-mode nxml-mode eval-expression-minibuffer-setup)
-         . puni-mode))
+         . puni-mode)
+  :config
+  (keymap-unset puni-mode-map "C-d")
+  (keymap-unset puni-mode-map "C-w"))
 
 ;;;; WS-Butler
 ;;;;

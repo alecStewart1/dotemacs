@@ -565,7 +565,6 @@ possible."
                    ("^\\*Ibuffer\\*$"                 :regexp t :ignore t)
                    ("^\\*image-dired"                 :regexp t :size 0.8 :select t)
                    ("^\\*F\\(?:d\\|ind\\)\\*$"        :regexp t :ignore t)
-                   ("*Org Links*"                     :select nil :size 0.2)
                    ("^ ?\\*\\(?:Agenda Com\\|Calendar\\|Org Export Dispatcher\\)"
                     :regexp t :align 'bottom :size 0.25)
                    ("^\\*Org \\(?:Select\\|Attach\\)" :regexp t :align 'bottom :size 0.25)
@@ -620,16 +619,17 @@ possible."
 ;;;; Minimap
 ;;;;
 
-(use-package demap
-  :preface
-  (defun demap:track-window-update ()
-    "Keep the minimap tracking the windows in the current frame."
-    (and (demap-track-w-mode-update-p-func-default)
-         (get-buffer-window)))
-  :custom
-  (demap-minimap-window-side 'right)
-  (demap-minimap-window-width 15)
-  (demap-track-window-mode-update-p-func #'demap:track-window-update))
+;; (use-package demap
+;;   :defer t
+;;   :preface
+;;   (defun demap:track-window-update ()
+;;     "Keep the minimap tracking the windows in the current frame."
+;;     (and (demap-track-w-mode-update-p-func-default)
+;;          (get-buffer-window)))
+;;   :custom
+;;   (demap-minimap-window-side 'right)
+;;   (demap-minimap-window-width 15)
+;;   (demap-track-window-mode-update-p-func #'demap:track-window-update))
 
 ;;;; Themes
 ;;;;

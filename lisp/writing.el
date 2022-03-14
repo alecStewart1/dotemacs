@@ -199,6 +199,10 @@
       (when-let (link (org-element-property :raw-link (org-element-context)))
         (format "Link: %s" link)))
 
+    (add-to-list 'display-buffer-alist '("^\\*Org-Links*\\*$"
+                                         (display-buffer-no-window)
+                                         (allow-no-window . t)))
+
     ;; Font stuff
     (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
     (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)

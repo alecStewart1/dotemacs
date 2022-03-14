@@ -9,6 +9,7 @@ My personal Emacs setup.
 - [[https://github.com/angrybacon/dotemacs][AngryBacon's Emacs Configuration]]
 - [[https://svn.red-bean.com/repos/kfogel/trunk/.emacs][kfogel's .emacs]]
 - [[https://github.com/daviwil/emacs-from-scratch][System Crafters' Emacs From Scratch]]
+- [[https://github.com/oantolin/emacs-config][Omar Antolín Camarena's Emacs Config]]
 - [[https://github.com/alphapapa/unpackaged.el][alphapapa's unpackaged.el]]
 
 * My Thought Process

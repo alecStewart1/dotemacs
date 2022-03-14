@@ -151,7 +151,7 @@
   (sentence-end-double-space nil)
 
   ;; Fill and wrap
-  (fill-column 80)
+  (fill-column 100)
   (word-wrap t)
   (adaptive-fill-regexp "[ t]+|[ t]*([0-9]+.|*+)[ t]*")
   (adaptive-fill-first-line-regexp "^* *$")
@@ -347,11 +347,14 @@
   :ensure nil
   :init
   ;; Leave me alone
-  (add-to-list 'display-buffer-alist '("^\\*Warnings\\*$" (display-buffer-no-window)
+  (add-to-list 'display-buffer-alist '("^\\*Warnings\\*$"
+                                       (display-buffer-no-window)
                                        (allow-no-window . t)))
-  (add-to-list 'display-buffer-alist '("^\\*Compile-log\\*$" (display-buffer-no-window)
+  (add-to-list 'display-buffer-alist '("^\\*Compile-log\\*$"
+                                       (display-buffer-no-window)
                                        (allow-no-window . t)))
-  (add-to-list 'display-buffer-alist '("^\\*Flycheck errors\\*$" (display-buffer-no-window)
+  (add-to-list 'display-buffer-alist '("^\\*Flycheck errors\\*$"
+                                       (display-buffer-no-window)
                                        (allow-no-window . t)))
   :custom
   (pop-up-windows nil)

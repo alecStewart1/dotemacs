@@ -62,7 +62,7 @@
   :init
   (setq orderless-matching-styles
         '(orderless-literal orderless-initialism orderless-prefixes)
-        orderless-component-separator 'orderless-escapable-split-on-space
+        orderless-component-separator #'orderless-escapable-split-on-space
         completion-styles '(orderless)
         completion-category-defaults nil
         completion-category-overrides
@@ -124,7 +124,7 @@
 (defvar vertico:find-file-in--history nil)
 ;;;###autoload
 (defun vertico:find-file-in (&optional dir initial)
-    "Jump to file under DIR (recursive).
+  "Jump to file under DIR (recursive).
 If INITIAL is non-nil, use as initial input."
   (interactive)
   (require 'consult)
@@ -169,9 +169,9 @@ Run ‘magit-status’ on repo containing the embark target."
   :init
   ;; these can be annoying so we disable the help at startup
   (advice-add #'vertico--setup :after
-              (lambda (&rest _)
-                (setq-local completion-auto-help nil
-                            completion-show-inline-help nil)))
+    (lambda (&rest _)
+      (setq-local completion-auto-help nil
+                  completion-show-inline-help nil)))
   :custom
   (vertico-resize nil)
   (vertico-count 16)
@@ -347,7 +347,7 @@ Run ‘magit-status’ on repo containing the embark target."
 
 (use-package marginalia
   :bind (:map minibuffer-local-map
-              ("M-A" . marginalia-cycle))
+         ("M-A" . marginalia-cycle))
   :init
   (marginalia-mode)
   :config
@@ -383,7 +383,7 @@ Run ‘magit-status’ on repo containing the embark target."
       (fit-window-to-buffer (get-buffer-window)
                             (floor (frame-height) 2) 1)))
 
-  ;(set-face-attribute 'embark-verbose-indicator-title nil :height 1.0)
+                                        ;(set-face-attribute 'embark-verbose-indicator-title nil :height 1.0)
   :config
   (setq embark-indicator '(embark-highlight-indicator
                            embark-isearch-highlight-indicator
@@ -450,17 +450,29 @@ Run ‘magit-status’ on repo containing the embark target."
          ("C-n" . corfu-next)
          ("S-TAB" . corfu-previous)
          ([backtab] . corfu-previous)
-         ("C-p" . corfu-previous))
+         ("C-p" . corfu-previous)
+         ("SPC" . corfu-insert-separator)
+         ([space] . corfu-insert-separator))
+  :preface
+  (defun corfu:in-minibuffer ()
+    ""
+    (unless (or (bound-and-true-p mct--active)
+                (bound-and-true-p vertico--input))
+      (setq-local corfu-auto nil)
+      (corfu-mode +1)))
   :custom
   (corfu-cycle t)
   (corfu-auto t)
-  (corfu-auto-delay 0.25)
-  (corfu-quit-no-match 0.5)
   (corfu-separator ?\s)
-  (corfu-quit-at-boundary t)
   (corfu-preselect-first nil)
-  (corfu-preview-current t)
-  (corfu-scroll-margin 6))
+  (corfu-preview-current 'insert)
+  (corfu-auto-delay 0.25)
+  (corfu-quit-no-match 'separator)
+  (corfu-quit-at-boundary 'separator)
+  (corfu-scroll-margin 6)
+  (corfu-echo-documentation t)
+  :config
+  (add-hook 'minibuffer-setup-hook #'corfu:in-minibuffer 1))
 
 ;;;; Cape
 ;;;;

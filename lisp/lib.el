@@ -193,7 +193,6 @@ scratch buffer. See `fallback-buffer-name' to change this."
             else collect (intern (format "%s-hook" (symbol-name hook)))))))
 
 (defun setq-hook--fns (hooks rest &optional singles)
-  (cl-declare (optimize (speed 3) (safety 3)))
   (unless (or singles (= 0 (% (length rest) 2)))
     (signal 'wrong-number-of-arguments (list #'evenp (length rest))))
   (loop with vars = (let ((args rest)
@@ -255,6 +254,94 @@ Returns the last file found to meet the rules set by FILES, which can be a
 single file or nested compound statement of `and' and `or' statements."
   `(let ((p ,(resolve-file-path-forms files directory)))
      (and p (expand-file-name p ,directory))))
+
+;;;; Editing
+;;;;
+
+;;;;; Useful advice and functions
+;;;;;
+;;;;; Some pulled from this thread:
+;;;;; https://old.reddit.com/r/emacs/comments/rlli0u/whats_your_favorite_defadvice/
+;;;;; Some from this package:
+;;;;; https://github.com/bbatsov/crux
+
+(define-advice kill-ring-save (:before (&rest _) copy-line-dwim)
+  "Copy single line when there is no region active."
+  (interactive
+   (if mark-active (list (region-beginning) (region-end))
+     (message "Single line copied")
+     (list (line-beginning-position)
+           (line-beginning-position 2)))))
+
+(define-advice kill-region (:before (&rest _) kill-line-dwin)
+  "Kill single line when there is no region active."
+  (interactive
+   (if mark-active (list (region-beginning) (region-end))
+     (list (line-beginning-position)
+           (line-beginning-position 2)))))
+
+(defadvice backward-kill-word (around delete-pair activate)
+  (if (eq (char-syntax (char-before)) ?\()
+      (progn
+        (backward-char 1)
+        (save-excursion
+          (forward-sexp 1)
+          (delete-char -1))
+        (forward-char 1)
+        (append-next-kill)
+        (kill-backward-chars 1))
+    ad-do-it))
+
+
+;;;###autoload
+(defvar line-start-regex-alist
+  '((org-mode . "^\\(\*\\|[[:space:]]*\\)* ")
+    (default . "^[[:space:]]*")))
+
+;;;###autoload
+(defun move-to-mode-line-start ()
+  "Move to the beginning, skipping mode specific line start regex."
+  (interactive)
+  (if line-move-visual
+      (beginning-of-visual-line nil)
+    (move-beginning-of-line nil))
+  (let ((line-start-regex (cdr (seq-find
+                                (lambda (e) (derived-mode-p (car e)))
+                                line-start-regex-alist
+                                (assoc 'default line-start-regex-alist)))))
+    (search-forward-regexp line-start-regex (line-end-position) t)))
+
+;;;###autoload
+(defun smart-open-line-above ()
+  "Insert an empty line above the current line.
+Position the cursor at its beginning, according to the current mode."
+  (interactive)
+  (move-beginning-of-line nil)
+  (insert "\n")
+  (if electric-indent-inhibit
+      ;; We can't use `indent-according-to-mode' in languages like Python,
+      ;; as there are multiple possible indentations with different meanings.
+      (let* ((indent-end (progn (move-to-mode-line-start) (point)))
+             (indent-start (progn (move-beginning-of-line nil) (point)))
+             (indent-chars (buffer-substring indent-start indent-end)))
+        (forward-line -1)
+        ;; This new line should be indented with the same characters as
+        ;; the current line.
+        (insert indent-chars))
+    ;; Just use the current major-mode's indent facility.
+    (forward-line -1)
+    (indent-according-to-mode)))
+
+;;;###autoload
+(defun smart-open-line (arg)
+  "Insert an empty line after the current line.
+Position the cursor at its beginning, according to the current mode.
+With a prefix ARG open line above the current line."
+  (interactive "P")
+  (if arg
+      (smart-open-line-above)
+    (move-end-of-line nil)
+    (newline-and-indent)))
 
 ;;;; Stuff for certain packages that a lot of configurations need
 ;;;;
@@ -338,18 +425,36 @@ see `snippets:global-snip'."
 (add-hook 'skeleton-end-hook #'snippet:make-markers)
 
 (defun snippet:make-markers ()
-   ""
+   "Create markers from points inside of ‘skeleton-positions’."
    (while snippet:marks
      (set-marker (pop snippet:marks) nil))
    (setq snippet:marks
          (mapcar 'copy-marker (reverse skeleton-positions))))
 
-(defun snippet:next-position (&optional r)
-  ""
+;;;###autoload
+(defun snippet:next-position ()
+  "Goto the next skeleton position in ‘snippet:marks’.
+These positions are denoted as ’@ _’ in Skeleton’s template language."
   (interactive "P")
-  (let ((positions (mapcar 'marker-position snippet:marks))
-        (positions (if r (reverse positions) positions))
-        (comp (if r '> '<))
+  (let* ((positions (mapcar 'marker-position snippet:marks))
+         (comp '<)
+        pos)
+    (when positions
+      (if (catch 'break
+            (while (setq pos (pop positions))
+              (when (funcall comp (point) pos)
+                (throw 'break t))))
+          (goto-char pos)
+        (goto-char (marker-position
+                    (car snippet:marks)))))))
+
+;;;###autoload
+(defun snippet:prev-position ()
+    "Goto the previous skeleton position in ‘snippet:marks’.
+These positions are denoted as ’@ _’ in Skeleton’s template language."
+  (interactive "P")
+  (let* ((positions (reverse (mapcar 'marker-position snippet:marks)))
+         (comp '>)
         pos)
     (when positions
       (if (catch 'break

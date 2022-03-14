@@ -132,6 +132,12 @@
 
 (use-package elfeed
   :commands elfeed
+  :custom
+  (elfeed-db-directory (concat my-local-dir "elfeed/db/"))
+  (elfeed-enclosure-default-dir (concat my-local-dir "elfeed/enclosures/"))
+  (elfeed-search-filter "@2-week-ago ")
+  (elfeed-show-entry-switch #'pop-to-buffer)
+  (shr-max-image-proportion 0.8)
   :config
   (make-directory elfeed-db-directory t)
 
@@ -141,7 +147,8 @@
 
   (setq-mode-local elfeed-show-mode
                    shr-put-image-function #'elfeed:put-sliced-image
-                   shr-external-rendering-functions '((img . elfeed:render-image-tag-without-underline)))
+                   shr-external-rendering-functions
+                   '((img . elfeed:render-image-tag-without-underline)))
 
   (setq elfeed-feeds '(("https://archlinux.org/feeds/news/" news arch)
                        ("https://planet.gentoo.org/universe/rss20.xml" news gentoo)
@@ -155,12 +162,23 @@
                        ("https://sachachua.com/blog/category/emacs/feed/" blog emacs)
                        ("https://with-emacs.com/rss.xml" blog emacs)
                        ("https://blog.jetbrains.com/category/how-tos/" blog jetbrains)))
-  :custom
-  (elfeed-db-directory (concat my-local-dir "elfeed/db/"))
-  (elfeed-enclosure-default-dir (concat my-local-dir "elfeed/enclosures/"))
-  (elfeed-search-filter "@2-week-ago ")
-  (elfeed-show-entry-switch #'pop-to-buffer)
-  (shr-max-image-proportion 0.8))
+
+  (defun embark-elfeed-target-url ()
+  "Target the URL of the elfeed entry at point."
+  (when-let (((derived-mode-p 'elfeed-search-mode))
+             (entry (elfeed-search-selected :ignore-region))
+             (url (elfeed-entry-link entry)))
+    `(url ,url ,(line-beginning-position) . ,(line-end-position))))
+
+  (defun embark-elfeed-url-candidates ()
+    "Target the URLs of the selected elfeed entries."
+    (when-let (((derived-mode-p 'elfeed-search-mode))
+               (entries (elfeed-search-selected))
+               (urls (mapcar #'elfeed-entry-link entries)))
+      (cons 'url urls)))
+
+  (add-to-list 'embark-target-finders #'embark-elfeed-target-url)
+  (add-to-list 'embark-candidate-collectors #'embark-elfeed-url-candidates))
 
 (use-package elfeed-org
   :after (:all elfeed org)
