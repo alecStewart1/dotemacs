@@ -429,20 +429,19 @@ see `snippets:global-snip'."
    (while snippet:marks
      (set-marker (pop snippet:marks) nil))
    (setq snippet:marks
-         (mapcar 'copy-marker (reverse skeleton-positions))))
+         (mapcar #'copy-marker (reverse skeleton-positions))))
 
 ;;;###autoload
 (defun snippet:next-position ()
   "Goto the next skeleton position in ‘snippet:marks’.
 These positions are denoted as ’@ _’ in Skeleton’s template language."
-  (interactive "P")
-  (let* ((positions (mapcar 'marker-position snippet:marks))
-         (comp '<)
+  (interactive "p")
+  (let ((positions (mapcar #'marker-position snippet:marks))
         pos)
     (when positions
       (if (catch 'break
             (while (setq pos (pop positions))
-              (when (funcall comp (point) pos)
+              (when (< (point) pos)
                 (throw 'break t))))
           (goto-char pos)
         (goto-char (marker-position
@@ -450,16 +449,15 @@ These positions are denoted as ’@ _’ in Skeleton’s template language."
 
 ;;;###autoload
 (defun snippet:prev-position ()
-    "Goto the previous skeleton position in ‘snippet:marks’.
+  "Goto the previous skeleton position in ‘snippet:marks’.
 These positions are denoted as ’@ _’ in Skeleton’s template language."
-  (interactive "P")
-  (let* ((positions (reverse (mapcar 'marker-position snippet:marks)))
-         (comp '>)
+  (interactive "p")
+  (let ((positions (reverse (mapcar 'marker-position snippet:marks)))
         pos)
     (when positions
       (if (catch 'break
             (while (setq pos (pop positions))
-              (when (funcall comp (point) pos)
+              (when (> (point) pos)
                 (throw 'break t))))
           (goto-char pos)
         (goto-char (marker-position
