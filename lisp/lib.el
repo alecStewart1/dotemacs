@@ -371,9 +371,12 @@ SKELETON must be a body that is valid to `Skeleton''s internal language.
 
 This macro makes use of `define-skeleton' and `define-abbrev' in order to
 create something similar to a code/writing snippet system, like that of
-`YASnippet'. Keep in mind that all abbreviations created are put in the
-`global-abbrev-table' under the named passed to this macro. That may or
-may not be something you want, depending on your uses.
+`YASnippet'.
+
+Keep in mind that all abbreviations created are put in the
+`global-abbrev-table' under the named passed to this macro.
+
+That may or may not be something you want, depending on your uses.
 If you're looking to only define an abbrev for a specific mode, see
 `mode-snippet’."
   (declare (debug t)
@@ -392,7 +395,9 @@ If you're looking to only define an abbrev for a specific mode, see
   "Create a MODES specific \"snippet\" with NAME and SKELETON.
 NAME must be valid in the Emacs Lisp naming convention.
 
-MODE must be a valid major or minor mode that
+MODE must be a valid major or minor mode that is known to Emacs.
+
+Example: ‘org-mode’, ‘emacs-lisp-mode’, etc.
 
 SKELETON must be a body that is valid to `Skeleton''s internal language.
 This macro makes use of `define-skeleton' and `define-abbrev' in order to
@@ -400,9 +405,12 @@ create something similar to a code/writing snippet system, like that of
 `YASnippet'.
 
 Keep in mind that all abbreviations created are put in the abbrev table of
-MODE you passed to this macro. That may or may not be something you want,
-depending on your uses. If you're looking to only define an abbrev globally,
-see `snippets:global-snip'."
+MODE you passed to this macro.
+
+Example: passing ‘org-mode’ will add the abbrev to the ‘org-mode-abbrev-table’.
+
+That may or may not be something you want depending on your uses.
+If you're looking to only define an abbrev globally, see `global-snippet'."
   (declare (debug t)
            (indent defun))
   ;; TODO need to figure out how to work with lists better
@@ -420,21 +428,21 @@ see `snippets:global-snip'."
 ;;;;;; For moving around snippets
 ;;;;;; From: https://www.emacswiki.org/emacs/SkeletonMode#h5o-15
 
-(defvar snippet:marks nil)
+(defvar snippet:marks '())
 
 (add-hook 'skeleton-end-hook #'snippet:make-markers)
 
 (defun snippet:make-markers ()
-   "Create markers from points inside of ‘skeleton-positions’."
-   (while snippet:marks
-     (set-marker (pop snippet:marks) nil))
-   (setq snippet:marks
-         (mapcar #'copy-marker (reverse skeleton-positions))))
+  "Create markers from points inside of ‘skeleton-positions’."
+  (setq snippet:marks
+        (mapcar #'copy-marker (reverse skeleton-positions)))
+  (while (> (length snippet:marks) 0)
+    (set-marker (pop snippet:marks) nil (current-buffer))))
 
 ;;;###autoload
 (defun snippet:next-position ()
   "Goto the next skeleton position in ‘snippet:marks’.
-These positions are denoted as ’@ _’ in Skeleton’s template language."
+These positions are denoted with ’@ _’ in Skeleton’s template language."
   (interactive "p")
   (let ((positions (mapcar #'marker-position snippet:marks))
         pos)
@@ -450,7 +458,7 @@ These positions are denoted as ’@ _’ in Skeleton’s template language."
 ;;;###autoload
 (defun snippet:prev-position ()
   "Goto the previous skeleton position in ‘snippet:marks’.
-These positions are denoted as ’@ _’ in Skeleton’s template language."
+These positions are denoted with ’@ _’ in Skeleton’s template language."
   (interactive "p")
   (let ((positions (reverse (mapcar 'marker-position snippet:marks)))
         pos)

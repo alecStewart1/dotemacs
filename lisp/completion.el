@@ -467,7 +467,7 @@ Run ‘magit-status’ on repo containing the embark target."
   (corfu-preselect-first nil)
   (corfu-preview-current 'insert)
   (corfu-auto-delay 0.25)
-  (corfu-quit-no-match 'separator)
+  (corfu-quit-no-match t)
   (corfu-quit-at-boundary 'separator)
   (corfu-scroll-margin 6)
   (corfu-echo-documentation t)

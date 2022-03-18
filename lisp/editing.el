@@ -405,10 +405,7 @@
 (use-package puni
   :defer t
   :hook ((prog-mode lisp-mode emacs-lisp-mode sgml-mode nxml-mode eval-expression-minibuffer-setup)
-         . puni-mode)
-  :config
-  (keymap-unset puni-mode-map "C-d")
-  (keymap-unset puni-mode-map "C-w"))
+         . puni-mode))
 
 ;;;; WS-Butler
 ;;;;
@@ -427,7 +424,7 @@
     (fsharp-mode . "fs")
     (java-mode . "java")
     (js-mode . "js")
-    (js2-mode "js")
+    (js2-mode . "js")
     (perl-mode . "pl")
     (php-mode . "php")
     (python-mode . "py")

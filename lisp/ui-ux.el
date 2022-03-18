@@ -646,9 +646,8 @@ possible."
 ;;;;;
 
 (use-package doom-themes
-  :hook (org-load-hook . doom-themes-org-config)
-  :config
-  (load-theme 'doom-gruvbox t))
+  :hook ((after-init . (lambda () (load-theme 'doom-gruvbox t)))
+         (org-load-hook . doom-themes-org-config)))
 
 (use-package nano-theme
   ;:hook (after-init . nano-dark)
