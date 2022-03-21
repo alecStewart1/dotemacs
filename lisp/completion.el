@@ -164,7 +164,8 @@ Run ‘magit-status’ on repo containing the embark target."
   (magit-status (locate-dominating-file file ".git")))
 
 (use-package vertico
-  :hook (after-init . vertico-mode)
+  :hook ((after-init . vertico-mode)
+         (vertico-mode . vertico-indexed-mode))
   :functions vertico--exhibit
   :init
   ;; these can be annoying so we disable the help at startup
@@ -183,6 +184,8 @@ Run ‘magit-status’ on repo containing the embark target."
 
   ;; Keys
   (define-key vertico-map (kbd "<backspace>") #'vertico-directory-delete-char)
+  (define-key vertico-map (kbd "RET") #'vertico-directory-enter)
+  (define-key vertico-map (kbd "<return>") #'vertico-directory-enter)
   (define-key vertico-map (kbd "?") #'minibuffer-completion-help)
   (define-key vertico-map (kbd "M-RET") #'minibuffer-force-complete-and-exist)
   (define-key vertico-map (kbd "M-TAB") #'minibuffer-complete))
@@ -444,15 +447,15 @@ Run ‘magit-status’ on repo containing the embark target."
 
 (use-package corfu
   :hook (after-init . corfu-global-mode)
-  :bind (:map corfu-map
-         ("TAB" . corfu-next)
-         ([tab] . corfu-next)
-         ("C-n" . corfu-next)
-         ("S-TAB" . corfu-previous)
-         ([backtab] . corfu-previous)
-         ("C-p" . corfu-previous)
-         ("SPC" . corfu-insert-separator)
-         ([space] . corfu-insert-separator))
+  :general (:keymaps 'corfu-map
+            "TAB"     #'corfu-next
+            [tab]     #'corfu-next
+            "C-n"     #'corfu-next
+            "S-TAB"   #'corfu-previous
+            [backtab] #'corfu-previous
+            "C-p"     #'corfu-previous
+            "SPC"     #'corfu-insert-separator
+            [space]   #'corfu-insert-separator)
   :preface
   (defun corfu:in-minibuffer ()
     ""
@@ -463,16 +466,28 @@ Run ‘magit-status’ on repo containing the embark target."
   :custom
   (corfu-cycle t)
   (corfu-auto t)
-  (corfu-separator ?\s)
   (corfu-preselect-first nil)
   (corfu-preview-current 'insert)
   (corfu-auto-delay 0.25)
   (corfu-quit-no-match t)
-  (corfu-quit-at-boundary 'separator)
+  (corfu-quit-at-boundary t)
   (corfu-scroll-margin 6)
-  (corfu-echo-documentation t)
+  (corfu-echo-documentation nil)
   :config
   (add-hook 'minibuffer-setup-hook #'corfu:in-minibuffer 1))
+
+(use-package corfu-doc
+  :after corfu
+  :hook (corfu-mode . corfu-doc-mode)
+  :general (:keymaps 'corfu-map
+            [remap corfu-show-documentation] #'corfu-doc-toggle ; Remap the default doc command
+            "M-n" #'corfu-doc-scroll-up
+            "M-p" #'corfu-doc-scroll-down)
+  :custom
+  (corfu-doc-delay 0.5)
+  (corfu-doc-max-width 70)
+  (corfu-doc-max-height 20)
+  (corfu-echo-documentation nil))
 
 ;;;; Cape
 ;;;;

@@ -192,25 +192,6 @@ scratch buffer. See `fallback-buffer-name' to change this."
             collect (cadr hook)
             else collect (intern (format "%s-hook" (symbol-name hook)))))))
 
-(defun setq-hook--fns (hooks rest &optional singles)
-  (unless (or singles (= 0 (% (length rest) 2)))
-    (signal 'wrong-number-of-arguments (list #'evenp (length rest))))
-  (loop with vars = (let ((args rest)
-                          vars)
-                      (while args
-                        (push (if singles
-                                  (list (pop args))
-                                (cons (pop args) (pop args)))
-                              vars))
-                      (nreverse vars))
-        for hook in (resolve-hook-forms hooks)
-        for mode = (string-remove-suffix "-hook" (symbol-name hook))
-        append
-        (loop for (var . val) in vars
-              collect (list var val hook
-                            (intern (format "setq-%s-for-%s-hook"
-                                            var mode))))))
-
 ;;;###autoload
 (defun resolve-file-path-forms (spec &optional directory)
   "Converts a simple nested series of or/and forms into a series of
@@ -576,35 +557,6 @@ This macro accepts, in order:
                (if append-p
                    (nreverse forms)
                  forms))))))
-
-;;;###autoload
-(defmacro setq-hook! (hooks &rest rest)
-  "A convenience macro for removing N functions from M hooks.
-
-Takes the same arguments as `add-hook!'.
-
-If N and M = 1, there's no benefit to using this macro over `remove-hook'.
-
-\(fn HOOKS [:append :local] FUNCTIONS)"
-  (declare (indent 1))
-  (macroexp-progn
-   (loop for (var val hook fn) in (setq-hook--fns hooks var-vals)
-         collect `(defun ,fn (&rest _)
-                    ,(format "%s = %s" var (pp-to-string val))
-                    (setq-local ,var ,val))
-         collect `(remove-hook ',hook #',fn)
-         collect `(add-hook ',hook #',fn))))
-
-;;;###autoload
-(defmacro unsetq-hook! (hooks &rest vars)
-  "Unbind setq hooks on HOOKS for VARS.
-
-\(fn HOOKS &rest [SYM VAL]...)"
-  (declare (indent 1))
-  (macroexp-progn
-   (loop for (_var _val hook fn)
-         in (setq-hook--fns hooks vars 'singles)
-         collect `(remove-hook ',hook #',fn))))
 
 ;;;###autoload
 (defmacro letf! (bindings &rest body)
