@@ -232,6 +232,17 @@
   (eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
   (eldoc-idle-delay 0.1))
 
+;;;;; Configuration files
+;;;;;
+
+(use-package conf-mode
+  :mode "\\.cfg\\’")
+
+(use-package yaml-mode
+  :mode "\\.yml\\’"
+  :mode "\\.yaml\\’"
+  :hook (yaml-mode . lsp-deferred))
+
 ;;;;; RMSBolt, deeply inspect you code
 ;;;;;
 
