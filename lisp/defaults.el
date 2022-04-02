@@ -81,7 +81,7 @@
                       bidi-paragraph-direction 'left-to-right)))
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
   (advice-add 'completing-read-multiple :filter-args #'minibuffer:crm-indicator)
-    :custom
+  :custom
   ;; Startup
   (inhibit-startup-screen            t)
   (inhibit-startup-message           t)
@@ -292,7 +292,7 @@
   :ensure nil
   :custom
   (byte-compile-verbose        nil)
-  (byte-compile-warnings       '(not free-vars unresolved noruntime lexical make-local))
+  (byte-compile-warnings       '(not free-vars unresolved noruntime lexical make-local cl-functions))
   (async-byte-compile-log-file (concat my-etc-dir "async-bytecomp.log")))
 
 (use-package comp

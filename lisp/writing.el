@@ -616,6 +616,24 @@ Made for `org-tab-first-hook' in evil-mode."
                    completion-at-point-functions cape:mega-writing-capf)
   (add-hook 'org-mode-local-vars-hook #'eldoc-mode)
 
+  (defun org-capture:fitness-note ()
+    "Capture a new fitness note."
+    (interactive)
+    (call-interactively #'org-store-link)
+    (org-capture nil "f"))
+
+  (defun org-capture:idea ()
+    "Capture a new idea/thought."
+    (interactive)
+    (call-interactively #'org-store-link)
+    (org-capture nil "i"))
+
+  (defun org-capture:cookbook ()
+    "Capture a cookbook with ‘org-chef’."
+    (interactive)
+    (call-interactively #'org-store-link)
+    (org-capture nil "c"))
+
   (mode-snippet oblock org-mode
     "Block type: "
     > "#+begin_" str " " @ _ ?\n

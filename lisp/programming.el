@@ -525,13 +525,12 @@ And if it's a function, evaluate it."
   (add-hook 'sh-mode-hook #'rainbow-delimiters-mode))
 
 (use-package fish-mode
-  ;; :config
-  ;; (snippets:file-snip fn 'fish-mode
-  ;;                     "Function Name: "
-  ;;                     ?\n "function " str " " @ (skeleton-read "Args: ")
-  ;;                     ?\n > @ _ ?\n
-  ;;                     "end" ?\n)
-  )
+  :config
+  (mode-snippet fn fish-mode
+    nil
+    > "function " @ _ "-d " @ - ?\n
+    > @ - ?\n
+    >  "end" ?\n))
 
 ;;;;; Sieve scripts (not really coding but whatever)
 ;;;;;
@@ -611,7 +610,6 @@ Also took this from Doom Emacs"
     > "(defun " @ - " (" @ _ ")" ?\n
     > "\"" @ _ "\"" ?\n
     > @ _ ")" ?\n)
-
 
   (defadvice! elisp-mode:append-val-to-eldoc (orig-fn sym)
     "Display variable value next to documentation in eldoc."

@@ -455,7 +455,9 @@ Run ‘magit-status’ on repo containing the embark target."
             [backtab] #'corfu-previous
             "C-p"     #'corfu-previous
             "SPC"     #'corfu-insert-separator
-            [space]   #'corfu-insert-separator)
+            [space]   #'corfu-insert-separator
+            "RET"     #'corfu-insert
+            [return]  #'corfu-insert)
   :preface
   (defun corfu:in-minibuffer ()
     ""
@@ -467,7 +469,7 @@ Run ‘magit-status’ on repo containing the embark target."
   (corfu-cycle t)
   (corfu-auto t)
   (corfu-preselect-first nil)
-  (corfu-preview-current 'insert)
+  ;(corfu-preview-current 'insert)
   (corfu-auto-delay 0.25)
   (corfu-quit-no-match t)
   (corfu-quit-at-boundary t)
