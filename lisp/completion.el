@@ -454,13 +454,13 @@ Run ‘magit-status’ on repo containing the embark target."
             "S-TAB"   #'corfu-previous
             [backtab] #'corfu-previous
             "C-p"     #'corfu-previous
-            "SPC"     #'corfu-insert-separator
-            [space]   #'corfu-insert-separator
             "RET"     #'corfu-insert
-            [return]  #'corfu-insert)
+            [return]  #'corfu-insert
+            "M-d"     #'corfu-show-documentation
+            "M-l"     #'corfu-show-location)
   :preface
   (defun corfu:in-minibuffer ()
-    ""
+    "Allow for Corfu in the minibuffer."
     (unless (or (bound-and-true-p mct--active)
                 (bound-and-true-p vertico--input))
       (setq-local corfu-auto nil)
@@ -469,7 +469,7 @@ Run ‘magit-status’ on repo containing the embark target."
   (corfu-cycle t)
   (corfu-auto t)
   (corfu-preselect-first nil)
-  ;(corfu-preview-current 'insert)
+  (corfu-preview-current t)
   (corfu-auto-delay 0.25)
   (corfu-quit-no-match t)
   (corfu-quit-at-boundary t)
@@ -477,6 +477,17 @@ Run ‘magit-status’ on repo containing the embark target."
   (corfu-echo-documentation nil)
   :config
   (add-hook 'minibuffer-setup-hook #'corfu:in-minibuffer 1))
+
+(use-package kind-icon
+  :after corfu
+  :custom
+  (kind-icon-use-icons t)
+  (kind-icon-default-face 'corfu-default)
+  (kind-icon-blend-background nil)
+  (kind-icon-blend-frac 0.08)
+  (svg-lib-icons-dir (concat my-cache-dir "svg-lib/"))
+  :config
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
 (use-package corfu-doc
   :after corfu

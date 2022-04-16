@@ -88,6 +88,8 @@
 
 (setq default-input-method nil)
 
+(setq native-comp-async-report-warnings-errors 'silent)
+
 (setq user-emacs-directory (file-name-directory load-file-name))
 
 ;;; early-init.el ends here

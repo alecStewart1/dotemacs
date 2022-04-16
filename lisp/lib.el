@@ -409,48 +409,42 @@ If you're looking to only define an abbrev globally, see `global-snippet'."
 ;;;;;; For moving around snippets
 ;;;;;; From: https://www.emacswiki.org/emacs/SkeletonMode#h5o-15
 
-(defvar snippet:marks '())
+(defvar snippet:marks nil)
 
 (add-hook 'skeleton-end-hook #'snippet:make-markers)
 
 (defun snippet:make-markers ()
   "Create markers from points inside of ‘skeleton-positions’."
-  (setq snippet:marks
-        (mapcar #'copy-marker (reverse skeleton-positions)))
-  (while (> (length snippet:marks) 0)
-    (set-marker (pop snippet:marks) nil (current-buffer))))
+  (let ((i 0))
+    (setf snippet:marks
+          (mapcar #'copy-marker (reverse skeleton-positions)))
+    (while (< i (length snippet:marks))
+      (set-marker (pop snippet:marks) nil (current-buffer))
+      (setq i (1+ i)))))
 
 ;;;###autoload
 (defun snippet:next-position ()
   "Goto the next skeleton position in ‘snippet:marks’.
 These positions are denoted with ’@ _’ in Skeleton’s template language."
   (interactive "p")
-  (let ((positions (mapcar #'marker-position snippet:marks))
-        pos)
+  (let* ((positions (mapcar #'marker-position snippet:marks))
+         (pos       (pop positions)))
     (when positions
-      (if (catch 'break
-            (while (setq pos (pop positions))
-              (when (< (point) pos)
-                (throw 'break t))))
-          (goto-char pos)
-        (goto-char (marker-position
-                    (car snippet:marks)))))))
+      (while (< (point) pos)
+        (setq pos (pop positions)))
+      (goto-char pos))))
 
 ;;;###autoload
 (defun snippet:prev-position ()
-  "Goto the previous skeleton position in ‘snippet:marks’.
+  "Goto the next skeleton position in ‘snippet:marks’.
 These positions are denoted with ’@ _’ in Skeleton’s template language."
   (interactive "p")
-  (let ((positions (reverse (mapcar 'marker-position snippet:marks)))
-        pos)
+  (let* ((positions (mapcar #'marker-position snippet:marks))
+         (pos       (pop positions)))
     (when positions
-      (if (catch 'break
-            (while (setq pos (pop positions))
-              (when (> (point) pos)
-                (throw 'break t))))
-          (goto-char pos)
-        (goto-char (marker-position
-                    (car snippet:marks)))))))
+      (while (> (point) pos)
+        (setq pos (pop positions)))
+      (goto-char pos))))
 
 ;;; Macros
 ;;;

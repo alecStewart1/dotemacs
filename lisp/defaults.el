@@ -70,9 +70,16 @@
   (put 'downcase-region  'disabled nil)
   (put 'list-threads     'disabled nil)
 
+  ;;; Thing that Emacs enables
+  ;;;
+  (put 'overwrite-mode 'disabled nil)
+
   ;;(fset 'x-popup-menu #'ignore)
   (fset #'display-startup-echo-area-message #'ignore)
-  (fset #'yes-or-no-p #'y-or-n-p)
+  (if emacs28-p
+      (setq use-short-answers t)
+    (fset #'yes-or-no-p #'y-or-n-p))
+
   
   (if emacs27-p
       (progn

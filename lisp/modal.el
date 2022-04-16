@@ -35,15 +35,7 @@
 
 ;;; Commentary:
 ;;
-;;  I’ve used Evil before, and I’ve briefly touched Boon
-;;  Here I want to put a few others.
-;;
-;;  - Meow
-;;  - Evil
-;;  - Some kind of Kakoune-like mode
-;;
-;;  I obviously won’t use them all, but I’d like to explore.
-;;  Maybe won’t use anything here, but it’s still nice to have.
+;;  I’ve heard good things about Meow, so I thought it’d give it a shot.
 ;;
 ;;; Code:
 
