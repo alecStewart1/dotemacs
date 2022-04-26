@@ -74,8 +74,6 @@
 
 (setq gnutls-verify-error t)
 (setq package-enable-at-startup nil
-      package-quickstart t ;; may get rid of this
-      package-quickstart-file (concat my-cache-dir "package-quickstart.el")
       package-user-dir (concat my-local-dir "elpa/")
       package-gnupghome-dir (expand-file-name "gpg" package-user-dir)
       ;; I omit Marmalade because its packages are manually submitted rather
