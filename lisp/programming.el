@@ -205,6 +205,10 @@
   :config
   (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake))
 
+(use-package flymake-collection
+  :after flymake
+  :hook (after-init . flymake-collection-hook-setup))
+
 (use-package flycheck
   :commands flycheck-list-errors flycheck-buffer
   :hook (find-file . global-flycheck-mode)
