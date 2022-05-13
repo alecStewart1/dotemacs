@@ -333,7 +333,7 @@
   (projectile-auto-discover nil)
   ;;(projectile-enable-caching doom-interactive-p)
   (projectile-globally-ignored-files '(".DS_Store" "TAGS"))
-  (projectile-globally-ignored-file-suffixes '(".elc" ".pyc" ".o"))
+  (projectile-globally-ignored-file-suffixes '(".elc", ".eln", ".pyc" ".o"))
   (projectile-kill-buffers-filter 'kill-only-files)
   (projectile-known-projects-file (concat my-cache-dir "projectile.projects"))
   (projectile-ignored-projects (list "~/" temporary-file-directory))
@@ -409,7 +409,6 @@ And if it's a function, evaluate it."
   (let ((default-directory "~"))
     (when (cl-find-if #'projectile-file-exists-p
                       projectile-project-root-files-bottom-up)
-      ;(doom-log "HOME appears to be a project. Disabling bottom-up root search.")
       (setq projectile-project-root-files
             (append projectile-project-root-files-bottom-up
                     projectile-project-root-files)
@@ -1409,6 +1408,8 @@ nimsuggest isn't installed."
 (use-package mhtml-mode
   :ensure nil
   :hook (html-mode . mhtml-mode))
+
+(add-hook 'css-mode-hook #'lsp-deferred)
 
 (use-package nxml-mode
   :ensure nil
