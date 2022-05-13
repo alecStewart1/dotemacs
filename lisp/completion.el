@@ -446,7 +446,7 @@ Run ‘magit-status’ on repo containing the embark target."
 ;;;;
 
 (use-package corfu
-  :hook (after-init . corfu-global-mode)
+  :hook (after-init . global-corfu-mode)
   :general (:keymaps 'corfu-map
             "TAB"     #'corfu-next
             [tab]     #'corfu-next
