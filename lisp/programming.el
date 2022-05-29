@@ -206,16 +206,7 @@
   (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake))
 
 (use-package flymake-collection
-  :after flymake
-  :hook (after-init . flymake-collection-hook-setup))
-
-(use-package flycheck
-  :commands flycheck-list-errors flycheck-buffer
-  :hook (find-file . global-flycheck-mode)
-  :config
-  (setq flycheck-emacs-lisp-load-path 'inherit
-        flycheck-buffer-switch-check-intermediate-buffers t
-        flycheck-display-errors-delay 0.25))
+  :hook (flymake-mode . flymake-collection-hook-setup))
 
 ;;;;; Uh...this thing
 ;;;;;
@@ -369,6 +360,8 @@
     (projectile-discover-projects-in-search-path))
 
   (push (abbreviate-file-name my-local-dir) projectile-globally-ignored-directories)
+  (pushnew! projectile-project-root-files "package.json")
+  (pushnew! projectile-globally-ignored-directories "^node_modules$" "^flow-typed$")
 
   (setq compilation-buffer-name-function #'projectile-compilation-buffer-name
         compilation-save-buffers-predicate #'projectile-current-project-buffer-p)
@@ -1235,58 +1228,58 @@ nimsuggest isn't installed."
 ;;;;; Elixir
 ;;;;;
 
-(use-package elixir-mode
-  :defer t
-  :config
-  (when (package-installed-p 'lsp-mode)
-    (add-hook 'elixir-mode-local-vars-hook #'lsp-deferred)
-    (eval-after-load 'lsp-mode
-      (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]_build\\'"))
-    (require 'dap-elixir))
+;; (use-package elixir-mode
+;;   :defer t
+;;   :config
+;;   (when (package-installed-p 'lsp-mode)
+;;     (add-hook 'elixir-mode-local-vars-hook #'lsp-deferred)
+;;     (eval-after-load 'lsp-mode
+;;       (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]_build\\'"))
+;;     (require 'dap-elixir))
 
-  (eval-after-load 'highlight-numbers
-    (puthash 'elixir-mode
-             "\\_<-?[[:digit:]]+\\(?:_[[:digit:]]\\{3\\}\\)*\\_>"
-             highlight-numbers-modelist))
+;;   (eval-after-load 'highlight-numbers
+;;     (puthash 'elixir-mode
+;;              "\\_<-?[[:digit:]]+\\(?:_[[:digit:]]\\{3\\}\\)*\\_>"
+;;              highlight-numbers-modelist))
 
-  ;; (snippet:file-snip mod 'elixir-mode
-  ;;                    "Name: "
-  ;;                    ?\n "defmodule " str " do"
-  ;;                    ?\n > @ _ ?\n
-  ;;                    "end" ?\n)
+;;   ;; (snippet:file-snip mod 'elixir-mode
+;;   ;;                    "Name: "
+;;   ;;                    ?\n "defmodule " str " do"
+;;   ;;                    ?\n > @ _ ?\n
+;;   ;;                    "end" ?\n)
 
-  ;; (snippet:file-snip def 'elixir-mode
-  ;;                    "Name: "
-  ;;                    ?\n "def " @ str " (" @ ") do"
-  ;;                    ?\n > @ _ ?\n
-  ;;                    "end" ?\n)
+;;   ;; (snippet:file-snip def 'elixir-mode
+;;   ;;                    "Name: "
+;;   ;;                    ?\n "def " @ str " (" @ ") do"
+;;   ;;                    ?\n > @ _ ?\n
+;;   ;;                    "end" ?\n)
 
-  ;; (snippet:file-snip if 'elixir-mode
-  ;;                    "Condition: "
-  ;;                    ?\n "if " @ str "do"
-  ;;                    ?\n > @ _ ?\n
-  ;;                    "end" ?\n)
-  )
+;;   ;; (snippet:file-snip if 'elixir-mode
+;;   ;;                    "Condition: "
+;;   ;;                    ?\n "if " @ str "do"
+;;   ;;                    ?\n > @ _ ?\n
+;;   ;;                    "end" ?\n)
+;;   )
 
-(use-package mix
-  :after elixir-mode
-  :hook (elixir-mode . mix-minor-mode))
+;; (use-package mix
+;;   :after elixir-mode
+;;   :hook (elixir-mode . mix-minor-mode))
 
-(use-package exunit
-  :hook (elixir-mode . exunit-mode))
+;; (use-package exunit
+;;   :hook (elixir-mode . exunit-mode))
 
-(use-package inf-elixir
-  :general
-  (:keymaps 'elixir-mode-map
-   :prefix "C-c i"
-   "i" #'inf-elixir
-   "p" #'inf-elixir-project
-   "l" #'inf-elixir-send-line
-   "r" #'inf-elixir-send-region
-   "b" #'inf-elixir-send-buffer))
+;; (use-package inf-elixir
+;;   :general
+;;   (:keymaps 'elixir-mode-map
+;;    :prefix "C-c i"
+;;    "i" #'inf-elixir
+;;    "p" #'inf-elixir-project
+;;    "l" #'inf-elixir-send-line
+;;    "r" #'inf-elixir-send-region
+;;    "b" #'inf-elixir-send-buffer))
 
-(use-package ob-elixir
-  :after ob)
+;; (use-package ob-elixir
+;;   :after ob)
 
 ;;;;; Perl
 ;;;;;
@@ -1422,6 +1415,41 @@ nimsuggest isn't installed."
   (nxml-slash-auto-complete-flag t)
   (nxml-auto-insert-xml-declaration-flag t))
 
+;;;###autoload
+(defun ts:init-lsp-maybe ()
+  "Start ‘lsp’ in current buffer."
+  (let ((buffer-file-name (buffer-file-name (buffer-base-buffer))))
+    (when (derived-mode-p 'js-mode 'typescript-mode)
+      (if (null buffer-file-name)
+          (add-hook 'after-save-hook #'ts:init-lsp-maybe nil 'local)
+        (lsp-deferred)
+        (remove-hook 'after-save-hook #'ts:init-lsp-maybe 'local)))))
+
+
+(use-package js
+  :ensure nil
+  :interpreter "node"
+  :hook (js-mode . rainbow-delimiters-mode)
+  :init
+  ;; Parse node stack traces in the compilation buffer
+  (with-eval-after-load 'compile
+    (add-to-list 'compilation-error-regexp-alist 'node)
+    (add-to-list 'compilation-error-regexp-alist-alist
+                 '(node "^[[:blank:]]*at \\(.*(\\|\\)\\(.+?\\):\\([[:digit:]]+\\):\\([[:digit:]]+\\)"
+                        2 3 4)))
+  :custom
+  (js-indent-level 2)
+  (js-switch-indent-offset 2)
+  (js-chain-indent t))
+
+(use-package typescript-mode
+  :hook (typescript-mode . rainbow-delimiters-mode)
+  :custom
+  (typescript-indent-level 2)
+  :config
+  (setq-mode-local typescript-mode
+                   comment-line-break-function #'c-indent-new-comment-line))
+
 (use-package web-mode
   :mode "\\.[px]?html?\\'"
   :mode "\\.\\(?:tpl\\|blade\\)\\(?:\\.php\\)?\\'"
@@ -1438,12 +1466,8 @@ nimsuggest isn't installed."
   :mode "wp-content/themes/.+/.+\\.php\\'"
   :mode "templates/.+\\.php\\'"
   :mode "\\.vue\\'"
-  :hook (web-mode . sgml-electric-tag-pair-mode)
-  :init
-  ;; If the user has installed `vue-mode' then, by appending this to
-  ;; `auto-mode-alist' rather than prepending it, its autoload will have
-  ;; priority over this one.
-  (add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode) 'append)
+  :hook ((web-mode . sgml-electric-tag-pair-mode)
+         (web-mode-local-vars . ts:init-lsp-maybe))
   :custom
   (web-mode-enable-html-entities-fontification t)
   (web-mode-auto-close-style 1)

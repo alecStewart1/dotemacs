@@ -63,7 +63,7 @@
   (setq orderless-matching-styles
         '(orderless-literal orderless-initialism orderless-prefixes)
         orderless-component-separator #'orderless-escapable-split-on-space
-        completion-styles '(orderless)
+        completion-styles '(orderless basic)
         completion-category-defaults nil
         completion-category-overrides
         '((file (styles . (orderless partial-completion)))
@@ -227,7 +227,6 @@ Run ‘magit-status’ on repo containing the embark target."
     (autoload 'projectile-project-root "projectile")
     (setq consult-project-root-function #'projectile:get-project-root))
 
-  (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
   (advice-add #'register-preview :override #'consult-register-window)
   (advice-add #'multi-occur :override #'consult-multi-occur)
 
@@ -367,7 +366,6 @@ Run ‘magit-status’ on repo containing the embark target."
 
 ;;; TODO define some Embark maps here
 (use-package embark
-  :defer t
   :defines vertico-map
   :bind (("C-;" . embark-act)
          ("C-." . embark-dwim)
