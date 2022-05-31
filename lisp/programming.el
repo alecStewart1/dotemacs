@@ -593,6 +593,7 @@ Also took this from Doom Emacs"
 
   :custom
   (tab-width 8)
+  (debugger-bury-or-kill 'kill)
   (mode-name "Elisp")
   (outline-regexp "[ \t];;;; [^ \t\n]")
   (lisp-indent-function #'elisp-mode:indent-function)
@@ -1502,22 +1503,20 @@ nimsuggest isn't installed."
              lsp-organize-imports
              lsp-install-server)
   :hook
-  (lsp-mode . (lambda ()
-                (add-hook 'before-save-hook #'lsp-format-buffer t t)
-                (add-hook 'before-save-hook #'lsp-organize-imports t t)))
   (lsp-completion-mode . lsp:setup-completion)
   :preface
+  (defvar lsp:defer-shutdown 3)
+
   (defun lsp:orderless-dispatch-flex-1st (_pattern index _total)
     (and (eq index 0) 'orderless-flex))
 
   (defun lsp:setup-completion ()
-    (setf (alist-get 'styles
-                     (alist-get 'lsp-capf
-                                completion-category-defaults))
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless partial-completion)))
   :init
   (general-setq lsp-session-file (concat my-etc-dir "lsp-seesion")
-                lsp-server-install-dir (concat my-etc-dir "lsp/"))
+                lsp-server-install-dir (concat my-etc-dir "lsp/")
+                lsp-use-plists t)
 
   (add-hook 'orderless-style-dispatchers #'lsp:orderless-dispatch-flex-1st
             nil
@@ -1533,12 +1532,12 @@ nimsuggest isn't installed."
                                               (cape-super-capf
                                                #'lsp-completion-at-point
                                                #'cape-keyword
-                                               #'cape-symbol
                                                #'cape-abbrev
                                                #'cape-dabbrev))
                                              #'cape-file))
   :custom
   (lsp-completion-provider :none) ; we use Corfu instead
+  (lsp-diagnostics-provider :flymake)
   (lsp-keep-workspace-alive nil)
   (lsp-intelephense-storage-path (concat my-cache-dir "lsp-intelephense/"))
   (lsp-clients-emmy-lua-jar-path (concat lsp-server-install-dir "EmmyLua-LS-all.jar"))
@@ -1559,6 +1558,7 @@ nimsuggest isn't installed."
           (setq-local flycheck-checker old-checker))
       (apply orig-fn args)))
 
+  (defvar lsp:deferred-shutdown-timer nil)
   (defadvice! lsp:defer-server-shutdown (orig-fn &optional restart)
     "Defer server shutdown for a few seconds.
   This gives the user a chance to open other project files before the server is
@@ -1567,14 +1567,14 @@ nimsuggest isn't installed."
     :around #'lsp--shutdown-workspace
     (if (or lsp-keep-workspace-alive
             restart
-            (null lsp-defer-shutdown)
-            (= lsp-defer-shutdown 0))
+            (null lsp:defer-shutdown)
+            (= lsp:defer-shutdown 0))
         (funcall orig-fn restart)
-      (when (timerp lsp--deferred-shutdown-timer)
-        (cancel-timer lsp--deferred-shutdown-timer))
-      (setq lsp--deferred-shutdown-timer
+      (when (timerp lsp:deferred-shutdown-timer)
+        (cancel-timer lsp:deferred-shutdown-timer))
+      (setq lsp:deferred-shutdown-timer
             (run-at-time
-             (if (numberp lsp-defer-shutdown) lsp-defer-shutdown 3)
+             (if (numberp lsp:defer-shutdown) lsp:defer-shutdown 3)
              nil (lambda (workspace)
                    (with-lsp-workspace workspace
                      (unless (lsp--workspace-buffers workspace)
@@ -1594,7 +1594,8 @@ nimsuggest isn't installed."
 (use-package lsp-ui
   :custom
   (lsp-ui-doc-max-height 8)
-  (lsp-ui-doc-max-width 35)
+  (lsp-ui-doc-max-width 72)
+  (lsp-ui-doc-delay 0.75)
   (lsp-ui-sideline-ignore-duplicate t)
   (lsp-ui-doc-enable t)
   (lsp-ui-doc-show-with-mouse nil)  ; don't disappear on mouseover
@@ -1602,7 +1603,8 @@ nimsuggest isn't installed."
   ;; Don't show symbol definitions in the sideline. They are pretty noisy,
   ;; and there is a bug preventing Flycheck errors from being shown (the
   ;; errors flash briefly and then disappear).
-  (lsp-ui-sideline-show-hover nil))
+  (lsp-ui-sideline-show-hover nil)
+  (lsp-ui-sideline-actions-icon lsp-ui-sideline-actions-icon-default))
 
 (use-package dap-mode
   :when (package-installed-p 'lsp-mode)

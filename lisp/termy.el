@@ -146,12 +146,25 @@ Once the eshell process is killed, the previous frame layout is restored."
 ;;; Completion for EShell with Corfu + Cape
 ;;;
 
+;; Make pcomplete behave with Corfu and Cape
+(advice-add 'pcomplete-completions-at-point :around #'cape-wrap-silent)
+(advice-add 'pcomplete-completions-at-point :around #'cape-wrap-purify)
+
+;;;###autoload
+(defvar cape:eshell-capf (list
+                          (cape-capf-buster
+                           (cape-super-capf
+                            #'pcomplete-completions-at-point
+                            #'cape-abbrev))
+                          #'cape-file))
+
 (defun eshell:setup-completion ()
   "Setup completion for EShell with ‘corfu’ and ‘cape’."
   (setq-mode-local eshell-mode
                    corfu-auto nil
                    corfu-quit-at-boundary t
-                   corfu-quit-no-match t))
+                   corfu-quit-no-match t
+                   completion-at-point-functions cape:eshell-capf))
 
 
 ;;; View eshell command histroy with Consult
