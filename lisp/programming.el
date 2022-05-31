@@ -1538,6 +1538,7 @@ nimsuggest isn't installed."
   :custom
   (lsp-completion-provider :none) ; we use Corfu instead
   (lsp-diagnostics-provider :flymake)
+  (lsp-enable-snippet nil)
   (lsp-keep-workspace-alive nil)
   (lsp-intelephense-storage-path (concat my-cache-dir "lsp-intelephense/"))
   (lsp-clients-emmy-lua-jar-path (concat lsp-server-install-dir "EmmyLua-LS-all.jar"))
