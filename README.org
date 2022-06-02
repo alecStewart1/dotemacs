@@ -30,8 +30,8 @@ found in Emacs.
 
 * TODO Things I'd like to do
 
-- [ ] My own code formatter
-- [ ] Add in a bunch of more sensible keys and such
+- [ ] Functions to format code
+- [ ] Flush out "snippets" ([[https://www.emacswiki.org/emacs/SkeletonMode][Skeletons]] + [[https://www.emacswiki.org/emacs/AbbrevMode][Abbrevs]])
 - [ ] Use Emacs in a productive way
 - [ ] Actually implement the splash screen
 - [ ] Add in more sources for consult

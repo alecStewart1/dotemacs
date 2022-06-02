@@ -46,9 +46,28 @@
 ;;;; Spellin' Good
 ;;;;
 
+(delq! 'ispell features)
+
 (use-package ispell
+  :ensure nil
+  :defer t
+  :custom
+  (ispell-program-name (executable-find "aspell"))
+  (ispell-extra-args '("--sug-mode=ultra" "--run-together"))
   :config
-  (add-to-list 'ispell-extra-args "--sug-mode=ultra"))
+  (pushnew! ispell-skip-region-alist
+            '(":\\(PROPERTIES\\|LOGBOOK\\):" . ":END:")
+            '("#\\+BEGIN_SRC" . "#\\+END_SRC")
+            '("#\\+BEGIN_EXAMPLE" . "#\\+END_EXAMPLE")))
+
+(use-package flyspell
+  :ensure nil
+  :defer t
+  :custom
+  (flyspell-issue-welcome-flag nil)
+  (flyspell-issue-message-flag nil)
+  :config
+  (provide 'ispell))
 
 ;;;; Org-Mode
 ;;;;
@@ -195,7 +214,7 @@
                     ("READ"    . org-done)
                     ("PROJ"    . org--todo-project)))
 
-    (defadvice! org-eldoc:display-lin (&rest _)
+    (defadvice! org-eldoc:display-line (&rest _)
       "TODO"
       :before-until #'org-eldoc-documentation-function
       (when-let (link (org-element-property :raw-link (org-element-context)))
@@ -621,27 +640,28 @@ Made for `org-tab-first-hook' in evil-mode."
   (defun org-capture:fitness-note ()
     "Capture a new fitness note."
     (interactive)
-    (call-interactively #'org-store-link)
     (org-capture nil "f"))
-
-  (defun org-capture:idea ()
-    "Capture a new idea/thought."
-    (interactive)
-    (call-interactively #'org-store-link)
-    (org-capture nil "i"))
 
   (defun org-capture:cookbook ()
     "Capture a cookbook with ‘org-chef’."
     (interactive)
-    (call-interactively #'org-store-link)
     (org-capture nil "c"))
+
+  (mode-snippet otitle org-mode
+    nil
+    "#+TITLE: " str \n)
+
+  (mode-snippet oauthor org-mode
+    nil
+    "#+AUTHOR: " str \n)
 
   (mode-snippet oblock org-mode
     "Block type: "
-    > "#+begin_" str " " @ _ ?\n
-    > @ - ?\n
-    > "#+end_" str ?\n)
+    > "#+begin_" str " " @ _  \n
+    > @ - \n
+    > "#+end_" str \n)
 
+  ;; TODO make this insert a heading in whatever the current context is
   (mode-snippet ptodo org-mode
     "Priority level [A-C]: "
     "* TODO [#" str "] " @ -))

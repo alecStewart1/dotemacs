@@ -401,7 +401,7 @@ If you're looking to only define an abbrev globally, see `global-snippet'."
          (abbrev-table (intern-soft var-str)))
     `(progn
        (define-skeleton ,func-name
-          ,(format "%s %s %s %s." snip-name "skeleton. Defined in" var-str "abbreviaton table.")
+          ,(format "%s %s %s %s." snip-name " skeleton. Defined in " var-str " abbreviaton table.")
           ,@skeleton)
        (define-abbrev ,abbrev-table ,snip-name
          "" ',func-name :system t))))
@@ -450,6 +450,7 @@ These positions are denoted with ’@ _’ in Skeleton’s template language."
 ;;;
 
 (defvar transient-counter 0)
+
 ;;;###autoload
 (defmacro add-transient-hook! (hook-or-function &rest forms)
   "From Doom Emacs.

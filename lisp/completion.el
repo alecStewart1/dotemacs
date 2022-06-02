@@ -63,7 +63,7 @@
   (setq orderless-matching-styles
         '(orderless-literal orderless-initialism orderless-prefixes)
         orderless-component-separator #'orderless-escapable-split-on-space
-        completion-styles '(orderless)
+        completion-styles '(orderless basic)
         completion-category-defaults nil
         completion-category-overrides
         '((file (styles . (orderless partial-completion)))
@@ -227,7 +227,6 @@ Run ‘magit-status’ on repo containing the embark target."
     (autoload 'projectile-project-root "projectile")
     (setq consult-project-root-function #'projectile:get-project-root))
 
-  (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
   (advice-add #'register-preview :override #'consult-register-window)
   (advice-add #'multi-occur :override #'consult-multi-occur)
 
@@ -345,6 +344,15 @@ Run ‘magit-status’ on repo containing the embark target."
          (bound-and-true-p flycheck-mode))
   :after (consult flycheck))
 
+;;;;;; Interface with LSP-Mode
+;;;;;;
+
+(use-package consult-lsp
+  :after (consult lsp-mode)
+  :general
+  (:keymaps 'lsp-mode-map
+   [remap xref-find-apropos] #'consult-lsp-symbols))
+
 ;;;;; Marginalia
 ;;;;;
 
@@ -367,7 +375,6 @@ Run ‘magit-status’ on repo containing the embark target."
 
 ;;; TODO define some Embark maps here
 (use-package embark
-  :defer t
   :defines vertico-map
   :bind (("C-;" . embark-act)
          ("C-." . embark-dwim)
@@ -435,10 +442,7 @@ Run ‘magit-status’ on repo containing the embark target."
      try-expand-line
      try-expand-dabbrev
      try-expand-dabbrev-all-buffers
-     try-expand-dabbrev-from-kill
      try-expand-all-abbrevs
-     try-complete-lisp-symbol-partially
-     try-complete-lisp-symbol
      try-complete-file-name-partially
      try-complete-file-name)))
 
@@ -508,31 +512,31 @@ Run ‘magit-status’ on repo containing the embark target."
 (use-package cape
   :after corfu
   :preface
-  (defvar cape:mega-capf (list
-                          (cape-capf-buster
-                           (cape-super-capf
-                            #'cape-keyword
-                            #'cape-symbol
-                            #'cape-abbrev
-                            #'cape-dabbrev))
-                          #'cape-file)
+  (defvar cape:elisp-capf (list
+                           (cape-capf-buster
+                            (cape-super-capf
+                             #'cape-keyword
+                             #'cape-symbol
+                             #'cape-abbrev
+                             #'cape-dabbrev))
+                           #'cape-file)
     "A ‘cape-super-capf’ that’s similar to most simpler Company configurations.
-The defacto cape to use for coding when none is particularly available.")
+The defacto cape to use for Emacs Lisp.")
 
   (defvar cape:mega-writing-capf (list
                                   (cape-capf-buster
                                    (cape-super-capf #'cape-dict
+                                                    #'cape-ispell
                                                     #'cape-abbrev
-                                                    #'cape-dabbrev
-                                                    #'cape-ispell)))
+                                                    #'cape-dabbrev)))
     "A ‘cape-super-capf’ for modes for writing.
-The defacto cape to use for writing when there is none available.")
+The defacto cape to use for markup languages for writing.")
   :custom
   (cape-dict-file (expand-file-name "~/.local/share/dict/words"))
   (cape-dabbrev-min-length 2)
   :config
-  (setq-mode-local prog-mode
-                   completion-at-point-functions cape:mega-capf))
+  (setq-mode-local emacs-lisp-mode
+                   completion-at-point-functions cape:elisp-capf))
 
 (provide 'completion)
 ;;; completion.el ends here

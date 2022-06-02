@@ -177,8 +177,9 @@
                (urls (mapcar #'elfeed-entry-link entries)))
       (cons 'url urls)))
 
-  (add-to-list 'embark-target-finders #'embark-elfeed-target-url)
-  (add-to-list 'embark-candidate-collectors #'embark-elfeed-url-candidates))
+  (with-eval-after-load 'embark
+   (add-to-list 'embark-target-finders #'embark-elfeed-target-url)
+   (add-to-list 'embark-candidate-collectors #'embark-elfeed-url-candidates)))
 
 (use-package elfeed-org
   :after (:all elfeed org)
