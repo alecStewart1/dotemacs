@@ -1438,7 +1438,7 @@ nimsuggest isn't installed."
   :mode "wp-content/themes/.+/.+\\.php\\'"
   :mode "templates/.+\\.php\\'"
   :mode "\\.vue\\'"
-  :hook (web-mode . sgml-electric-tag-pair-mode)
+  :hook (web-mode . (sgml-mode sgml-electric-tag-pair-mode))
   :init
   ;; If the user has installed `vue-mode' then, by appending this to
   ;; `auto-mode-alist' rather than prepending it, its autoload will have

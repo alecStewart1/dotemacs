@@ -110,7 +110,9 @@
      org-agenda-span 10
      org-agenda-start-on-weekday nil
      org-agenda-start-day "-3d"
-     org-agenda-files '("~/Documents/Org/GTD/work.org"
+     org-agenda-files '("~/Documents/Org/GTD/today.org"
+                        "~/Documents/Org/GTD/this-week.org"
+                        "~/Documents/Org/GTD/work.org"
                         "~/Documents/Org/GTD/finances.org"
                         "~/Documents/Org/GTD/reading.org"
                         "~/Documents/Org/GTD/open-source.org"
