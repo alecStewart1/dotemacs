@@ -324,9 +324,7 @@
                  org-attach-sync)
       :config
       (unless org-attach-id-dir
-        (setq org-attach-id-dir (expand-file-name ".attach/" org-directory)))
-      (with-eval-after-load 'projectile
-        (add-to-list 'projectile-globally-ignored-directories org-attach-id-dir))))
+        (setq org-attach-id-dir (expand-file-name ".attach/" org-directory)))))
 
   (defun org:setup-custom-links ()
     (org-link-set-parameters

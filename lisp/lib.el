@@ -327,17 +327,6 @@ With a prefix ARG open line above the current line."
 ;;;; Stuff for certain packages that a lot of configurations need
 ;;;;
 
-;;;;; Projectile
-;;;;;
-
-;;;###autoload
-(defun projectile:get-project-root (&optional dir)
-  "Return the project root of DIR (defaults to `default-directory').
-Returns nil if not in a project."
-  (let ((projectile-project-root (unless dir projectile-project-root))
-        projectile-require-project-root)
-    (projectile-project-root dir)))
-
 ;;;;; Skeleton
 ;;;;;
 

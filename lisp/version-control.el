@@ -198,7 +198,6 @@ modified."
   :config
   (defadvice! magit:revert-repo-buffers-deferred (&rest _)
     :after '(magit-checkout magit-branch-and-checkout)
-    (projectile-invalidate-cache nil)
     (magit:mark-stale-buffers))
 
   (add-hook 'magit-process-mode-hook #'goto-address-mode)

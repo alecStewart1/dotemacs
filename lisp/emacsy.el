@@ -81,9 +81,6 @@
   :config
   (put 'dired-find-alternate-file 'disabled nil)
 
-  (eval-after-load 'projectile
-    (add-hook 'dired-before-readin-hook #'projectile-track-known-projects-find-file-hook))
-
   (define-key dired-mode-map (kbd "C-c C-e") #'wdired-change-to-wdired-mode))
 
 (use-package image-dired
@@ -338,22 +335,6 @@ current line.")
           (concat (file-name-sans-extension filename) ".zst")
         filname))))
 
-;;;; Group projects in IBuffer
-;;;;
-
-(use-package ibuffer-projectile
-  ;; Group ibuffer's list by project root
-  :hook (ibuffer-mode . ibuffer-projectile-set-filter-groups)
-  :custom
-  (ibuffer-projectile-prefix
-     (if (package-installed-p 'all-the-icons)
-         (concat (all-the-icons-octicon
-                  "file-directory"
-                  :face ibuffer-filter-group-name-face
-                  :v-adjust -0.05)
-                 " ")
-       "Project: ")))
-
 ;;;; Burly
 ;;;; TODO maybe use eyebrowse as well along with this?
 
@@ -371,8 +352,6 @@ current line.")
 ;;   (bufler-defgroups
 ;;    (group
 ;;     (auto-workspace))
-;;    (group
-;;     (auto-projectile))
 ;;    (group
 ;;     (auto-project))
 ;;    (dir user-emacs-directory)

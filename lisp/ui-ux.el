@@ -607,9 +607,6 @@ possible."
   :config
   (treemacs-follow-mode -1))
 
-(use-package treemacs-projectile
-  :after treemacs)
-
 (use-package treemacs-magit
   :after treemacs magit)
 

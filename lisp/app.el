@@ -94,10 +94,8 @@
 (defun elfeed:cleanup ()
   "Clean up after an elfeed session. Kill all elfeed and elfeed-org files."
   (interactive)
-  ;; `delete-file-projectile-remove-from-cache' slows down `elfeed-db-compact'
-  ;; tremendously, so we disable the projectile cache:
-  (let (projectile-enable-caching)
-    (elfeed-db-compact))
+
+  (elfeed-db-compact)
   (let ((buf (previous-buffer)))
     (when (null buf)
       (switch-to-buffer (fallback-buffer))))

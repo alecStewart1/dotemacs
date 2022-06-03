@@ -152,9 +152,9 @@ If INITIAL is non-nil, use as initial input."
   (vertico:find-file-in org-directory))
 
 (defun vertico:find-file-in-project-root ()
-  "Find a file in the ‘projectile-project-root’."
+  "Find a file in the ‘project:project-root’."
   (interactive)
-  (vertico:find-file-in (projectile:get-project-root)))
+  (vertico:find-file-in (project:project-root)))
 
 ;;;###autoload
 (defun vertico:embark-magit-status (file)
@@ -223,9 +223,10 @@ Run ‘magit-status’ on repo containing the embark target."
   (defvar consult:find-program (cl-find-if #'executable-find (list "fdfind"
                                                                    "fd")))
   :init
-  (with-eval-after-load 'projectile
-    (autoload 'projectile-project-root "projectile")
-    (setq consult-project-root-function #'projectile:get-project-root))
+  (with-eval-after-load 'project
+    (autoload 'project-root "project")
+    (autoload 'project-current "project")
+    (setq consult-project-root-function #'project:project-root))
 
   (advice-add #'register-preview :override #'consult-register-window)
   (advice-add #'multi-occur :override #'consult-multi-occur)
@@ -240,7 +241,7 @@ Run ‘magit-status’ on repo containing the embark target."
                 consult-async-refresh-delay 0.15
                 consult-async-input-throttle 0.2
                 consult-async-input-debounce 0.1
-                consult-project-root-function #'projectile:get-project-root
+                consult-project-root-function #'project:project-root
                 consult-find-args (concat
                                    (format "%s -i -H -E .git --regex %s"
                                            consult:find-program
@@ -362,13 +363,9 @@ Run ‘magit-status’ on repo containing the embark target."
   :init
   (marginalia-mode)
   :config
-  (advice-add #'marginalia--project-root :override #'projectile:get-project-root)
+  (advice-add #'marginalia--project-root :override #'project:project-root)
   (pushnew! marginalia-command-categories
-            '(flycheck-error-list-set-filter . builtin)
-            '(projectile-find-file . project-file)
-            '(projectile-recentf . project-file)
-            '(projectile-switch-to-buffer . buffer)
-            '(projectile-switch-project . project-file)))
+            '(flycheck-error-list-set-filter . builtin)))
 
 ;;;;; Embark
 ;;;;;

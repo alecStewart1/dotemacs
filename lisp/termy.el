@@ -239,7 +239,7 @@ Once the eshell process is killed, the previous frame layout is restored."
 ;;;###autoload
 (defun eshell/cd-to-project ()
   "Change to the project root of the current directory."
-  (eshell/cd (projectile:get-project-root (eshell/pwd))))
+  (eshell/cd (project:project-root (eshell/pwd))))
 
 ;;;###autoload
 (defun eshell/quit-and-close (&rest _)

@@ -348,10 +348,6 @@ Returns nil if not in a project."
 ;;   :preface
 ;;   (defvar ccls-sem-highlight-method 'tree-sitter-hl-mode)
 ;;   :init
-;;   (with-eval-after-load 'projectile
-;;     (add-to-list 'projectile-globally-ignored-directories ".ccls-cache")
-;;     (add-to-list 'projectile-project-root-files-bottom-up ".ccls-root")
-;;     (add-to-list 'projectile-project-root-files-top-down-recurring "compile_commands.json"))
 ;;   (with-eval-after-load 'lsp-mode
 ;;     (require 'ccls))
 ;;   :config
@@ -794,7 +790,7 @@ Also took this from Doom Emacs"
 ;;   (geiser-active-implementations '(gauche guile chez chicken))
 ;;   (geiser-default-implementation 'gauche)
 ;;   (geiser-autodoc-identifier-format "%s => %s")
-;;   (geiser-repl-current-project-function #'projectile:get-project-root))
+;;   (geiser-repl-current-project-function #'project:project-root))
 
 ;; (use-package macrostep-geiser
 ;;   :after (:or geiser-mode geiser-repl)
@@ -889,19 +885,6 @@ If in a method, runs the test method, otherwise runs the entire test class."
 ;;;;; .NET Core
 ;;;;;
 
-;; (with-eval-after-load 'projectile
-;;   (pushnew! projectile-project-root-files "global.json")
-
-;;   (defun projectile:dotnet-project-p ()
-;;     (or (projectile-verify-file-wildcard "?*.csproj")
-;;         (projectile-verify-file-wildcard "?*.fsproj")
-;;         (projectile-verify-file-wildcard "?*.sln")))
-
-;;   (projectile-register-project-type 'dotnet #'projectile:dotnet-project-p
-;;                                     :compile "dotnet build"
-;;                                     :run "dotnet run"
-;;                                     :test "dotnet test"))
-
 ;; (use-package csharp-mode
 ;;   :hook (csharp-mode . rainbow-delimiters-mode)
 ;;   :config
@@ -926,14 +909,6 @@ If in a method, runs the test method, otherwise runs the entire test class."
 ;;   :interpreter (("pwsh" . powershell-mode)
 ;;                 ("powershell" . powershell-mode))
 ;;   :config
-;;   ;; TODO uhh...how do I do this?
-;;   ;; (defun projectile:powershell-project-p ()
-;;   ;;   (or (projectile-verify-file-wildcard (rx ".ps1xml" eos))
-;;   ;;       (projectile-verify-file-wildcard (rx ".psd1" eos))
-;;   ;;       (projectile-verify-file-wildcard (rx ".psm1" eos))))
-
-;;   ;; (projectile-register-project-type 'powershell #'projectile:powershell-project-p
-;;   ;;                                   :test "pwsh -NoLogo -NoProfile -Command 'Invoke-Pester'")
 ;;   (add-hook 'powershell-mode-hook #'lsp-deferred)
 ;;   (if (package-installed-p 'dap-mode)
 ;;       (require 'dap-pwsh)))
@@ -1235,13 +1210,6 @@ nimsuggest isn't installed."
 
 ;; (use-package ruby-test-mode
 ;;   :after enh-ruby-mode)
-
-;; (use-package projectile-rails
-;;   :hook ((enh-ruby-mode inf-ruby-mode projectile-rails-server-mode) . projectile-rails-mode)
-;;   :hook (projectile-rails-mode-hook . auto-insert-mode)
-;;   :init
-;;   (setq auto-insert-query nil)
-;;   (setq inf-ruby-console-environment "development"))
 
 ;;;;; Python
 ;;;;;
