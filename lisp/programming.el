@@ -274,138 +274,34 @@
      (python-mode . python)
      (ruby-mode . ruby))))
 
-;;;;; Projectile
+;;;;; Project.el
 ;;;;;
 
-(use-package projectile
-  :defer 0.5
-  :hook (after-init . projectile-mode)
-  :commands (projectile-project-root
-             projectile-project-name
-             projectile-project-p
-             projectile-locate-dominating-file
-             projectile-relevant-known-projects)
+(use-package project
+  :ensure nil
   :preface
-  (defun projectile:cleanup-project-cache ()
-    "Purge projectile cache entries that:
+  (defvar project:root-list
+    '("Makefile" "GNUMakefile" "CMakeLists.txt"
+      "Cask" "Eldev" "Keg" "Eask"
+      "package.json" "tsconfig.json" "jsconfig.json"
+      "manage.py" "requirements.txt" "setup.py" "tox.ini" "Pipfile" "poetry.lock"
+      "Gemfile"
+      "info.rkt"))
 
-    a) have too many files (see `projectile:cache-limit'),
-    b) represent blacklisted directories that are too big, change too often or are
-       private. (see `projectile:cache-blacklist'),
-    c) are not valid projectile projects."
-    (when (and (bound-and-true-p projectile-projects-cache)
-               projectile-enable-caching)
-      (setq projectile-known-projects
-            (cl-remove-if #'projectile-ignored-project-p
-                          projectile-known-projects))
-      (projectile-cleanup-known-projects)
-      (cl-loop with blacklist = (mapcar #'file-truename projectile:cache-blacklist)
-               for proot in (hash-table-keys projectile-projects-cache)
-               if (or (not (stringp proot))
-                      (>= (length (gethash proot projectile-projects-cache))
-                          projectile:cache-limit)
-                      (member (substring proot 0 -1) blacklist)
-                      (and projectile:cache-purge-non-projects
-                           (not (projectile-project-p proot)))
-                      (projectile-ignored-project-p proot))
-               do (doom-log "Removed %S from projectile cache" proot)
-               and do (remhash proot projectile-projects-cache)
-               and do (remhash proot projectile-projects-cache-time)
-               and do (remhash proot projectile-project-type-cache))
-      (projectile-serialize-cache)))
+  (defun project:project-root (&optional dir)
+    "Return the current project root of DIR (defaults to ‘default-directory’).
+Returns nil if not in a project."
+    (if dir
+        (project-root dir)
+      (project-root (project-current))))
 
-  :init
-  (defvar projectile:cache-limit 10000)
-  (defvar projectile:cache-blacklist '("~" "/tmp" "/"))
-  (defvar projectile:cache-purge-non-projects nil)
-  (defvar projectile:fd-binary (cl-find-if #'executable-find (list "fdfind" "fd")))
-  :custom
-  (projectile-cache-file (concat my-cache-dir "projectile.cache"))
-  (projectile-auto-discover nil)
-  ;;(projectile-enable-caching doom-interactive-p)
-  (projectile-globally-ignored-files '(".DS_Store" "TAGS"))
-  (projectile-globally-ignored-file-suffixes '(".elc", ".eln", ".pyc" ".o"))
-  (projectile-kill-buffers-filter 'kill-only-files)
-  (projectile-known-projects-file (concat my-cache-dir "projectile.projects"))
-  (projectile-ignored-projects (list "~/" temporary-file-directory))
-  (projectile-project-root-files-bottom-up
-                                           (append '(".projectile"  ; projectile's root marker
-                                                     ".project"     ; doom project marker
-                                                     ".git")        ; Git VCS root dir
-                                                   (when (executable-find "hg")
-                                                     '(".hg"))      ; Mercurial VCS root dir
-                                                   (when (executable-find "bzr")
-                                                     '(".bzr"))))  ; Bazaar VCS root dir
-  (projectile-project-root-files '())
-  (projectile-project-root-files-top-down-recurring '("Makefile"))
-  (projectile-git-submodule-command nil)
-  (projectile-indexing-method 'hybrid)
-  (projectile-generic-command
-   (lambda (_)
-     (cond ((when-let (bin (if (ignore-errors (file-remote-p default-directory nil t))
-                               (cl-find-if (-rpartial #'executable-find t)
-                                           (list "fdfind" "fd"))
-                             projectile:fd-binary))
-              (concat (format "%s . -0 -H --color=never --type file --type symlink --follow --exclude .git" bin)
-                      (if windows-nt-p "--path-separator=/"))))
-           ((executable-find "rg" t)
-            (concat "rg -0 --files --follow --color=never --hidden -g!.git"
-                    (if window-nt-p "--path-separator=/")))
-           ("find . -type f -print0"))))
-  :config
-  (projectile-mode +1)
-
-  (add-transient-hook! 'projectile-relevant-known-projects
-    (projectile-cleanup-known-projects)
-    (projectile-discover-projects-in-search-path))
-
-  (push (abbreviate-file-name my-local-dir) projectile-globally-ignored-directories)
-  (pushnew! projectile-project-root-files "package.json")
-  (pushnew! projectile-globally-ignored-directories "^node_modules$" "^flow-typed$")
-
-  (setq compilation-buffer-name-function #'projectile-compilation-buffer-name
-        compilation-save-buffers-predicate #'projectile-current-project-buffer-p)
-
-  (defadvice! projectile:dirconfig-file ()
-    :override #'projectile-dirconfig-file
-    (cond ((file-exists-p! (or ".projectile" ".project") (projectile-project-root)))
-          ((expand-file-name ".project" (projectile-project-root)))))
-
-  (put 'projectile-ag 'disabled "Use +{vertico,selectrum}/project-search instead")
-  (put 'projectile-ripgrep 'disabled "Use +{vertico,seletrum}/project-search instead")
-  (put 'projectile-grep 'disabled "Use +{vertico,seletrum}/project-search instead")
-
-  ;; Accidentally indexing big directories like $HOME or / will massively bloat
-  ;; projectile's cache (into the hundreds of MBs). This purges those entries
-  ;; when exiting Emacs to prevent slowdowns/freezing when cache files are
-  ;; loaded or written to.
-  (add-hook! 'kill-emacs-hook #'projectile:cleanup-project-cache)
-
-  (add-hook 'dired-before-readin-hook #'projectile-track-known-projects-find-file-hook)
-
-  (defadvice! projectile:only-use-generic-command (vcs)
-    "Only use `projectile-generic-command' for indexing project files.
-And if it's a function, evaluate it."
-    :override #'projectile-get-ext-command
-    (if (functionp projectile-generic-command)
-        (funcall projectile-generic-command vcs)
-      projectile-generic-command))
-
-  (defadvice! projectile:default-generic-command (orig-fn &rest args)
-    :around #'projectile-default-generic-command
-    (ignore-errors (apply orig-fn args)))
-
-  ;; It breaks projectile's project root resolution if HOME is a project (e.g.
-  ;; it's a git repo). In that case, we disable bottom-up root searching to
-  ;; prevent issues. This makes project resolution a little slower and less
-  ;; accurate in some cases.
-  (let ((default-directory "~"))
-    (when (cl-find-if #'projectile-file-exists-p
-                      projectile-project-root-files-bottom-up)
-      (setq projectile-project-root-files
-            (append projectile-project-root-files-bottom-up
-                    projectile-project-root-files)
-            projectile-project-root-files-bottom-up nil))))
+  (defun project:search ()
+    "Find files in ‘project-root’ with ripgrep/grep."
+    (interactive)
+    (let ((proot (project:project-root)))
+      (if (executable-find "rg")
+          (consult-ripgrep proot)
+        (consult-grep proot)))))
 
 ;;;; Coding and programming modes
 ;;;;
