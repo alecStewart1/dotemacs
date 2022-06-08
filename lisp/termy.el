@@ -288,8 +288,6 @@ Once the eshell process is killed, the previous frame layout is restored."
   (setq-local corfu-auto nil
               corfu-quit-at-boundary t
               corfu-quit-no-match t)
-  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-silent)
-  (advice-add 'pcomplete-completions-at-point :around #'cape-wrap-purify)
 
   (add-hook 'eshell-mode-hook #'hide-mode-line-mode)
 
@@ -298,6 +296,7 @@ Once the eshell process is killed, the previous frame layout is restored."
   (with-eval-after-load 'esh-mode
     (define-key eshell-mode-map (kbd "C-j") #'eshell-next-matching-input-from-input)
     (define-key eshell-mode-map (kbd "C-k") #'eshell-previous-matching-input-from-input)
+    (define-key eshell-mode-map (kbd "C-a") #'beginning-of-line)
     (define-key eshell-mode-map (kbd "C-e") #'end-of-line)
     (define-key eshell-mode-map (kbd "C-s") #'eshell:search-history)
     (define-key eshell-mode-map (kbd "C-l") (lambda () (interactive)

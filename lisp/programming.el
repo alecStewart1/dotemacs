@@ -276,6 +276,7 @@
 
 ;;;;; Project.el
 ;;;;;
+;;;;; TODO Finish this up for ignoring folders etc.
 
 (use-package project
   :ensure nil
@@ -301,7 +302,27 @@ Returns nil if not in a project."
     (let ((proot (project:project-root)))
       (if (executable-find "rg")
           (consult-ripgrep proot)
-        (consult-grep proot)))))
+        (consult-grep proot))))
+
+  (defun project:eshell ()
+    "Run an eshell instance in the current project directory."
+    (interactive)
+    (let* ((default-directory (project:project-root))
+           (eshell-buffer-name (project-prefixed-buffer-name "eshell"))
+           (eshell-buffer (get-buffer eshell-buffer-name)))
+
+      (if (and eshell-buffer (not current-prefix-arg))
+          (pop-to-buffer eshell-buffer '((display-buffer-below-selected . ((window-height . 14)
+                                                                    (window-min-height . 8)))))
+        (eshell t))))
+
+  :custom
+  (project-list-file (concat my-cache-dir "projects.eld"))
+  (project-switch-commands
+   '((project-dired "Root" "D")
+     (project-find-file "File" "f")
+     (magit-project-status "Git" "g")
+     (project:search "Search" "s"))))
 
 ;;;; Coding and programming modes
 ;;;;
