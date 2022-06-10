@@ -40,7 +40,8 @@
 ;;  - Vertico
 ;;  - Consult
 ;;  - Marginalia
-;;  - and Company
+;;  - Corfu
+;;  - Cape
 ;;
 ;;  Interesting packages that use the built-in functionalities of Emacs, as opposed to
 ;;  creating a whole API.
@@ -183,6 +184,8 @@ Run ‘magit-status’ on repo containing the embark target."
   (add-hook 'minibuffer-setup-hook #'vertico-repeat-save)
 
   ;; Keys
+  (define-key vertico-map (kbd "C-n") #'vertico-next)
+  (define-key vertico-map (kbd "C-p") #'vertico-previous)
   (define-key vertico-map (kbd "<backspace>") #'vertico-directory-delete-char)
   (define-key vertico-map (kbd "RET") #'vertico-directory-enter)
   (define-key vertico-map (kbd "<return>") #'vertico-directory-enter)
@@ -200,6 +203,7 @@ Run ‘magit-status’ on repo containing the embark target."
   ([remap switch-to-buffer-other-window] #'consult-buffer-other-window)
   ([remap switch-to-buffer-other-frame]  #'consult-buffer-other-frame)
   ([remap bookmark-jump]                 #'consult-bookmark)
+  ([remap recentf-open-files]            #'consult-recent-file)
   ([remap yank-pop]                      #'consult-yank-pop)
   ([remap locate]                        #'consult-locate)
   ([remap repeat-complex-command]        #'consult-complex-command)
@@ -233,7 +237,7 @@ Run ‘magit-status’ on repo containing the embark target."
 
   (general-setq prefix-help-command #'embark-prefix-help-command
                 register-preview-delay 0
-                register-preview-function #'consult-register-preview
+                register-preview-function #'consult-register-format
                 consult-preview-key '(:debounce 0.2 any)
                 consult-narrow-key "<"
                 consult-line-numbers-widen t
@@ -248,8 +252,10 @@ Run ‘magit-status’ on repo containing the embark target."
                                            (if windows-nt-p "--path-separator=/" ""))))
   :config
   (defadvice! consult:recent-file-fix (&rest _args)
-    "`consult-recent-file' needs to have `recentf-mode' on to work correctly"
+    "`consult-recent-file' needs to have `recentf-mode' on to work correctly. A
+Also need to have consult loaded as well, as it’s deferred by use-package."
     :before #'consult-recent-file
+    (require 'consult)
     (recentf-mode +1))
 
   ;; Sources

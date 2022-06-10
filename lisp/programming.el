@@ -283,6 +283,7 @@
   :preface
   (defvar project:root-list
     '("Makefile" "GNUMakefile" "CMakeLists.txt"
+      "pom.xml"
       "Cask" "Eldev" "Keg" "Eask"
       "package.json" "tsconfig.json" "jsconfig.json"
       "manage.py" "requirements.txt" "setup.py" "tox.ini" "Pipfile" "poetry.lock"
@@ -310,7 +311,6 @@ Returns nil if not in a project."
     (let* ((default-directory (project:project-root))
            (eshell-buffer-name (project-prefixed-buffer-name "eshell"))
            (eshell-buffer (get-buffer eshell-buffer-name)))
-
       (if (and eshell-buffer (not current-prefix-arg))
           (pop-to-buffer eshell-buffer '((display-buffer-below-selected . ((window-height . 14)
                                                                     (window-min-height . 8)))))
@@ -322,7 +322,10 @@ Returns nil if not in a project."
    '((project-dired "Root" "D")
      (project-find-file "File" "f")
      (magit-project-status "Git" "g")
-     (project:search "Search" "s"))))
+     (project:search "Search" "s")))
+  :config
+  (define-key ctl-x-map [remap project-search] #'project:search)
+  (define-key ctl-x-map [remap project-eshell] #'project:eshell))
 
 ;;;; Coding and programming modes
 ;;;;
