@@ -94,7 +94,6 @@
 (defun elfeed:cleanup ()
   "Clean up after an elfeed session. Kill all elfeed and elfeed-org files."
   (interactive)
-
   (elfeed-db-compact)
   (let ((buf (previous-buffer)))
     (when (null buf)
@@ -152,21 +151,18 @@
                        ("https://planet.gentoo.org/universe/rss20.xml" news gentoo)
                        ("http://planet.sbcl.org/rss20.xml" news dev)
                        ("https://updates.orgmode.org/feed/changes" news orgmode)
-                       ("https://neovim.io/news.xml" news neovim)
-                       ("https://blog.jetbrains.com/category/news/" news jetbrains)
                        ("https://www.winehq.org/news/rss/" news wine)
                        ("http://planet.lisp.org/rss20.xml" blog dev)
                        ("https://planet.emacslife.com/atom.xml" blog emacs)
                        ("https://sachachua.com/blog/category/emacs/feed/" blog emacs)
-                       ("https://with-emacs.com/rss.xml" blog emacs)
-                       ("https://blog.jetbrains.com/category/how-tos/" blog jetbrains)))
+                       ("https://with-emacs.com/rss.xml" blog emacs)))
 
   (defun embark-elfeed-target-url ()
-  "Target the URL of the elfeed entry at point."
-  (when-let (((derived-mode-p 'elfeed-search-mode))
-             (entry (elfeed-search-selected :ignore-region))
-             (url (elfeed-entry-link entry)))
-    `(url ,url ,(line-beginning-position) . ,(line-end-position))))
+    "Target the URL of the elfeed entry at point."
+    (when-let (((derived-mode-p 'elfeed-search-mode))
+               (entry (elfeed-search-selected :ignore-region))
+               (url (elfeed-entry-link entry)))
+      `(url ,url ,(line-beginning-position) . ,(line-end-position))))
 
   (defun embark-elfeed-url-candidates ()
     "Target the URLs of the selected elfeed entries."
@@ -178,6 +174,10 @@
   (with-eval-after-load 'embark
    (add-to-list 'embark-target-finders #'embark-elfeed-target-url)
    (add-to-list 'embark-candidate-collectors #'embark-elfeed-url-candidates)))
+
+
+;;;;;; Configure and view elfeed in a nice way
+;;;;;;
 
 (use-package elfeed-org
   :after (:all elfeed org)
@@ -195,10 +195,32 @@
           (message "elfeed-org: ignoring %S because it can't be read" file))
         (setq rmh-elfeed-org-files (cl-remove-if-not #'file-exists-p files))))))
 
+
+;;;;;; Extra nice things for elfeed
+;;;;;;
+
 (use-package elfeed-goodies
   :after elfeed
-	:config
-	(elfeed-goodies/setup))
+  :demand t
+  :config
+  (elfeed-goodies/setup))
+
+
+;;;;;; Inject YouTube feeds right into elfeed
+;;;;;;
+
+(use-package elfeed-tube
+  :after elfeed
+  :demand t
+  :config
+  (elfeed-tube-setup)
+  :bind (:map elfeed-show-mode-map
+         ("F" . elfeed-tube-fetch)
+         ([remap save-buffer] . elfeed-tube-save)
+         :map elfeed-search-mode-map
+         ("F" . elfeed-tube-fetch)
+         ([remap save-buffer] . elfeed-tube-save)))
+
 
 (provide 'app)
 ;;; app.el ends here
