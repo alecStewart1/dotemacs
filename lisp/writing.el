@@ -653,6 +653,7 @@ Made for `org-tab-first-hook' in evil-mode."
     nil
     "#+AUTHOR: " str \n)
 
+  ;; TODO how to do the double cursor thing from Tempel
   (mode-snippet oblock org-mode
     "Block type: "
     > "#+begin_" str " " @ _  \n

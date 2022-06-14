@@ -206,6 +206,13 @@
   (elfeed-goodies/setup))
 
 
+;;;;;; Get a summary of feeds
+;;;;;;
+
+(use-package elfeed-summary
+  :after elfeed
+  :demand t)
+
 ;;;;;; Inject YouTube feeds right into elfeed
 ;;;;;;
 
