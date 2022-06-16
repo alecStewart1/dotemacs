@@ -342,6 +342,17 @@ Also need to have consult loaded as well, as it’s deferred by use-package."
          ("C-x C-d" . consult-dir)
          ("C-x C-j" . consult-dir-jump-file)))
 
+;;;;;; Interfacing with TRAMP
+;;;;;;
+
+;; (use-package consult-tramp
+;;   :defer t
+;;   :config
+;;   (setq consult-tramp-method tramp-default-method
+;;         consult-tramp-sources '(consult-tramp--source-local
+;;                                 consult-tramp--source-ssh
+;;                                 consult-tramp--source-known-host)))
+
 ;;;;;; Interface with Flycheck
 ;;;;;;
 

@@ -414,5 +414,16 @@ Once the eshell process is killed, the previous frame layout is restored."
   (setq confirm-kill-processes nil)
   (setq hscroll-margin 0))
 
+;;;; TRAMP
+;;;;
+;;;;
+
+(use-package tramp
+  :ensure nil
+  :init
+  (general-setq tramp-default-method "ssh")
+  :config
+  (add-to-list 'tramp-remote-path 'tramp-own-remote-path))
+
 (provide 'termy)
 ;;; termy.el ends here
