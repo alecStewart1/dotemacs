@@ -216,17 +216,17 @@
 ;;;;;; Inject YouTube feeds right into elfeed
 ;;;;;;
 
-(use-package elfeed-tube
-  :after elfeed
-  :demand t
-  :config
-  (elfeed-tube-setup)
-  :bind (:map elfeed-show-mode-map
-         ("F" . elfeed-tube-fetch)
-         ([remap save-buffer] . elfeed-tube-save)
-         :map elfeed-search-mode-map
-         ("F" . elfeed-tube-fetch)
-         ([remap save-buffer] . elfeed-tube-save)))
+;; (use-package elfeed-tube
+;;   :after elfeed
+;;   :demand t
+;;   :config
+;;   (elfeed-tube-setup)
+;;   :bind (:map elfeed-show-mode-map
+;;          ("F" . elfeed-tube-fetch)
+;;          ([remap save-buffer] . elfeed-tube-save)
+;;          :map elfeed-search-mode-map
+;;          ("F" . elfeed-tube-fetch)
+;;          ([remap save-buffer] . elfeed-tube-save)))
 
 
 (provide 'app)
