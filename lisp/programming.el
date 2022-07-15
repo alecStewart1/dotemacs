@@ -250,7 +250,10 @@
 (use-package tree-sitter
   :if (functionp 'module-load)
   :hook (prog-mode . global-tree-sitter-mode)
-  :hook (tree-sitter-after-on . tree-sitter-hl-mode))
+  :hook (tree-sitter-after-on . tree-sitter-hl-mode)
+  :config
+  (setq tree-sitter-debug-jump-buttons t
+        tree-sitter-debug-highlight-jump-region t))
 
 (use-package tree-sitter-langs
   :after tree-sitter
@@ -1481,7 +1484,17 @@ nimsuggest isn't installed."
           (lsp--info "Could not guess project root."))))))
 
 (use-package lsp-ui
+  :hook (lsp-mode . lsp-ui-mode)
+  :init
+  ;; This is from Doom Emacs
+  (defadvice! lsp-ui:use-hook-instead-a (fn &rest args)
+    "Change `lsp--auto-configure' to not force `lsp-ui-mode' on us. Using a hook
+instead is more sensible."
+    :around #'lsp--auto-configure
+    (letf! ((#'lsp-ui-mode #'ignore))
+      (apply fn args)))
   :custom
+  (lsp-ui-peek-enable t)
   (lsp-ui-doc-max-height 8)
   (lsp-ui-doc-max-width 72)
   (lsp-ui-doc-delay 0.75)
